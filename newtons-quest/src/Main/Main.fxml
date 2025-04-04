@@ -9,23 +9,23 @@
 
 <StackPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" 
            fx:controller="Controlador.MainController"
-           prefWidth="800" prefHeight="600" style="-fx-background-color: #1a1a2e;">
+           prefWidth="800" prefHeight="600">
     
     <!-- Contenido del menú -->
     <VBox alignment="CENTER" spacing="30">
         <!-- Título del juego -->
         <VBox alignment="CENTER" spacing="10">
-            <Text text="Newton's" fill="WHITE">
+            <Text text="Newton's" fill="WHITE" styleClass="title-text">
                 <font>
                     <Font name="System Bold" size="50" />
                 </font>
             </Text>
-            <Text text="Apple Quest" fill="#ff6b6b">
+            <Text text="Apple Quest" fill="#ff6b6b" styleClass="title-text">
                 <font>
                     <Font name="System Bold" size="60" />
                 </font>
             </Text>
-            <Text text="Una aventura física" fill="WHITE">
+            <Text text="Una aventura física" fill="WHITE" styleClass="subtitle-text">
                 <font>
                     <Font size="24" />
                 </font>
@@ -37,22 +37,13 @@
             <padding>
                 <Insets top="40" />
             </padding>
-            <Button fx:id="startButton" text="Iniciar Juego" 
-                    style="-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10px;" 
-                    maxWidth="Infinity" />
-            <Button fx:id="rulesButton" text="Reglas" 
-                    style="-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10px;" 
-                    maxWidth="Infinity" />
-            <Button fx:id="settingsButton" text="Configuración" 
-                    style="-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10px;" 
-                    maxWidth="Infinity" />
+            <Button fx:id="startButton" text="Iniciar Juego" styleClass="menu-button" maxWidth="Infinity" />
+            <Button fx:id="rulesButton" text="Reglas" styleClass="menu-button" maxWidth="Infinity" />
+            <Button fx:id="settingsButton" text="Configuración" styleClass="menu-button" maxWidth="Infinity" />
         </VBox>
         
         <!-- Fórmulas físicas decorativas -->
-        <Text text="F = ma    E = mc²    F = G(m₁m₂)/r²" fill="WHITE" opacity="0.7">
-            <font>
-                <Font name="Monospaced Regular" size="16" />
-            </font>
+        <Text text="F = ma    E = mc²    F = G(m₁m₂)/r²" styleClass="formula-text">
             <VBox.margin>
                 <Insets top="50" />
             </VBox.margin>
