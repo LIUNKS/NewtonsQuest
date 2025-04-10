@@ -62,12 +62,5 @@
                         prefWidth="150" />
             </HBox>
         </VBox>
-        
-        <!-- Fórmulas físicas decorativas -->
-        <Text text="F = ma    E = mc²    F = G(m₁m₂)/r²" styleClass="formula-text">
-            <VBox.margin>
-                <Insets top="30" />
-            </VBox.margin>
-        </Text>
     </VBox>
 </StackPane>
