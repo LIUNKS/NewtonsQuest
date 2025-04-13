@@ -1,0 +1,119 @@
+/* Estilos para la pantalla de registro */
+.main-background {
+    -fx-background-color: linear-gradient(to bottom, #0f0c29, #1a1a2e, #24243e);
+}
+
+.content-container {
+    -fx-padding: 20px;
+}
+
+.title-text {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 5, 0, 0, 2);
+    -fx-font-family: "System Bold";
+    -fx-font-size: 36px;
+}
+
+.subtitle-text {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 3, 0, 0, 1);
+    -fx-font-family: "System";
+    -fx-font-size: 24px;
+}
+
+.login-form {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-padding: 25px;
+    -fx-background-radius: 15px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 5);
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 1px;
+    -fx-border-radius: 15px;
+}
+
+.field-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.input-field {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-background-radius: 8px;
+    -fx-padding: 12px;
+    -fx-font-size: 14px;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 1);
+    -fx-prompt-text-fill: #888888;
+}
+
+.input-field:focused {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, #ff6b6b, 5, 0, 0, 0);
+}
+
+.error-message {
+    -fx-background-color: rgba(255,107,107,0.15);
+    -fx-padding: 12px;
+    -fx-background-radius: 8px;
+    -fx-border-color: #ff6b6b;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ff6b6b;
+}
+
+.primary-button {
+    -fx-background-color: #e94560;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12px;
+    -fx-background-radius: 30px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 10, 0, 0, 3);
+    -fx-cursor: hand;
+    -fx-transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+    -fx-background-color: #ff6b6b;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #c9184a;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.secondary-button {
+    -fx-background-color: rgba(22, 33, 62, 0.8);
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12px;
+    -fx-background-radius: 30px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 10, 0, 0, 3);
+    -fx-cursor: hand;
+    -fx-transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+    -fx-background-color: rgba(26, 51, 101, 0.9);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #0f172a;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.footer-text {
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+.formula-decoration {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
