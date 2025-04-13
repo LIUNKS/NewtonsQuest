@@ -7,15 +7,28 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.geometry.Insets?>
 
 <StackPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" 
            fx:controller="Controlador.LoginController"
-           prefWidth="800" prefHeight="600">
+           prefWidth="900" prefHeight="700"
+           styleClass="main-background">
     
-    <VBox alignment="CENTER" spacing="20" maxWidth="400">
+    <!-- Elementos decorativos de fondo (círculos que representan manzanas) -->
+    <Circle radius="15" fill="#ff6b6b" opacity="0.2" translateX="-250" translateY="-200" />
+    <Circle radius="8" fill="#ff6b6b" opacity="0.15" translateX="200" translateY="-150" />
+    <Circle radius="12" fill="#ff6b6b" opacity="0.1" translateX="-180" translateY="180" />
+    <Circle radius="10" fill="#ff6b6b" opacity="0.2" translateX="220" translateY="220" />
+    
+    <!-- Fórmulas físicas decorativas -->
+    <Label text="F = G(m₁m₂)/r²" styleClass="formula-decoration" translateX="-250" translateY="-120" rotate="-15" />
+    <Label text="E = mc²" styleClass="formula-decoration" translateX="250" translateY="100" rotate="10" />
+    
+    <VBox alignment="CENTER" spacing="20" maxWidth="500" styleClass="content-container">
         <!-- Título -->
         <Text text="Newton's Apple Quest" fill="#ff6b6b" styleClass="title-text">
             <font>
@@ -34,33 +47,49 @@
         </Text>
         
         <!-- Formulario de inicio de sesión -->
-        <VBox spacing="10" styleClass="login-form">
+        <VBox spacing="15" styleClass="login-form">
             <!-- Campo de usuario -->
-            <Label text="Usuario:" textFill="WHITE" />
-            <TextField fx:id="usernameField" promptText="Ingresa tu nombre de usuario" />
+            <Label text="Usuario:" textFill="WHITE" styleClass="field-label" />
+            <TextField fx:id="usernameField" promptText="Ingresa tu nombre de usuario" styleClass="input-field" />
             
             <!-- Campo de contraseña -->
-            <Label text="Contraseña:" textFill="WHITE">
+            <Label text="Contraseña:" textFill="WHITE" styleClass="field-label">
+                <VBox.margin>
+                    <Insets top="5" />
+                </VBox.margin>
+            </Label>
+            <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña" styleClass="input-field" />
+            
+            <!-- Mensaje de error -->
+            <Label fx:id="errorLabel" textFill="#ff6b6b" 
+                   text="Error" wrapText="true"
+                   styleClass="error-message" visible="false">
+                <font>
+                    <Font name="System Bold" size="12" />
+                </font>
                 <VBox.margin>
                     <Insets top="10" />
                 </VBox.margin>
             </Label>
-            <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña" />
-            
-            <!-- Mensaje de error (inicialmente invisible) -->
-            <Label fx:id="errorLabel" textFill="#ff6b6b" visible="false" 
-                   text="Usuario o contraseña incorrectos" wrapText="true" />
             
             <!-- Botones -->
-            <HBox spacing="10" alignment="CENTER">
+            <HBox spacing="15" alignment="CENTER">
                 <padding>
-                    <Insets top="20" />
+                    <Insets top="20" bottom="10" />
                 </padding>
-                <Button fx:id="loginButton" text="Iniciar Sesión" styleClass="login-button" 
-                        prefWidth="150" />
-                <Button fx:id="registerButton" text="Registrarse" styleClass="register-button" 
-                        prefWidth="150" />
+                <Button fx:id="loginButton" text="Iniciar Sesión" styleClass="primary-button" 
+                        prefWidth="180" />
+                <Button fx:id="registerButton" text="Registrarse" styleClass="secondary-button" 
+                        prefWidth="180" />
             </HBox>
         </VBox>
+        
+        <!-- Nota de pie -->
+        <Label text="Una aventura física inspirada en Isaac Newton" 
+               textFill="white" opacity="0.7" styleClass="footer-text">
+            <VBox.margin>
+                <Insets top="20" />
+            </VBox.margin>
+        </Label>
     </VBox>
 </StackPane>
