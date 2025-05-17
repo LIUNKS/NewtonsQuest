@@ -47,10 +47,53 @@ public class MainController {
     
     private void startGame() {
         try {
-            // Aquí cargarías la pantalla del juego
-            System.out.println("INICIAR JUEGO");
+            System.out.println("Iniciando juego...");
+            
+            // Verificar si el archivo Game.fxml existe
+            File gameFxmlFile = new File("src/Main/Game.fxml");
+            if (!gameFxmlFile.exists()) {
+                System.err.println("Error: No se encontró el archivo Game.fxml en " + gameFxmlFile.getAbsolutePath());
+                return;
+            }
+            
+            // Verificar si el archivo game.css existe
+            File gameCssFile = new File("src/Vista/game.css");
+            if (!gameCssFile.exists()) {
+                System.err.println("Error: No se encontró el archivo game.css en " + gameCssFile.getAbsolutePath());
+                return;
+            }
+            
+            // Cargar el archivo FXML
+            FXMLLoader loader = new FXMLLoader(gameFxmlFile.toURI().toURL());
+            Parent root = loader.load();
+            
+            // Obtener el controlador del juego
+            GameController gameController = loader.getController();
+            
+            // Crear una nueva escena
+            Scene scene = new Scene(root, 900, 700);
+            
+            // Añadir el CSS
+            scene.getStylesheets().add(gameCssFile.toURI().toURL().toExternalForm());
+            
+            // Obtener el stage actual
+            Stage stage = (Stage) startButton.getScene().getWindow();
+            
+            // Cambiar la escena
+            stage.setScene(scene);
+            stage.setTitle("Newton's Apple Quest - Juego");
+            
+            // Asegurarse de que la escena tenga el foco para capturar eventos de teclado
+            scene.getRoot().requestFocus();
+            
+            System.out.println("Juego iniciado correctamente");
+            
+        } catch (IOException e) {
+            System.err.println("Error al cargar la pantalla del juego: " + e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("No se puedo iniciar el juego");
+            System.err.println("Error inesperado al iniciar el juego: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
