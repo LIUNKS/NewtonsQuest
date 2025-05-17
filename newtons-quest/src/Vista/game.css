@@ -1,0 +1,22 @@
+/* Estilos para la pantalla de juego */
+.game-background {
+    -fx-background-color: #87CEEB; /* Color celeste para el cielo */
+}
+
+.game-over-text {
+    -fx-font-size: 48px;
+    -fx-font-weight: bold;
+    -fx-fill: #ff6b6b;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 5, 0, 0, 2);
+}
+
+.score-text {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 3, 0, 0, 1);
+}
+
+.pause-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+}
