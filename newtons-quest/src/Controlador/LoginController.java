@@ -149,7 +149,7 @@ public class LoginController {
             Parent root = loader.load();
 
             // Crear una nueva escena con mayor altura para acomodar todos los campos
-            Scene scene = new Scene(root, 900, 750);
+            Scene scene = new Scene(root, 900, 700);
 
             // Añadir el CSS
             scene.getStylesheets().add(cssPath);
