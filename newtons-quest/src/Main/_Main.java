@@ -33,10 +33,8 @@ public class _Main extends Application {
         }
 
         // Cargar la pantalla de inicio de sesión
-        Parent root = loader.load();
-
-        // Crear la escena
-        Scene scene = new Scene(root, 800, 600);
+        Parent root = loader.load();        // Crear la escena
+        Scene scene = new Scene(root, 900, 700);
 
         // Añadir el CSS específico para la pantalla de login
         scene.getStylesheets().add(cssPath);
