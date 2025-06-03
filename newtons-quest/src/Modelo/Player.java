@@ -15,17 +15,11 @@ public class Player {
     
     // Velocidad del jugador
     private double velocityX = 0;
-    private double velocityY = 0;
     
     // Constantes de movimiento
     private final double SPEED = 5.0;
-    private final double GRAVITY = 0.5;
-    private final double JUMP_FORCE = -12.0;
-    private final double MAX_FALL_SPEED = 10.0;
     
     // Estado del jugador
-    private boolean isJumping = false;
-    private boolean isFalling = false;
     private boolean isMovingLeft = false;
     private boolean isMovingRight = false;
     private boolean facingRight = true;
@@ -39,13 +33,10 @@ public class Player {
     private List<Image> walkLeftSprites;
     private Image idleRightSprite;
     private Image idleLeftSprite;
-    private Image jumpRightSprite;
-    private Image jumpLeftSprite;
-    private Image fallSprite;
     
     // Animación
     private int currentFrame = 0;
-    private int frameDelay = 5;
+    private final int frameDelay = 5;
     private int frameCounter = 0;
     
     // Constructor
@@ -83,16 +74,8 @@ public class Player {
             walkRightSprites.add(loadImageSafely(spritePaths[2]));
             walkRightSprites.add(loadImageSafely(spritePaths[3]));
             walkRightSprites.add(loadImageSafely(spritePaths[4]));
-            
-            // Sprites para caminar hacia la izquierda (los mismos pero invertidos horizontalmente)
+              // Sprites para caminar hacia la izquierda (los mismos pero invertidos horizontalmente)
             walkLeftSprites = walkRightSprites;
-            
-            // Sprite para saltar
-            jumpRightSprite = loadImageSafely(spritePaths[5]);
-            jumpLeftSprite = jumpRightSprite; // Lo invertiremos al dibujar
-            
-            // Sprite para caer
-            fallSprite = loadImageSafely(spritePaths[6]);
             
             System.out.println("Sprites cargados correctamente");
             
@@ -133,13 +116,9 @@ public class Player {
         
         // Crear una imagen de respaldo
         Image fallbackImage = createFallbackImage();
-        
-        // Asignar la imagen de respaldo a todos los sprites
+          // Asignar la imagen de respaldo a todos los sprites
         idleRightSprite = fallbackImage;
         idleLeftSprite = fallbackImage;
-        jumpRightSprite = fallbackImage;
-        jumpLeftSprite = fallbackImage;
-        fallSprite = fallbackImage;
         
         // Inicializar las listas de sprites si es necesario
         if (walkRightSprites == null) {
@@ -159,25 +138,10 @@ public class Player {
         walkRightSprites.add(fallbackImage);
         walkRightSprites.add(fallbackImage);
         
-        walkLeftSprites = walkRightSprites;
-    }
-    
-    // Actualizar la posición y estado del jugador
+        walkLeftSprites = walkRightSprites;    }    // Actualizar la posición y estado del jugador
     public void update(double floorY) {
-        // Aplicar gravedad si el jugador está en el aire
-        if (y < floorY - HEIGHT) {
-            velocityY += GRAVITY;
-            if (velocityY > MAX_FALL_SPEED) {
-                velocityY = MAX_FALL_SPEED;
-            }
-            isFalling = true;
-        } else {
-            // El jugador está en el suelo
-            y = floorY - HEIGHT;
-            velocityY = 0;
-            isJumping = false;
-            isFalling = false;
-        }
+        // El jugador siempre está en el suelo
+        y = floorY - HEIGHT;
         
         // Actualizar posición horizontal
         if (isMovingLeft) {
@@ -190,9 +154,8 @@ public class Player {
             velocityX = 0;
         }
         
-        // Actualizar posición
+        // Actualizar posición (solo horizontal)
         x += velocityX;
-        y += velocityY;
         
         // Actualizar animación
         if (isMovingLeft || isMovingRight) {
@@ -206,28 +169,20 @@ public class Player {
             frameCounter = 0;
         }
     }
-    
-    // Dibujar el jugador
+      // Dibujar el jugador
     public void render(GraphicsContext gc) {
         Image currentSprite;
         
-        // Seleccionar el sprite adecuado según el estado del jugador
-        if (isJumping || isFalling) {
-            if (isFalling && y > 300) { // Si está cayendo y ha caído lo suficiente
-                currentSprite = fallSprite;
-            } else {
-                currentSprite = facingRight ? jumpRightSprite : jumpLeftSprite;
-            }
-        } else if (isMovingLeft) {
+        // Seleccionar el sprite adecuado según el estado del jugador (solo movimiento horizontal)
+        if (isMovingLeft) {
             currentSprite = walkLeftSprites.get(currentFrame);
         } else if (isMovingRight) {
             currentSprite = walkRightSprites.get(currentFrame);
         } else {
             currentSprite = facingRight ? idleRightSprite : idleLeftSprite;
         }
-        
-        // Dibujar el sprite
-        if ((isMovingLeft || !facingRight) && !(isFalling && y > 300)) {
+          // Dibujar el sprite
+        if (isMovingLeft || !facingRight) {
             // Dibujar invertido horizontalmente
             gc.save();
             gc.translate(x + WIDTH, y);
@@ -246,18 +201,10 @@ public class Player {
             isMovingRight = false;
         }
     }
-    
-    public void moveRight(boolean move) {
+      public void moveRight(boolean move) {
         isMovingRight = move;
         if (move) {
             isMovingLeft = false;
-        }
-    }
-    
-    public void jump() {
-        if (!isJumping && !isFalling) {
-            velocityY = JUMP_FORCE;
-            isJumping = true;
         }
     }
     
@@ -273,7 +220,7 @@ public class Player {
     public int getWidth() {
         return WIDTH;
     }
-    
+      
     public int getHeight() {
         return HEIGHT;
     }
