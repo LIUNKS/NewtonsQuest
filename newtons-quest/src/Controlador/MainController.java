@@ -44,55 +44,54 @@ public class MainController {
             welcomeLabel.setText("¡Bienvenido, " + username + "!");
         }
     }
-    
-    private void startGame() {
+      private void startGame() {
         try {
-            System.out.println("Iniciando juego...");
+            System.out.println("Cargando la pantalla del mapa...");
             
-            // Verificar si el archivo Game.fxml existe
-            File gameFxmlFile = new File("src/Main/Game.fxml");
-            if (!gameFxmlFile.exists()) {
-                System.err.println("Error: No se encontró el archivo Game.fxml en " + gameFxmlFile.getAbsolutePath());
+            // Verificar si el archivo Map.fxml existe
+            File mapFxmlFile = new File("src/Main/Map.fxml");
+            if (!mapFxmlFile.exists()) {
+                System.err.println("Error: No se encontró el archivo Map.fxml en " + mapFxmlFile.getAbsolutePath());
                 return;
             }
             
-            // Verificar si el archivo game.css existe
-            File gameCssFile = new File("src/Vista/game.css");
-            if (!gameCssFile.exists()) {
-                System.err.println("Error: No se encontró el archivo game.css en " + gameCssFile.getAbsolutePath());
+            // Verificar si el archivo map.css existe
+            File mapCssFile = new File("src/Vista/map.css");
+            if (!mapCssFile.exists()) {
+                System.err.println("Error: No se encontró el archivo map.css en " + mapCssFile.getAbsolutePath());
                 return;
             }
             
             // Cargar el archivo FXML
-            FXMLLoader loader = new FXMLLoader(gameFxmlFile.toURI().toURL());
+            FXMLLoader loader = new FXMLLoader(mapFxmlFile.toURI().toURL());
             Parent root = loader.load();
             
-            // Obtener el controlador del juego
-            GameController gameController = loader.getController();
+            // Obtener el controlador del mapa
+            MapController mapController = loader.getController();
             
             // Crear una nueva escena
             Scene scene = new Scene(root, 900, 700);
             
             // Añadir el CSS
-            scene.getStylesheets().add(gameCssFile.toURI().toURL().toExternalForm());
+            scene.getStylesheets().add(mapCssFile.toURI().toURL().toExternalForm());
             
             // Obtener el stage actual
             Stage stage = (Stage) startButton.getScene().getWindow();
             
             // Cambiar la escena
             stage.setScene(scene);
-            stage.setTitle("Newton's Apple Quest - Juego");
+            stage.setTitle("Newton's Apple Quest - Mapa de Aventuras");
             
             // Asegurarse de que la escena tenga el foco para capturar eventos de teclado
             scene.getRoot().requestFocus();
             
-            System.out.println("Juego iniciado correctamente");
+            System.out.println("Pantalla del mapa cargada correctamente");
             
         } catch (IOException e) {
-            System.err.println("Error al cargar la pantalla del juego: " + e.getMessage());
+            System.err.println("Error al cargar la pantalla del mapa: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.err.println("Error inesperado al iniciar el juego: " + e.getMessage());
+            System.err.println("Error inesperado al cargar la pantalla del mapa: " + e.getMessage());
             e.printStackTrace();
         }
     }
