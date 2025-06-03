@@ -35,15 +35,21 @@ public class GameController {
     
     // Teclas presionadas
     private boolean leftKeyPressed = false;
-    private boolean rightKeyPressed = false;
-    
-    public void initialize() {
+    private boolean rightKeyPressed = false;      public void initialize() {
         try {
+            System.out.println("========== INICIALIZANDO GAMECONTROLLER ==========");
+            
             // Obtener el contexto gráfico del canvas
             gc = gameCanvas.getGraphicsContext2D();
+            System.out.println("Contexto gráfico obtenido: " + (gc != null ? "OK" : "NULL"));
+            
+            // Hacer que el canvas pueda recibir el foco
+            gameCanvas.setFocusTraversable(true);
+            System.out.println("Canvas configurado como focusTraversable");
             
             // Inicializar el jugador en el centro de la pantalla
             player = new Player(GAME_WIDTH / 2 - 32, FLOOR_Y - 96);
+            System.out.println("Jugador inicializado en (" + player.getX() + ", " + player.getY() + ")");
             
             // Configurar los eventos de teclado
             setupKeyHandlers();
@@ -51,30 +57,46 @@ public class GameController {
             // Iniciar el bucle del juego
             startGameLoop();
             
+            // Solicitar el foco nuevamente después de la inicialización
+            gameCanvas.requestFocus();
+            System.out.println("Foco solicitado para el canvas después de inicialización");
+            
             System.out.println("GameController inicializado correctamente");
+            System.out.println("=================================================");
         } catch (Exception e) {
             System.err.println("Error al inicializar GameController: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    
-    private void setupKeyHandlers() {
+    }private void setupKeyHandlers() {
         try {
+            System.out.println("Configurando manejadores de teclas...");
+            System.out.println("Canvas: " + (gameCanvas != null ? "OK" : "NULL"));
+            
+            // Agregar un listener directo al canvas para probar si recibe eventos
+            gameCanvas.setOnKeyPressed(event -> {
+                System.out.println("Tecla presionada directamente en el canvas: " + event.getCode());
+            });
+            
             // Obtener la escena
             gameCanvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                System.out.println("Escena cambiada: " + (newScene != null ? "Nueva escena disponible" : "Escena nula"));
+                
                 if (newScene != null) {
-                    // Configurar los eventos de teclado para la escena
+                    // Solicitar el foco para el canvas cuando se carga la escena
+                    gameCanvas.requestFocus();
+                    System.out.println("Foco solicitado para el canvas");                    // Configurar los eventos de teclado para la escena
                     newScene.setOnKeyPressed(event -> {
                         KeyCode code = event.getCode();
+                        System.out.println("Tecla presionada: " + code);
                         
                         if (code == KeyCode.LEFT || code == KeyCode.A) {
                             leftKeyPressed = true;
                             player.moveLeft(true);
+                            System.out.println("Moviendo a la izquierda");
                         } else if (code == KeyCode.RIGHT || code == KeyCode.D) {
                             rightKeyPressed = true;
                             player.moveRight(true);
-                        } else if (code == KeyCode.UP || code == KeyCode.W || code == KeyCode.SPACE) {
-                            player.jump();
+                            System.out.println("Moviendo a la derecha");
                         } else if (code == KeyCode.ESCAPE) {
                             togglePause();
                         } else if (code == KeyCode.BACK_SPACE) {
@@ -103,6 +125,9 @@ public class GameController {
                             }
                         }
                     });
+                    
+                    // También añadir el foco al canvas cuando se hace clic en él
+                    gameCanvas.setOnMouseClicked(event -> gameCanvas.requestFocus());
                     
                     System.out.println("Eventos de teclado configurados correctamente");
                 }
@@ -194,11 +219,10 @@ public class GameController {
                 gc.setFont(javafx.scene.text.Font.font(48));
                 gc.fillText("GAME OVER", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2);
             }
-            
-            // Mostrar instrucciones
+              // Mostrar instrucciones
             gc.setFill(Color.WHITE);
             gc.setFont(javafx.scene.text.Font.font(14));
-            gc.fillText("Controles: Flechas o WASD para mover, ESPACIO para saltar, ESC para pausar", 20, 30);
+            gc.fillText("Controles: Flechas o WASD para mover, ESC para pausar", 20, 30);
             gc.fillText("BACKSPACE para volver al menú principal", 20, 50);
             
         } catch (Exception e) {
