@@ -53,16 +53,15 @@ public class Player {
             // Inicializar las listas de sprites
             walkRightSprites = new ArrayList<>();
             walkLeftSprites = new ArrayList<>();
-            
-            // Rutas de los sprites
+              // Rutas de los sprites
             String[] spritePaths = {
-                "src/recursos/sprites/newton_1.png",
-                "src/recursos/sprites/newton_2.png",
-                "src/recursos/sprites/newton_3.png",
-                "src/recursos/sprites/newton_4.png",
-                "src/recursos/sprites/newton_5.png",
-                "src/recursos/sprites/newton_6.png",
-                "src/recursos/sprites/newton_7.png"
+                "src/recursos/sprites/newton/newton_1.png",
+                "src/recursos/sprites/newton/newton_2.png",
+                "src/recursos/sprites/newton/newton_3.png",
+                "src/recursos/sprites/newton/newton_4.png",
+                "src/recursos/sprites/newton/newton_5.png",
+                "src/recursos/sprites/newton/newton_6.png",
+                "src/recursos/sprites/newton/newton_7.png"
             };
             
             // Cargar sprites usando FileInputStream para mayor compatibilidad
