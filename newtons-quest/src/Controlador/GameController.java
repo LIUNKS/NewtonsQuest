@@ -2,6 +2,7 @@ package Controlador;
 
 import Modelo.Player;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
@@ -10,7 +11,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -21,6 +25,8 @@ public class GameController {
     private GraphicsContext gc;
     private Player player;
     private AnimationTimer gameLoop;
+    private MediaPlayer musicPlayer;
+    private Image backgroundImage;
     
     // Dimensiones del juego
     private final int GAME_WIDTH = 900;
@@ -46,6 +52,12 @@ public class GameController {
             // Hacer que el canvas pueda recibir el foco
             gameCanvas.setFocusTraversable(true);
             System.out.println("Canvas configurado como focusTraversable");
+            
+            // Cargar la imagen de fondo
+            loadBackgroundImage();
+            
+            // Iniciar la música de fondo
+            playBackgroundMusic();
             
             // Inicializar el jugador en el centro de la pantalla
             player = new Player(GAME_WIDTH / 2 - 32, FLOOR_Y - 96);
@@ -179,15 +191,19 @@ public class GameController {
             e.printStackTrace();
         }
     }
-    
-    private void render() {
+      private void render() {
         try {
             // Limpiar el canvas
             gc.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             
-            // Dibujar el fondo (cielo)
-            gc.setFill(Color.SKYBLUE);
-            gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            // Dibujar la imagen de fondo
+            if (backgroundImage != null) {
+                gc.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+            } else {
+                // Dibujar el fondo (cielo) como respaldo si la imagen no se cargó
+                gc.setFill(Color.SKYBLUE);
+                gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            }
             
             // Dibujar el suelo
             gc.setFill(Color.SADDLEBROWN);
@@ -234,14 +250,17 @@ public class GameController {
     private void togglePause() {
         isPaused = !isPaused;
         System.out.println("Juego " + (isPaused ? "pausado" : "reanudado"));
-    }
-    
-    // Método para volver al menú principal
+    }    // Método para volver al menú principal
     public void returnToMainMenu() {
         try {
             // Detener el bucle del juego
             if (gameLoop != null) {
                 gameLoop.stop();
+            }
+            
+            // Detener la música
+            if (musicPlayer != null) {
+                musicPlayer.stop();
             }
             
             System.out.println("Volviendo al menú principal...");
@@ -290,6 +309,60 @@ public class GameController {
             e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Carga la imagen de fondo del juego
+     */
+    private void loadBackgroundImage() {
+        try {
+            String backgroundPath = "src/recursos/imagenes/fondo_juego.jpg";
+            File backgroundFile = new File(backgroundPath);
+            
+            if (backgroundFile.exists()) {
+                // Estamos en desarrollo, usar ruta de archivo
+                backgroundImage = new Image(new FileInputStream(backgroundFile));
+                System.out.println("Imagen de fondo cargada correctamente");
+            } else {
+                // Estamos en producción, usar getResource
+                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/fondo_juego.jpg"));
+                System.out.println("Imagen de fondo cargada desde recursos");
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
+            e.printStackTrace();
+            backgroundImage = null;
+        }
+    }    /**
+     * Reproduce la música de fondo del juego
+     */
+    private void playBackgroundMusic() {
+        try {
+            String musicPath = "src/recursos/musica/musica_juego.mp3";
+            File musicFile = new File(musicPath);
+            
+            Media media;
+            if (musicFile.exists()) {
+                // Estamos en desarrollo, usar ruta de archivo
+                media = new Media(musicFile.toURI().toString());
+                System.out.println("Música cargada desde archivo: " + musicPath);
+            } else {
+                // Estamos en producción, usar getResource
+                String resourcePath = getClass().getResource("/recursos/musica/musica_juego.mp3").toString();
+                media = new Media(resourcePath);
+                System.out.println("Música cargada desde recursos");
+            }
+            
+            musicPlayer = new MediaPlayer(media);
+            musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Reproducir en bucle
+            musicPlayer.setVolume(0.5); // Volumen al 50%
+            musicPlayer.play();
+            
+            System.out.println("Música de fondo iniciada");
+        } catch (Exception e) {
+            System.err.println("Error al reproducir la música: " + e.getMessage());
             e.printStackTrace();
         }
     }
