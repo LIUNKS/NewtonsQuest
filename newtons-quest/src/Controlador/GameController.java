@@ -1,9 +1,13 @@
 package Controlador;
 
+import Modelo.Apple;
 import Modelo.Player;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -41,7 +45,29 @@ public class GameController {
     
     // Teclas presionadas
     private boolean leftKeyPressed = false;
-    private boolean rightKeyPressed = false;      public void initialize() {
+    private boolean rightKeyPressed = false;
+    
+    // Sistema de manzanas
+    private List<Apple> apples = new ArrayList<>();
+    private Random random = new Random();
+    private long lastAppleSpawnTime = 0;
+    private final long APPLE_SPAWN_INTERVAL = 1500; // Intervalo entre manzanas en milisegundos
+    private final double MIN_APPLE_SPEED = 2.0;
+    private final double MAX_APPLE_SPEED = 5.0;
+    
+    // Sistema de puntuación
+    private int score = 0;
+    private final int RED_APPLE_POINTS = 10;
+    private final int GREEN_APPLE_POINTS = -5;
+    private final int MISSED_APPLE_POINTS = -3;
+    
+    // Sistema de vidas
+    private int lives = 5;
+    private final int MAX_LIVES = 5;
+    private Image heartImage;
+    private Image emptyHeartImage;
+    
+      public void initialize() {
         try {
             System.out.println("========== INICIALIZANDO GAMECONTROLLER ==========");
             
@@ -52,9 +78,11 @@ public class GameController {
             // Hacer que el canvas pueda recibir el foco
             gameCanvas.setFocusTraversable(true);
             System.out.println("Canvas configurado como focusTraversable");
-            
-            // Cargar la imagen de fondo
+              // Cargar la imagen de fondo
             loadBackgroundImage();
+            
+            // Cargar imágenes de corazones
+            loadHeartImages();
             
             // Iniciar la música de fondo
             playBackgroundMusic();
@@ -174,8 +202,7 @@ public class GameController {
             e.printStackTrace();
         }
     }
-    
-    private void update() {
+      private void update() {
         try {
             // Actualizar el jugador
             player.update(FLOOR_Y);
@@ -186,12 +213,21 @@ public class GameController {
             } else if (player.getX() > GAME_WIDTH - player.getWidth()) {
                 player.setPosition(GAME_WIDTH - player.getWidth(), player.getY());
             }
+            
+            // Generar nuevas manzanas
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastAppleSpawnTime > APPLE_SPAWN_INTERVAL) {
+                spawnApple();
+                lastAppleSpawnTime = currentTime;
+            }
+            
+            // Actualizar manzanas y comprobar colisiones
+            updateApples();
         } catch (Exception e) {
             System.err.println("Error al actualizar el juego: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-      private void render() {
+    }    private void render() {
         try {
             // Limpiar el canvas
             gc.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -209,8 +245,20 @@ public class GameController {
             gc.setFill(Color.SADDLEBROWN);
             gc.fillRect(0, FLOOR_Y, GAME_WIDTH, GAME_HEIGHT - FLOOR_Y);
             
+            // Dibujar las manzanas
+            for (Apple apple : apples) {
+                if (apple.isActive()) {
+                    apple.render(gc);
+                }
+            }
+            
             // Dibujar el jugador
             player.render(gc);
+              // Dibujar barra de puntuación
+            drawScoreBar();
+            
+            // Dibujar vidas
+            drawLives();
             
             // Si el juego está pausado, mostrar mensaje
             if (isPaused) {
@@ -225,21 +273,34 @@ public class GameController {
                 gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 50);
                 gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 90);
             }
-            
-            // Si el juego terminó, mostrar mensaje
+              // Si el juego terminó, mostrar mensaje
             if (gameOver) {
-                gc.setFill(new Color(0, 0, 0, 0.5));
+                gc.setFill(new Color(0, 0, 0, 0.7));
                 gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
                 
                 gc.setFill(Color.RED);
                 gc.setFont(javafx.scene.text.Font.font(48));
-                gc.fillText("GAME OVER", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2);
-            }
-              // Mostrar instrucciones
+                gc.fillText("GAME OVER", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 - 50);
+                
+                // Mostrar puntuación final
+                gc.setFill(Color.WHITE);
+                gc.setFont(javafx.scene.text.Font.font(32));
+                gc.fillText("Puntuación final: " + score, GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 20);
+                
+                // Instrucciones para volver a jugar
+                gc.setFont(javafx.scene.text.Font.font(24));
+                gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 80);
+            }              // Mostrar instrucciones
             gc.setFill(Color.WHITE);
             gc.setFont(javafx.scene.text.Font.font(14));
             gc.fillText("Controles: Flechas o WASD para mover, ESC para pausar", 20, 30);
-            gc.fillText("BACKSPACE para volver al menú principal", 20, 50);
+            gc.fillText("Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)", 20, 50);
+            gc.fillText("¡Cuidado! Perderás una vida si:", 20, 70);
+            gc.fillText("- Dejas caer una manzana roja", 40, 90);
+            gc.fillText("- Atrapas una manzana verde", 40, 110);
+            
+            // Dibujar sistema de vidas
+            drawLives();
             
         } catch (Exception e) {
             System.err.println("Error al renderizar el juego: " + e.getMessage());
@@ -364,6 +425,213 @@ public class GameController {
         } catch (Exception e) {
             System.err.println("Error al reproducir la música: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Genera una nueva manzana en una posición aleatoria en la parte superior de la pantalla
+     */
+    private void spawnApple() {
+        try {
+            // Posición X aleatoria (dejando margen en los bordes)
+            double x = 50 + random.nextDouble() * (GAME_WIDTH - 100);
+            
+            // Posición Y en la parte superior
+            double y = -50;
+            
+            // Velocidad aleatoria
+            double speed = MIN_APPLE_SPEED + random.nextDouble() * (MAX_APPLE_SPEED - MIN_APPLE_SPEED);
+            
+            // 70% de probabilidad de que sea manzana roja, 30% de que sea verde
+            boolean isRed = random.nextDouble() < 0.7;
+            
+            // Crear la manzana y añadirla a la lista
+            Apple apple = new Apple(x, y, isRed, speed);
+            apples.add(apple);
+            
+            System.out.println("Generada manzana " + (isRed ? "roja" : "verde") + " en (" + x + ", " + y + ") con velocidad " + speed);
+        } catch (Exception e) {
+            System.err.println("Error al generar manzana: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Actualiza todas las manzanas, comprobando colisiones y si han llegado al suelo
+     */
+    private void updateApples() {
+        try {
+            // Lista para guardar las manzanas que hay que eliminar
+            List<Apple> applesToRemove = new ArrayList<>();
+            
+            // Actualizar cada manzana
+            for (Apple apple : apples) {
+                if (!apple.isActive()) {
+                    applesToRemove.add(apple);
+                    continue;
+                }
+                
+                // Actualizar posición
+                apple.update();
+                
+                // Comprobar si ha colisionado con el jugador
+                if (apple.checkCollision(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {                    // Actualizar puntuación según el tipo de manzana
+                    if (apple.isRed()) {
+                        score += RED_APPLE_POINTS;
+                        System.out.println("¡Manzana roja recogida! Puntos: +" + RED_APPLE_POINTS);
+                    } else {
+                        score += GREEN_APPLE_POINTS;
+                        System.out.println("¡Manzana verde recogida! Puntos: " + GREEN_APPLE_POINTS);
+                        // Perder una vida por atrapar manzana verde
+                        loseLife("Has atrapado una manzana verde");
+                    }
+                    
+                    // Desactivar la manzana para que se elimine
+                    apple.deactivate();
+                    applesToRemove.add(apple);
+                }
+                // Comprobar si ha llegado al suelo
+                else if (apple.hasReachedFloor(FLOOR_Y)) {                    // Si era roja y cayó al suelo, penalizar
+                    if (apple.isRed()) {
+                        score += MISSED_APPLE_POINTS;
+                        System.out.println("Manzana roja perdida. Puntos: " + MISSED_APPLE_POINTS);
+                        // Perder una vida por dejar caer una manzana roja
+                        loseLife("Has dejado caer una manzana roja");
+                    }
+                    
+                    // Desactivar la manzana para que se elimine
+                    apple.deactivate();
+                    applesToRemove.add(apple);
+                }
+            }
+            
+            // Eliminar las manzanas que ya no están activas
+            apples.removeAll(applesToRemove);
+            
+        } catch (Exception e) {
+            System.err.println("Error al actualizar manzanas: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Dibuja la barra de puntuación en la parte superior de la pantalla
+     */
+    private void drawScoreBar() {
+        try {
+            // Dibujar un fondo semitransparente para la barra de puntuación
+            gc.setFill(new Color(0, 0, 0, 0.5));
+            gc.fillRect(GAME_WIDTH - 250, 10, 230, 70);
+            
+            // Dibujar el texto de la puntuación
+            gc.setFill(Color.WHITE);
+            gc.setFont(javafx.scene.text.Font.font(24));
+            gc.fillText("PUNTUACIÓN: " + score, GAME_WIDTH - 230, 40);
+            
+            // Texto explicativo
+            gc.setFont(javafx.scene.text.Font.font(12));
+            gc.fillText("Manzana roja: +" + RED_APPLE_POINTS + " pts", GAME_WIDTH - 230, 60);
+            gc.fillText("Manzana verde: " + GREEN_APPLE_POINTS + " pts", GAME_WIDTH - 230, 75);
+            
+        } catch (Exception e) {
+            System.err.println("Error al dibujar la barra de puntuación: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Dibuja los corazones que representan las vidas del jugador
+     */
+    private void drawLives() {
+        try {
+            if (heartImage == null || emptyHeartImage == null) {
+                return;
+            }
+            
+            // Tamaño de cada corazón
+            int heartSize = 30;
+            // Espacio entre corazones
+            int heartSpacing = 10;
+            // Posición inicial X
+            int startX = 20;
+            // Posición Y
+            int heartY = 100;
+            
+            // Dibujar fondo para los corazones
+            gc.setFill(new Color(0, 0, 0, 0.5));
+            gc.fillRect(startX - 10, heartY - 10, (MAX_LIVES * (heartSize + heartSpacing)) + 10, heartSize + 20);
+            
+            // Dibujar texto "VIDAS"
+            gc.setFill(Color.WHITE);
+            gc.setFont(javafx.scene.text.Font.font(16));
+            gc.fillText("VIDAS:", startX, heartY - 15);
+            
+            // Dibujar cada corazón
+            for (int i = 0; i < MAX_LIVES; i++) {
+                int x = startX + (i * (heartSize + heartSpacing));
+                
+                if (i < lives) {
+                    // Dibujar corazón lleno
+                    gc.drawImage(heartImage, x, heartY, heartSize, heartSize);
+                } else {
+                    // Dibujar corazón vacío
+                    gc.drawImage(emptyHeartImage, x, heartY, heartSize, heartSize);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al dibujar vidas: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Carga las imágenes de corazones para el sistema de vidas
+     */
+    private void loadHeartImages() {
+        try {
+            // Intentar cargar las imágenes de corazones
+            String heartPath = "src/recursos/sprites/corazon_lleno.png";
+            String emptyHeartPath = "src/recursos/sprites/corazon_vacio.png";
+            
+            File heartFile = new File(heartPath);
+            File emptyHeartFile = new File(emptyHeartPath);
+            
+            if (heartFile.exists() && emptyHeartFile.exists()) {
+                // Cargar desde archivos
+                heartImage = new Image(new FileInputStream(heartFile));
+                emptyHeartImage = new Image(new FileInputStream(emptyHeartFile));
+                System.out.println("Imágenes de corazones cargadas correctamente");
+            } else {
+                // Crear imágenes predeterminadas en caso de que no existan los archivos
+                // Corazón lleno (rojo)
+                heartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwklEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
+                // Corazón vacío (gris)
+                emptyHeartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwElEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
+                System.out.println("Utilizando imágenes de corazones predeterminadas");
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar imágenes de corazones: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Crear imágenes predeterminadas en caso de error
+            heartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwklEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
+            emptyHeartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwElEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
+        }
+    }
+      /**
+     * Reduce una vida del jugador y verifica si el juego ha terminado
+     * @param reason Motivo por el que perdió la vida
+     */
+    private void loseLife(String reason) {
+        if (lives > 0) {
+            lives--;
+            System.out.println("¡Has perdido una vida! Motivo: " + reason + ". Vidas restantes: " + lives);
+            
+            // Si se quedó sin vidas, terminar el juego
+            if (lives <= 0) {
+                gameOver = true;
+                System.out.println("GAME OVER: Te has quedado sin vidas");
+            }
         }
     }
 }
