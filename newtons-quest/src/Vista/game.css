@@ -1,6 +1,6 @@
 /* Estilos para la pantalla de juego */
 .game-background {
-    -fx-background-color: #87CEEB; /* Color celeste para el cielo */
+    -fx-background-color: #87CEEB;
 }
 
 .game-over-text {
