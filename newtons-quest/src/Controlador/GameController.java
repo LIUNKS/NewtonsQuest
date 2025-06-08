@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -17,6 +19,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -38,10 +41,10 @@ public class GameController {
     
     // Posición del suelo
     private final int FLOOR_Y = 600;
-    
-    // Estado del juego
+      // Estado del juego
     private boolean isPaused = false;
     private boolean gameOver = false;
+    private boolean minimalUI = true; // Interfaz minimalista por defecto
     
     // Teclas presionadas
     private boolean leftKeyPressed = false;
@@ -179,9 +182,12 @@ public class GameController {
                             player.moveRight(true);
                             System.out.println("Moviendo a la derecha");
                         } else if (code == KeyCode.ESCAPE) {
-                            togglePause();
-                        } else if (code == KeyCode.BACK_SPACE) {
+                            togglePause();                        } else if (code == KeyCode.BACK_SPACE) {
                             returnToMainMenu();
+                        } else if (code == KeyCode.M) {
+                            // Alternar entre interfaz minimalista y completa
+                            minimalUI = !minimalUI;
+                            System.out.println("Interfaz cambiada a modo " + (minimalUI ? "minimalista" : "completo"));
                         } else if (code.isDigitKey()) {
                             // Obtener el número de la tecla presionada (1-5)
                             int formulaNumber = Integer.parseInt(code.getName()) - 1;
@@ -318,14 +324,91 @@ public class GameController {
                     apple.render(gc);
                 }
             }
-            
-            // Dibujar el jugador
+              // Dibujar el jugador
             if (player != null) {
                 player.render(gc);
             } else {
                 System.err.println("ERROR: Player es null en GameController.render()");
             }
             
+            // Dibujar elementos de la interfaz según el modo
+            if (minimalUI && !isPaused && !gameOver) {
+                // Interfaz minimalista: solo lo esencial
+                drawMinimalUI();
+            } else {
+                // Interfaz completa
+                drawCompleteUI();
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error al renderizar el juego: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Dibuja solo los elementos esenciales de la interfaz (modo minimalista)
+     */
+    private void drawMinimalUI() {
+        try {
+            // Mostrar solo la puntuación en la esquina superior derecha (sin fondo)
+            gc.setFill(Color.WHITE);
+            gc.setFont(javafx.scene.text.Font.font(24));
+            gc.fillText(score + "", GAME_WIDTH - 70, 30);            // Dibujar vidas como corazones simples en la esquina superior izquierda (sin fondo)
+            if (heartImage != null && emptyHeartImage != null) {
+                int heartSize = 20; // Tamaño reducido
+                int heartSpacing = 3; // Espacio reducido
+                
+                // Calcular el ancho total que ocuparían todos los corazones
+                int totalWidth = (MAX_LIVES * (heartSize + heartSpacing));
+                
+                // Si el ancho es mayor que un tercio de la pantalla, redimensionar
+                if (totalWidth > GAME_WIDTH / 3) {
+                    heartSize = Math.max(12, (GAME_WIDTH / 3) / MAX_LIVES - heartSpacing);
+                    totalWidth = (MAX_LIVES * (heartSize + heartSpacing));
+                }
+                
+                // Asegurarse de que los corazones no se salgan de la pantalla
+                int startX = Math.min(10, GAME_WIDTH - totalWidth - 5);
+                
+                for (int i = 0; i < MAX_LIVES; i++) {
+                    int x = startX + (i * (heartSize + heartSpacing));
+                    
+                    if (i < lives) {
+                        // Corazón lleno
+                        gc.drawImage(heartImage, x, 10, heartSize, heartSize);
+                    } else {
+                        // Corazón vacío
+                        gc.drawImage(emptyHeartImage, x, 10, heartSize, heartSize);
+                    }
+                }
+            }
+            
+            // Si se acaba de desbloquear una fórmula, mostrar el efecto
+            if (showingUnlockEffect) {
+                drawUnlockPopup();
+            }
+            
+            // Pequeño indicador de nivel en la esquina inferior
+            gc.setFill(new Color(1, 1, 1, 0.7));
+            gc.setFont(javafx.scene.text.Font.font(16));
+            gc.fillText("Nivel " + (level + 1), 10, GAME_HEIGHT - 10);
+            
+            // Pequeño indicador de modo minimalista
+            gc.setFill(new Color(1, 1, 1, 0.7));
+            gc.setFont(javafx.scene.text.Font.font(12));
+            gc.fillText("Presiona M para mostrar más detalles", GAME_WIDTH - 200, GAME_HEIGHT - 10);
+            
+        } catch (Exception e) {
+            System.err.println("Error al dibujar UI minimalista: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+      /**
+     * Dibuja todos los elementos de la interfaz (modo completo)
+     */
+    private void drawCompleteUI() {
+        try {
             // Dibujar barra de puntuación
             drawScoreBar();
             
@@ -341,7 +424,9 @@ public class GameController {
                 gc.setFont(javafx.scene.text.Font.font(24));
                 gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 50);
                 gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 90);
-            }            // Si el juego terminó, mostrar mensaje
+            }
+            
+            // Si el juego terminó, mostrar mensaje
             if (gameOver) {
                 gc.setFill(new Color(0, 0, 0, 0.85));
                 gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -422,26 +507,33 @@ public class GameController {
                 gc.setFill(Color.WHITE);
                 gc.setFont(javafx.scene.text.Font.font(24));
                 gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
-            }            // Mostrar instrucciones
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(14));
-            gc.fillText("Controles: Flechas o WASD para mover, ESC para pausar", 20, 30);
-            gc.fillText("Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)", 20, 50);
-            gc.fillText("¡Cuidado! Perderás una vida si:", 20, 70);
-            gc.fillText("- Dejas caer una manzana roja", 40, 90);
-            gc.fillText("- Atrapas una manzana verde", 40, 110);
-            
-            // Dibujar sistema de vidas
-            drawLives();
-            
-            // Dibujar nivel y fórmula actual
-            drawLevelAndFormula();
-            
-            // Dibujar panel de fórmulas
-            drawFormulasPanel();
-            
+            } else {                // Mostrar instrucciones en modo no minimalista
+                gc.setFill(new Color(0, 0, 0, 0.7)); // Fondo para instrucciones
+                gc.fillRect(15, 15, 400, 135);
+                gc.setStroke(new Color(1, 1, 1, 0.4));
+                gc.setLineWidth(2);
+                gc.strokeRect(15, 15, 400, 135);
+                
+                gc.setFill(Color.WHITE);
+                gc.setFont(javafx.scene.text.Font.font(14));
+                gc.fillText("Controles: Flechas o WASD para mover, ESC para pausar", 20, 35);
+                gc.fillText("Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)", 20, 55);
+                gc.fillText("¡Cuidado! Perderás una vida si:", 20, 75);
+                gc.fillText("- Dejas caer una manzana roja", 40, 95);
+                gc.fillText("- Atrapas una manzana verde", 40, 115);
+                gc.fillText("Presiona M para alternar entre interfaz minimalista/completa", 20, 135);
+                
+                // Dibujar sistema de vidas
+                drawLives();
+                
+                // Dibujar nivel y fórmula actual
+                drawLevelAndFormula();
+                
+                // Dibujar panel de fórmulas
+                drawFormulasPanel();
+            }
         } catch (Exception e) {
-            System.err.println("Error al renderizar el juego: " + e.getMessage());
+            System.err.println("Error al dibujar UI completa: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -661,22 +753,26 @@ public class GameController {
     
     /**
      * Dibuja la barra de puntuación en la parte superior de la pantalla
-     */
-    private void drawScoreBar() {
+     */    private void drawScoreBar() {
         try {
             // Dibujar un fondo semitransparente para la barra de puntuación
-            gc.setFill(new Color(0, 0, 0, 0.5));
-            gc.fillRect(GAME_WIDTH - 250, 10, 230, 70);
+            // Reubicada más abajo y ajustada al contorno de la pantalla
+            gc.setFill(new Color(0, 0, 0, 0.7)); // Aumentamos la opacidad para mejor visibilidad
+            gc.fillRect(GAME_WIDTH - 250, 70, 240, 80); // Movido más abajo para asegurar visibilidad completa
             
-            // Dibujar el texto de la puntuación
+            // Borde para mejorar visibilidad
+            gc.setStroke(new Color(1, 1, 1, 0.4));
+            gc.setLineWidth(2);
+            gc.strokeRect(GAME_WIDTH - 250, 70, 240, 80);
+              // Dibujar el texto de la puntuación
             gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(24));
-            gc.fillText("PUNTUACIÓN: " + score, GAME_WIDTH - 230, 40);
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
+            gc.fillText("PUNTUACIÓN: " + score, GAME_WIDTH - 230, 105);
             
-            // Texto explicativo
-            gc.setFont(javafx.scene.text.Font.font(12));
-            gc.fillText("Manzana roja: +" + RED_APPLE_POINTS + " pts", GAME_WIDTH - 230, 60);
-            gc.fillText("Manzana verde: " + GREEN_APPLE_POINTS + " pts", GAME_WIDTH - 230, 75);
+            // Texto explicativo con mejor espaciado
+            gc.setFont(javafx.scene.text.Font.font("Arial", 14)); // Aumentamos tamaño de fuente
+            gc.fillText("Manzana roja: +" + RED_APPLE_POINTS + " pts", GAME_WIDTH - 230, 130);
+            gc.fillText("Manzana verde: " + GREEN_APPLE_POINTS + " pts", GAME_WIDTH - 230, 145);
             
         } catch (Exception e) {
             System.err.println("Error al dibujar la barra de puntuación: " + e.getMessage());
@@ -692,23 +788,36 @@ public class GameController {
             if (heartImage == null || emptyHeartImage == null) {
                 return;
             }
-            
             // Tamaño de cada corazón
-            int heartSize = 30;
+            int heartSize = 32; // Ligeramente más grande
             // Espacio entre corazones
             int heartSpacing = 10;
-            // Posición inicial X
+            
+            // Calcular el ancho total que ocuparían todos los corazones
+            int totalWidth = (MAX_LIVES * (heartSize + heartSpacing)) + 20; // +20 para margen
+            
+            // Si el ancho es mayor que un tercio de la pantalla, redimensionar
+            if (totalWidth > GAME_WIDTH / 3) {
+                heartSize = Math.max(18, (GAME_WIDTH / 3 - 20) / MAX_LIVES - heartSpacing);
+                totalWidth = (MAX_LIVES * (heartSize + heartSpacing)) + 20;
+            }
+              // Posición inicial X
             int startX = 20;
-            // Posición Y
-            int heartY = 100;
+            // Posición Y - reubicada más abajo y ajustada al contorno
+            int heartY = 180; // Movido significativamente más abajo para asegurar visibilidad completa
             
             // Dibujar fondo para los corazones
-            gc.setFill(new Color(0, 0, 0, 0.5));
-            gc.fillRect(startX - 10, heartY - 10, (MAX_LIVES * (heartSize + heartSpacing)) + 10, heartSize + 20);
+            gc.setFill(new Color(0, 0, 0, 0.7)); // Aumentamos opacidad para mejor visibilidad
+            int backgroundWidth = Math.min((MAX_LIVES * (heartSize + heartSpacing)) + 10, GAME_WIDTH - 40);
+            gc.fillRect(startX - 10, heartY - 10, backgroundWidth, heartSize + 20);
             
-            // Dibujar texto "VIDAS"
+            // Borde para mejorar visibilidad
+            gc.setStroke(new Color(1, 1, 1, 0.4));
+            gc.setLineWidth(2);
+            gc.strokeRect(startX - 10, heartY - 10, backgroundWidth, heartSize + 20);
+              // Dibujar texto "VIDAS"
             gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(16));
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18)); // Mejor tipografía
             gc.fillText("VIDAS:", startX, heartY - 15);
             
             // Dibujar cada corazón
@@ -761,8 +870,7 @@ public class GameController {
             heartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwklEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
             emptyHeartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwElEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
         }
-    }
-      /**
+    }      /**
      * Reduce una vida del jugador y verifica si el juego ha terminado
      * @param reason Motivo por el que perdió la vida
      */    private void loseLife(String reason) {
@@ -775,20 +883,18 @@ public class GameController {
                 gameOver = true;
                 // Activar el sprite de game over
                 player.setDead(true);
-                // Centrar al jugador en la pantalla para la escena de game over
-                player.setPosition(GAME_WIDTH / 2 - 48, player.getY());
+                // Ya no centramos al jugador, se queda donde perdió
                 System.out.println("GAME OVER: Te has quedado sin vidas");
             }
         }
     }
       /**
      * Dibuja el nivel actual y la fórmula correspondiente en la parte superior derecha de la pantalla
-     */
-    private void drawLevelAndFormula() {
+     */    private void drawLevelAndFormula() {
         try {
-            // Posición y tamaño del panel del nivel
+            // Posición y tamaño del panel del nivel - ajustado para evitar solapamiento
             int levelPanelX = GAME_WIDTH - 300;
-            int levelPanelY = 10;
+            int levelPanelY = 160; // Movido más abajo para evitar solapamiento con la barra de puntuación
             int levelPanelWidth = 290;
             int levelPanelHeight = 100;
             
@@ -797,18 +903,17 @@ public class GameController {
             gc.fillRect(levelPanelX, levelPanelY, levelPanelWidth, levelPanelHeight);
             
             // Dibujar borde del panel
-            gc.setStroke(Color.WHITE);
+            gc.setStroke(new Color(1, 1, 1, 0.4));
             gc.setLineWidth(2);
             gc.strokeRect(levelPanelX, levelPanelY, levelPanelWidth, levelPanelHeight);
-            
-            // Dibujar el nivel actual
+              // Dibujar el nivel actual
             gc.setFill(Color.YELLOW);
-            gc.setFont(javafx.scene.text.Font.font(24));
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
             gc.fillText("Nivel: " + (level + 1), levelPanelX + 10, levelPanelY + 30);
             
             // Dibujar la fórmula correspondiente al nivel
             gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(18));
+            gc.setFont(javafx.scene.text.Font.font("Arial", 18));
             String formula = FORMULAS_SHORT[level];
             gc.fillText("Fórmula: " + formula, levelPanelX + 10, levelPanelY + 60);
             
@@ -1002,38 +1107,73 @@ public class GameController {
             e.printStackTrace();
         }
     }
-    
-    /**
-     * Divide una descripción larga en múltiples líneas
+      /**
+     * Divide un texto en múltiples líneas sin exceder un máximo de caracteres por línea
      * @param text Texto a dividir
      * @param maxCharsPerLine Máximo número de caracteres por línea
      * @return Lista de líneas
      */
     private List<String> splitDescription(String text, int maxCharsPerLine) {
         List<String> lines = new ArrayList<>();
-        String[] words = text.split(" ");
-        StringBuilder currentLine = new StringBuilder();
         
-        for (String word : words) {
-            if (currentLine.length() + word.length() + 1 <= maxCharsPerLine) {
-                if (currentLine.length() > 0) {
-                    currentLine.append(" ");
-                }
-                currentLine.append(word);
-            } else {
-                lines.add(currentLine.toString());
-                currentLine = new StringBuilder(word);
+        // Detectar saltos de línea explícitos y respetarlos
+        String[] paragraphs = text.split("\n");
+        for (String paragraph : paragraphs) {
+            // Si es un párrafo vacío (doble salto de línea), agregar una línea vacía
+            if (paragraph.trim().isEmpty()) {
+                lines.add("");
+                continue;
             }
-        }
-        
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString());
+            
+            String[] words = paragraph.split(" ");
+            StringBuilder currentLine = new StringBuilder();
+            
+            for (String word : words) {
+                // Tratar con símbolos especiales que podrían causar problemas (como fórmulas)
+                if (word.contains("×") || word.contains("²") || word.contains("≈")) {
+                    word = word.replace("×", " × ").replace("²", " ² ").replace("≈", " ≈ ");
+                    word = word.trim();
+                }
+                
+                // Si la palabra es más larga que el máximo permitido, dividirla
+                if (word.length() > maxCharsPerLine - 2) {
+                    // Si la línea actual tiene contenido, añadirla primero
+                    if (currentLine.length() > 0) {
+                        lines.add(currentLine.toString());
+                        currentLine = new StringBuilder();
+                    }
+                    
+                    // Dividir la palabra larga en fragmentos
+                    int startIndex = 0;
+                    while (startIndex < word.length()) {
+                        int endIndex = Math.min(startIndex + maxCharsPerLine - 2, word.length());
+                        String fragment = word.substring(startIndex, endIndex);
+                        lines.add(fragment);
+                        startIndex = endIndex;
+                    }
+                } 
+                // Proceso normal para palabras que caben en una línea
+                else if (currentLine.length() + word.length() + 1 <= maxCharsPerLine - 2) {
+                    if (currentLine.length() > 0) {
+                        currentLine.append(" ");
+                    }
+                    currentLine.append(word);
+                } else {
+                    // La palabra no cabe, comenzar nueva línea
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(word);
+                }
+            }
+            
+            // Agregar la última línea del párrafo si tiene contenido
+            if (currentLine.length() > 0) {
+                lines.add(currentLine.toString());
+            }
         }
         
         return lines;
     }
-    
-    /**
+      /**
      * Dibuja un popup cuando se desbloquea una nueva fórmula
      */
     private void drawUnlockPopup() {
@@ -1052,43 +1192,70 @@ public class GameController {
                 opacity = Math.max(0.0, Math.min(1.0, opacity));
             }
             
-            // Dimensiones y posición del popup
-            int popupWidth = 500;
-            int popupHeight = 200;
-            int popupX = (GAME_WIDTH - popupWidth) / 2;
-            int popupY = (GAME_HEIGHT - popupHeight) / 2;
-            
-            // Dibujar fondo del popup
-            gc.setFill(new Color(0.0, 0.0, 0.0, 0.85 * opacity));
-            gc.fillRect(popupX - 5, popupY - 5, popupWidth + 10, popupHeight + 10);
-            
-            // Borde dorado
-            gc.setStroke(new Color(1.0, 0.84, 0.0, opacity));
-            gc.setLineWidth(5);
-            gc.strokeRect(popupX, popupY, popupWidth, popupHeight);
-            
-            // Título del popup
-            gc.setFill(new Color(1.0, 1.0, 0.0, opacity));
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 28));
-            gc.fillText("¡NUEVA FÓRMULA DESBLOQUEADA!", popupX + 25, popupY + 40);
-            
-            // Dibujar la fórmula
-            gc.setFill(new Color(1.0, 1.0, 1.0, opacity));
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-            gc.fillText(FORMULAS[unlockedFormulaIndex], popupX + 25, popupY + 85);
-            
-            // Dibujar la descripción
-            gc.setFill(new Color(0.9, 0.9, 0.9, opacity));
-            gc.setFont(javafx.scene.text.Font.font("Arial", 16));
-            
-            // Dividir la descripción en múltiples líneas
-            String description = FORMULAS_DESCRIPTIONS[unlockedFormulaIndex];
-            List<String> lines = splitDescription(description, 60);
-            
-            for (int i = 0; i < lines.size(); i++) {
-                gc.fillText(lines.get(i), popupX + 25, popupY + 120 + (i * 20));
+            // En modo minimalista, hacer el popup más pequeño y centrado
+            if (minimalUI) {
+                // Dimensiones y posición del popup minimalista
+                int popupWidth = 450; // Aumentamos un poco el ancho
+                int popupHeight = 120; // Aumentamos un poco el alto
+                int popupX = (GAME_WIDTH - popupWidth) / 2;
+                int popupY = (GAME_HEIGHT / 3) - (popupHeight / 2);
+                
+                // Dibujar fondo del popup
+                gc.setFill(new Color(0.0, 0.0, 0.0, 0.85 * opacity));
+                gc.fillRect(popupX, popupY, popupWidth, popupHeight);
+                
+                // Borde dorado
+                gc.setStroke(new Color(1.0, 0.84, 0.0, opacity));
+                gc.setLineWidth(3);
+                gc.strokeRect(popupX, popupY, popupWidth, popupHeight);
+                
+                // Título y fórmula (en formato compacto)
+                gc.setFill(new Color(1.0, 1.0, 0.0, opacity));
+                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20)); // Aumentamos el tamaño
+                gc.fillText("¡NUEVA FÓRMULA! " + FORMULAS_SHORT[unlockedFormulaIndex], popupX + 20, popupY + 45); // Ajustamos posición
+                
+                // Instrucción para ver detalles
+                gc.setFill(new Color(1.0, 1.0, 1.0, opacity));
+                gc.setFont(javafx.scene.text.Font.font("Arial", 16)); // Aumentamos el tamaño
+                gc.fillText("Presiona " + (unlockedFormulaIndex + 1) + " para ver detalles", popupX + 20, popupY + 80); // Ajustamos posición
+            } else {
+                // Dimensiones y posición del popup completo
+                int popupWidth = 500;
+                int popupHeight = 200;
+                int popupX = (GAME_WIDTH - popupWidth) / 2;
+                int popupY = (GAME_HEIGHT - popupHeight) / 2;
+                
+                // Dibujar fondo del popup
+                gc.setFill(new Color(0.0, 0.0, 0.0, 0.85 * opacity));
+                gc.fillRect(popupX - 5, popupY - 5, popupWidth + 10, popupHeight + 10);
+                
+                // Borde dorado
+                gc.setStroke(new Color(1.0, 0.84, 0.0, opacity));
+                gc.setLineWidth(5);
+                gc.strokeRect(popupX, popupY, popupWidth, popupHeight);
+                
+                // Título del popup
+                gc.setFill(new Color(1.0, 1.0, 0.0, opacity));
+                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 28));
+                gc.fillText("¡NUEVA FÓRMULA DESBLOQUEADA!", popupX + 25, popupY + 40);
+                
+                // Dibujar la fórmula
+                gc.setFill(new Color(1.0, 1.0, 1.0, opacity));
+                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
+                gc.fillText(FORMULAS[unlockedFormulaIndex], popupX + 25, popupY + 85);
+                
+                // Dibujar la descripción
+                gc.setFill(new Color(0.9, 0.9, 0.9, opacity));
+                gc.setFont(javafx.scene.text.Font.font("Arial", 16));
+                
+                // Dividir la descripción en múltiples líneas
+                String description = FORMULAS_DESCRIPTIONS[unlockedFormulaIndex];
+                List<String> lines = splitDescription(description, 60);
+                
+                for (int i = 0; i < lines.size(); i++) {
+                    gc.fillText(lines.get(i), popupX + 25, popupY + 120 + (i * 20));
+                }
             }
-            
         } catch (Exception e) {
             System.err.println("Error al dibujar popup de desbloqueo: " + e.getMessage());
             e.printStackTrace();
@@ -1132,7 +1299,7 @@ public class GameController {
             };
             
             // Dibujar el fondo semi-transparente para toda la pantalla
-            gc.setFill(new Color(0, 0, 0, 0.9));
+            gc.setFill(new Color(0, 0, 0, 0.85));
             gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             
             // Dibujar el panel de información
@@ -1141,8 +1308,18 @@ public class GameController {
             int panelWidth = GAME_WIDTH - 100;
             int panelHeight = GAME_HEIGHT - 100;
             
+            // Asegurarse de que el panel no sea demasiado grande para la pantalla
+            if (panelWidth > GAME_WIDTH - 20) {
+                panelWidth = GAME_WIDTH - 20;
+                panelX = 10;
+            }
+            if (panelHeight > GAME_HEIGHT - 20) {
+                panelHeight = GAME_HEIGHT - 20;
+                panelY = 10;
+            }
+            
             // Fondo del panel con degradado
-            gc.setFill(new Color(0.1, 0.1, 0.2, 0.95));
+            gc.setFill(new Color(0.12, 0.12, 0.22, 0.95));
             gc.fillRect(panelX, panelY, panelWidth, panelHeight);
             
             // Borde del panel
@@ -1156,63 +1333,173 @@ public class GameController {
             gc.fillText(FORMULAS_SHORT[formulaIndex], panelX + 30, panelY + 50);
             
             // Descripción completa
-            gc.setFont(javafx.scene.text.Font.font("Arial", 18));
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
             gc.setFill(Color.WHITE);
             gc.fillText(FORMULAS[formulaIndex], panelX + 30, panelY + 90);
             
             // Separador
-            gc.setStroke(Color.GRAY);
-            gc.setLineWidth(1);
+            gc.setStroke(new Color(0.5, 0.5, 0.8, 0.6));
+            gc.setLineWidth(2);
             gc.strokeLine(panelX + 30, panelY + 110, panelX + panelWidth - 30, panelY + 110);
             
+            // Título para la información extendida
+            gc.setFill(new Color(0.7, 0.7, 1.0, 1.0));
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
+            gc.fillText("Explicación:", panelX + 30, panelY + 140);
+            
             // Información extendida
-            gc.setFill(Color.LIGHTGRAY);
+            gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
             gc.setFont(javafx.scene.text.Font.font("Arial", 16));
+              // Calcular cuántos caracteres caben en el ancho del panel - más conservador para evitar problemas
+            int maxCharsPerLine = Math.max(50, (panelWidth - 100) / 9); // Más espacio por carácter (9px) para mejor legibilidad
             
             // Dividir la información extendida en líneas
-            List<String> infoLines = splitDescription(EXTENDED_INFO[formulaIndex], 85);
-            for (int i = 0; i < infoLines.size(); i++) {
-                gc.fillText(infoLines.get(i), panelX + 30, panelY + 140 + (i * 22));
+            List<String> infoLines = splitDescription(EXTENDED_INFO[formulaIndex], maxCharsPerLine);
+            
+            // Contar líneas que contienen símbolos especiales para ajustar altura
+            int specialLines = 0;
+            for (String line : infoLines) {
+                if (line.contains("×") || line.contains("²") || line.contains("≈") || 
+                    line.contains("m/s") || line.contains("g")) {
+                    specialLines++;
+                }
             }
             
-            // Título para aplicaciones prácticas
-            int applicationsY = panelY + 140 + (infoLines.size() * 22) + 20;
-            gc.setFill(Color.GOLD);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
-            gc.fillText("Aplicaciones prácticas:", panelX + 30, applicationsY);
+            // Calcular cuántas líneas podemos mostrar en el espacio disponible
+            int maxLinesForInfo = Math.min(infoLines.size(), (panelHeight - 300) / 26);
             
-            // Listar aplicaciones prácticas
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", 16));
+            // Dibujar fondo para la explicación - altura ajustada para acomodar símbolos especiales
+            gc.setFill(new Color(0.15, 0.15, 0.25, 0.7));
+            int explanationHeight = (maxLinesForInfo * 26) + (specialLines * 4) + 30; // Altura base + extra para líneas especiales
+            gc.fillRoundRect(panelX + 25, panelY + 150, panelWidth - 60, explanationHeight, 10, 10);
+              // Dibujar texto de explicación con mejor espaciado y control de superposición
+            gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
             
-            // Dividir las aplicaciones prácticas en líneas
-            List<String> appLines = splitDescription(PRACTICAL_APPLICATIONS[formulaIndex], 85);
-            for (int i = 0; i < appLines.size(); i++) {
-                gc.fillText(appLines.get(i), panelX + 30, applicationsY + 30 + (i * 22));
+            // Ajustar el espaciado vertical según el tamaño del texto
+            int lineHeight = 26; // Altura base para cada línea de texto
+            for (int i = 0; i < maxLinesForInfo; i++) {
+                String line = infoLines.get(i);
+                
+                // Espacio extra para líneas que contienen símbolos matemáticos
+                if (line.contains("×") || line.contains("²") || line.contains("≈") || 
+                    line.contains("m/s") || line.contains("m/s²")) {
+                    lineHeight = 30; // Mayor altura para fórmulas
+                } else if (line.isEmpty()) {
+                    // Tratar líneas vacías como separadores de párrafos
+                    lineHeight = 10;
+                } else {
+                    lineHeight = 26; // Altura normal para texto regular
+                }
+                
+                // Si no es una línea vacía, dibujarla
+                if (!line.isEmpty()) {
+                    gc.fillText(line, panelX + 40, panelY + 170 + (i * lineHeight));
+                }
+            }
+            
+            // Título para aplicaciones prácticas - ajustado dinámicamente
+            int applicationsY = panelY + 170 + explanationHeight + 20; // Extra padding
+            
+            // Verificar si hay espacio suficiente para mostrar aplicaciones prácticas
+            int remainingHeight = panelHeight - (applicationsY - panelY) - 80; // 80px para las instrucciones de salida
+            
+            if (remainingHeight >= 100) { // Altura mínima para título y al menos dos líneas
+                gc.setFill(new Color(0.7, 0.7, 1.0, 1.0));
+                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
+                gc.fillText("Aplicaciones prácticas:", panelX + 30, applicationsY);
+                
+                // Fondo para aplicaciones prácticas
+                gc.setFill(new Color(0.15, 0.15, 0.25, 0.7));
+                int appsHeight = Math.min(remainingHeight - 50, 150); // Altura máxima para aplicaciones
+                gc.fillRoundRect(panelX + 25, applicationsY + 10, panelWidth - 60, appsHeight, 10, 10);
+                
+                // Listar aplicaciones prácticas
+                gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
+                gc.setFont(javafx.scene.text.Font.font("Arial", 16));
+                  // Calcular caracteres por línea basado en el ancho del panel
+                int maxCharsPerLinePractical = Math.max(50, (panelWidth - 100) / 8); // Reducir máximo para seguridad
+                
+                // Dividir las aplicaciones prácticas en líneas
+                List<String> appLines = splitDescription(PRACTICAL_APPLICATIONS[formulaIndex], maxCharsPerLinePractical);
+                
+                // Calcular cuántas líneas podemos mostrar en el espacio restante
+                int maxLinesForApps = Math.min(appLines.size(), (appsHeight - 20) / 30);
+                
+                // Ajustar el espaciado vertical según contenido
+                int appLineHeight = 30;
+                for (int i = 0; i < maxLinesForApps; i++) {
+                    String line = appLines.get(i);
+                    
+                    // Aplicar sangría especial para líneas que comienzan con viñetas
+                    if (line.startsWith("•")) {
+                        gc.fillText(line, panelX + 40, applicationsY + 35 + (i * appLineHeight));
+                    } else {
+                        gc.fillText(line, panelX + 40, applicationsY + 35 + (i * appLineHeight));
+                    }
+                }
             }
             
             // Instrucciones para cerrar
             gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", 18));
-            gc.fillText("Presiona ESCAPE para volver al juego", panelX + (panelWidth / 2) - 150, panelY + panelHeight - 30);
+            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18));
+            
+            // Centrar texto horizontalmente y colocarlo en la parte inferior del panel
+            String closeText = "Presiona ESCAPE para volver al juego";
+            double textWidth = closeText.length() * 10; // Aproximación del ancho del texto
+            double textX = panelX + (panelWidth / 2) - (textWidth / 2);
+            double textY = panelY + panelHeight - 30;
+            
+            // Fondo para el texto de cierre
+            gc.setFill(new Color(0.2, 0.2, 0.3, 0.8));
+            gc.fillRoundRect(textX - 20, textY - 20, textWidth + 40, 30, 15, 15);
+            
+            // Texto de cierre
+            gc.setFill(new Color(1.0, 1.0, 1.0, 0.9));
+            gc.fillText(closeText, textX, textY);
             
             // Esperar a que el usuario presione ESC para cerrar
-            gameCanvas.getScene().setOnKeyPressed(event -> {
+            Scene scene = gameCanvas.getScene();
+            EventHandler<KeyEvent> originalKeyPressedHandler = (EventHandler<KeyEvent>) scene.getOnKeyPressed();
+            EventHandler<KeyEvent> originalKeyReleasedHandler = (EventHandler<KeyEvent>) scene.getOnKeyReleased();
+            
+            // Temporalmente reemplazamos los manejadores de eventos
+            scene.setOnKeyPressed(event -> {
                 if (event.getCode() == KeyCode.ESCAPE) {
-                    // Restaurar los controles del juego
-                    setupKeyHandlers();
+                    // Restaurar los manejadores de eventos originales
+                    scene.setOnKeyPressed(originalKeyPressedHandler);
+                    scene.setOnKeyReleased(originalKeyReleasedHandler);
                     
                     // Restaurar el estado de pausa anterior
                     isPaused = wasPaused;
+                    
+                    // Forzar la actualización de los controles
+                    if (originalKeyPressedHandler != null) {
+                        Platform.runLater(() -> {
+                            System.out.println("Controles de juego restaurados correctamente");
+                        });
+                    }
                 }
             });
             
+            // Desactivamos temporalmente el manejador de liberación de teclas
+            scene.setOnKeyReleased(null);
         } catch (Exception e) {
             System.err.println("Error al mostrar detalles de fórmula: " + e.getMessage());
             e.printStackTrace();
             
             // Asegurarse de restaurar los controles del juego en caso de error
-            setupKeyHandlers();
+            isPaused = false; // Aseguramos que el juego no quede pausado
+            
+            // Restaurar los manejadores de eventos originales si es posible
+            try {
+                Scene scene = gameCanvas.getScene();
+                if (scene != null) {
+                    setupKeyHandlers(); // Restauramos los manejadores de eventos de teclado
+                    System.out.println("Controles restaurados después de error");
+                }
+            } catch (Exception ex) {
+                System.err.println("Error al restaurar controles: " + ex.getMessage());
+            }
         }
     }
 }
