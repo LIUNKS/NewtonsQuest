@@ -731,12 +731,11 @@ public class GameController {
     
     /**
      * Carga las imágenes de corazones para el sistema de vidas
-     */
-    private void loadHeartImages() {
+     */    private void loadHeartImages() {
         try {
             // Intentar cargar las imágenes de corazones
-            String heartPath = "src/recursos/sprites/corazon_lleno.png";
-            String emptyHeartPath = "src/recursos/sprites/corazon_vacio.png";
+            String heartPath = "src/recursos/sprites/corazon/corazon_lleno.png";
+            String emptyHeartPath = "src/recursos/sprites/corazon/corazon_vacio.png";
             
             File heartFile = new File(heartPath);
             File emptyHeartFile = new File(emptyHeartPath);
