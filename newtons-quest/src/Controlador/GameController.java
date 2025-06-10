@@ -1,247 +1,314 @@
 package Controlador;
 
-import Modelo.Apple;
+import Controlador.componentes.InputManager;
+import Controlador.componentes.*;
 import Modelo.Player;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+/**
+ * Controlador principal del juego.
+ * Ahora actúa como coordinador entre los diferentes componentes especializados.
+ */
 public class GameController {
     
     @FXML private Canvas gameCanvas;
     
-    private GraphicsContext gc;
-    private Player player;
-    private AnimationTimer gameLoop;
-    private MediaPlayer musicPlayer;
-    private Image backgroundImage;
-    
     // Dimensiones del juego
     private final int GAME_WIDTH = 900;
     private final int GAME_HEIGHT = 700;
-    
-    // Posición del suelo
     private final int FLOOR_Y = 600;
-      // Estado del juego
+    
+    // Componentes del juego
+    private GraphicsContext gc;
+    private Player player;
+    private AnimationTimer gameLoop;
+    
+    // Managers especializados
+    private RenderManager renderManager;
+    private InputManager inputManager;
+    private AudioManager audioManager;
+    private ResourceManager resourceManager;
+    private LevelManager levelManager;
+    private AppleManager appleManager;
+    private ScoreManager scoreManager;
+    
+    // Estado del juego
     private boolean isPaused = false;
     private boolean gameOver = false;
     private boolean minimalUI = true; // Interfaz minimalista por defecto
     
-    // Teclas presionadas
-    private boolean leftKeyPressed = false;
-    private boolean rightKeyPressed = false;
-    
-    // Sistema de manzanas
-    private List<Apple> apples = new ArrayList<>();
-    private Random random = new Random();
-    private long lastAppleSpawnTime = 0;
-    private final long APPLE_SPAWN_INTERVAL = 1500; // Intervalo entre manzanas en milisegundos
-    private final double MIN_APPLE_SPEED = 2.0;
-    private final double MAX_APPLE_SPEED = 5.0;
-    
-    // Sistema de puntuación
-    private int score = 0;
-    private final int RED_APPLE_POINTS = 10;
-    private final int GREEN_APPLE_POINTS = -5;
-    private final int MISSED_APPLE_POINTS = -3;
-    
-    // Sistema de vidas
-    private int lives = 5;
-    private final int MAX_LIVES = 5;
-    private Image heartImage;
-    private Image emptyHeartImage;
-    
-    // Sistema de niveles y fórmulas
-    private int level = 0;
-    private final int MAX_LEVEL = 5;
-    private final String[] FORMULAS = {
-        "F = m × g → Peso o fuerza gravitacional",
-        "v = g × t → Velocidad en caída libre",
-        "d = ½ × g × t² → Distancia en caída libre",
-        "U = m × g × h → Energía potencial",
-        "K = ½ × m × v² → Energía cinética"
-    };
-    private final String[] FORMULAS_SHORT = {
-        "F = m × g",
-        "v = g × t",
-        "d = ½ × g × t²",
-        "U = m × g × h",
-        "K = ½ × m × v²"
-    };
-    
-    // Descripciones extendidas para cada fórmula
-    private final String[] FORMULAS_DESCRIPTIONS = {
-        "La fuerza de gravedad (peso) es igual a la masa del objeto multiplicada por la aceleración gravitacional. En la Tierra, g ≈ 9.8 m/s².",
-        "La velocidad de un objeto en caída libre es igual a la aceleración gravitacional multiplicada por el tiempo transcurrido (ignorando la resistencia del aire).",
-        "La distancia recorrida por un objeto en caída libre es igual a la mitad de la aceleración gravitacional multiplicada por el tiempo al cuadrado.",
-        "La energía potencial gravitacional es igual a la masa del objeto multiplicada por la aceleración gravitacional y por la altura.",
-        "La energía cinética es igual a la mitad de la masa del objeto multiplicada por la velocidad al cuadrado."
-    };
-    
-    // Variables para efectos visuales de desbloqueo
-    private boolean showingUnlockEffect = false;
-    private int unlockedFormulaIndex = -1;
-    private long unlockEffectStartTime = 0;
-    private final long UNLOCK_EFFECT_DURATION = 3000; // Duración del efecto en milisegundos
-    
-    private final int[] LEVEL_THRESHOLDS = {100, 250, 450, 700, 1000};
-    private boolean[] unlockedFormulas = new boolean[MAX_LEVEL];
-    
-      public void initialize() {
+    /**
+     * Inicializa el controlador y todos los componentes del juego
+     */    public void initialize() {
         try {
             System.out.println("========== INICIALIZANDO GAMECONTROLLER ==========");
             
-            // Obtener el contexto gráfico del canvas
-            gc = gameCanvas.getGraphicsContext2D();
-            System.out.println("Contexto gráfico obtenido: " + (gc != null ? "OK" : "NULL"));
+            // Verificar si el canvas existe
+            if (gameCanvas == null) {
+                System.err.println("ADVERTENCIA: gameCanvas es null en initialize(). Se creará uno alternativo durante la inicialización de componentes.");
+                // No hacemos return aquí, seguimos adelante y crearemos el canvas en initializeComponents
+            } else {
+                // Obtener el contexto gráfico del canvas
+                gc = gameCanvas.getGraphicsContext2D();
+                System.out.println("Contexto gráfico obtenido: " + (gc != null ? "OK" : "NULL"));
+                
+                // Hacer que el canvas pueda recibir el foco
+                gameCanvas.setFocusTraversable(true);
+                System.out.println("Canvas configurado como focusTraversable");
+            }
             
-            // Hacer que el canvas pueda recibir el foco
-            gameCanvas.setFocusTraversable(true);
-            System.out.println("Canvas configurado como focusTraversable");
-              // Cargar la imagen de fondo
-            loadBackgroundImage();
+            // Inicializar todos los componentes
+            System.out.println("Iniciando inicialización de componentes...");
+            initializeComponents();
+            System.out.println("Componentes inicializados: " + 
+                              "inputManager=" + (inputManager != null ? "OK" : "NULL") + ", " +
+                              "renderManager=" + (renderManager != null ? "OK" : "NULL") + ", " +
+                              "levelManager=" + (levelManager != null ? "OK" : "NULL"));
             
-            // Cargar imágenes de corazones
-            loadHeartImages();
+            // Verificar si los componentes esenciales están inicializados
+            if (inputManager == null) {
+                System.err.println("ERROR CRÍTICO: InputManager no se pudo inicializar. No se puede continuar.");
+                return;
+            }
             
-            // Iniciar la música de fondo
-            playBackgroundMusic();
-              // Inicializar el jugador en el centro de la pantalla
+            if (renderManager == null) {
+                System.err.println("ERROR CRÍTICO: RenderManager no se pudo inicializar. No se puede continuar.");
+                return;
+            }
+            
+            // Inicializar el jugador en el centro de la pantalla
             player = new Player(GAME_WIDTH / 2 - 32, FLOOR_Y - 96);
             System.out.println("Jugador inicializado en (" + player.getX() + ", " + player.getY() + ")");
             
-            // Inicializar el sistema de niveles y fórmulas
-            for (int i = 0; i < MAX_LEVEL; i++) {
-                unlockedFormulas[i] = false;
-            }
-            level = 0;
+            // Configurar el input manager con el jugador
+            System.out.println("Configurando jugador en inputManager...");
+            inputManager.setPlayer(player);
             
-            // Configurar los eventos de teclado
-            setupKeyHandlers();
+            // Configurar los callbacks entre componentes
+            System.out.println("Configurando callbacks...");
+            setupComponentCallbacks();
             
             // Iniciar el bucle del juego
+            System.out.println("Iniciando bucle de juego...");
             startGameLoop();
             
-            // Solicitar el foco nuevamente después de la inicialización
-            gameCanvas.requestFocus();
-            System.out.println("Foco solicitado para el canvas después de inicialización");
+            // Solicitar el foco para el canvas
+            System.out.println("Solicitando foco para el canvas...");
+            inputManager.requestCanvasFocus();
             
-            System.out.println("GameController inicializado correctamente");            System.out.println("=================================================");
+            System.out.println("GameController inicializado correctamente");
+            System.out.println("=================================================");
         } catch (Exception e) {
             System.err.println("Error al inicializar GameController: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
-    private void setupKeyHandlers() {
+    /**
+     * Inicializa todos los componentes del juego
+     */    private void initializeComponents() {
         try {
-            System.out.println("Configurando manejadores de teclas...");
-            System.out.println("Canvas: " + (gameCanvas != null ? "OK" : "NULL"));
+            System.out.println("Iniciando inicialización de componentes...");
             
-            // Agregar un listener directo al canvas para probar si recibe eventos
-            gameCanvas.setOnKeyPressed(event -> {
-                System.out.println("Tecla presionada directamente en el canvas: " + event.getCode());
-            });
+            // Inicializar gestores de recursos
+            resourceManager = new ResourceManager();
+            resourceManager.loadAllResources();
+            System.out.println("ResourceManager inicializado");
             
-            // Obtener la escena
-            gameCanvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
-                System.out.println("Escena cambiada: " + (newScene != null ? "Nueva escena disponible" : "Escena nula"));
-                
-                if (newScene != null) {
-                    // Solicitar el foco para el canvas cuando se carga la escena
-                    gameCanvas.requestFocus();
-                    System.out.println("Foco solicitado para el canvas");                    // Configurar los eventos de teclado para la escena
-                    newScene.setOnKeyPressed(event -> {
-                        KeyCode code = event.getCode();
-                        System.out.println("Tecla presionada: " + code);
-                        
-                        if (code == KeyCode.LEFT || code == KeyCode.A) {
-                            leftKeyPressed = true;
-                            player.moveLeft(true);
-                            System.out.println("Moviendo a la izquierda");
-                        } else if (code == KeyCode.RIGHT || code == KeyCode.D) {                            rightKeyPressed = true;
-                            player.moveRight(true);
-                            System.out.println("Moviendo a la derecha");
-                        } else if (code == KeyCode.ESCAPE) {
-                            togglePause();                        } else if (code == KeyCode.BACK_SPACE) {
-                            returnToMainMenu();
-                        } else if (code == KeyCode.M) {
-                            // Alternar entre interfaz minimalista y completa
-                            minimalUI = !minimalUI;
-                            System.out.println("Interfaz cambiada a modo " + (minimalUI ? "minimalista" : "completo"));
-                        } else if (code.isDigitKey()) {
-                            // Obtener el número de la tecla presionada (1-5)
-                            int formulaNumber = Integer.parseInt(code.getName()) - 1;
-                            
-                            // Verificar si esa fórmula está desbloqueada
-                            if (formulaNumber >= 0 && formulaNumber < MAX_LEVEL && unlockedFormulas[formulaNumber]) {
-                                showFormulaDetails(formulaNumber);
-                            }
-                        }
-                    });
-                    
-                    newScene.setOnKeyReleased(event -> {
-                        KeyCode code = event.getCode();
-                        
-                        if (code == KeyCode.LEFT || code == KeyCode.A) {
-                            leftKeyPressed = false;
-                            player.moveLeft(false);
-                            
-                            // Si la tecla derecha sigue presionada, seguir moviendo a la derecha
-                            if (rightKeyPressed) {
-                                player.moveRight(true);
-                            }
-                        } else if (code == KeyCode.RIGHT || code == KeyCode.D) {
-                            rightKeyPressed = false;
-                            player.moveRight(false);
-                            
-                            // Si la tecla izquierda sigue presionada, seguir moviendo a la izquierda
-                            if (leftKeyPressed) {
-                                player.moveLeft(true);
-                            }
-                        }
-                    });
-                    
-                    // También añadir el foco al canvas cuando se hace clic en él
-                    gameCanvas.setOnMouseClicked(event -> gameCanvas.requestFocus());
-                    
-                    System.out.println("Eventos de teclado configurados correctamente");
-                }
-            });
+            // Inicializar gestores de audio
+            audioManager = new AudioManager();
+            audioManager.playBackgroundMusic();
+            System.out.println("AudioManager inicializado");
+            
+            // Verificar si el canvas es null y crear uno alternativo si es necesario
+            if (gameCanvas == null) {
+                System.err.println("ADVERTENCIA: gameCanvas es null, creando uno alternativo");
+                gameCanvas = new Canvas(GAME_WIDTH, GAME_HEIGHT);
+                // Hacer que el canvas pueda recibir el foco
+                gameCanvas.setFocusTraversable(true);
+                // Obtener el contexto gráfico del canvas
+                gc = gameCanvas.getGraphicsContext2D();
+                System.out.println("Canvas alternativo creado y configurado");
+            }
+            
+            // Asegurarse de que el contexto gráfico no sea nulo
+            if (gc == null && gameCanvas != null) {
+                gc = gameCanvas.getGraphicsContext2D();
+                System.out.println("Contexto gráfico inicializado");
+            }
+            
+            // Inicializar gestor de entrada (IMPORTANTE: inicializar antes de usarlo)
+            System.out.println("Iniciando InputManager con canvas: " + (gameCanvas != null ? "OK" : "NULL"));
+            inputManager = new InputManager(gameCanvas);
+            System.out.println("InputManager creado");
+            
+            // Solo configurar manejadores de teclas si el canvas no es nulo
+            if (gameCanvas != null) {
+                inputManager.setupKeyHandlers(); // Configurar los manejadores de eventos de teclado
+                System.out.println("Manejadores de teclas configurados");
+            } else {
+                System.err.println("ERROR: No se pueden configurar manejadores de teclas porque el canvas es nulo");
+            }
+              // Inicializar gestor de renderizado
+            if (gc != null) {
+                renderManager = new RenderManager(gc, GAME_WIDTH, GAME_HEIGHT, FLOOR_Y);
+                renderManager.setImages(
+                    resourceManager.getBackgroundImage(),
+                    resourceManager.getHeartImage(),
+                    resourceManager.getEmptyHeartImage()
+                );
+                System.out.println("RenderManager inicializado");
+            } else {
+                System.err.println("ERROR: No se puede inicializar RenderManager porque gc es nulo");
+            }
+            
+            // Inicializar gestor de niveles
+            levelManager = new LevelManager();
+            System.out.println("LevelManager inicializado");
+            
+            // Pasar la información de fórmulas al RenderManager solo si el renderManager no es nulo
+            if (renderManager != null && levelManager != null) {
+                renderManager.setFormulasInfo(
+                    levelManager.getFormulasShort(),
+                    levelManager.getFormulasDescriptions()
+                );
+                System.out.println("Información de fórmulas configurada en RenderManager");
+            } else {
+                System.err.println("ERROR: No se puede configurar información de fórmulas porque renderManager o levelManager son nulos");
+            }
+            
+            // Inicializar gestor de puntuación (5 vidas máximo)
+            scoreManager = new ScoreManager(5);
+            System.out.println("ScoreManager inicializado");
+            
+            // Inicializar gestor de manzanas
+            appleManager = new AppleManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 1500, 2.0, 5.0);
+            System.out.println("AppleManager inicializado");
+            
+            System.out.println("Todos los componentes inicializados correctamente");
         } catch (Exception e) {
-            System.err.println("Error al configurar los eventos de teclado: " + e.getMessage());
+            System.err.println("Error al inicializar componentes: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
+    /**
+     * Configura los callbacks entre los diferentes componentes
+     */
+    private void setupComponentCallbacks() {
+        try {
+            // Verificar que todos los componentes estén inicializados
+            if (inputManager == null) {
+                System.err.println("ERROR: InputManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            if (renderManager == null) {
+                System.err.println("ERROR: RenderManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            if (scoreManager == null) {
+                System.err.println("ERROR: ScoreManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            if (levelManager == null) {
+                System.err.println("ERROR: LevelManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            if (appleManager == null) {
+                System.err.println("ERROR: AppleManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            if (audioManager == null) {
+                System.err.println("ERROR: AudioManager es null en setupComponentCallbacks");
+                return;
+            }
+            
+            // Configurar callbacks del InputManager
+            inputManager.setCallbacks(
+                this::togglePause,                 // onPauseToggle
+                this::returnToMainMenu,            // onReturnToMenu
+                this::toggleUI,                    // onUIToggle
+                this::showFormulaDetails,          // onFormulaDetails
+                () -> renderManager.hideFormulaDetails() // onHideFormulaDetails
+            );
+            
+            // Configurar callbacks del ScoreManager
+            scoreManager.setCallbacks(
+                this::setGameOver,                 // onGameOver
+                score -> levelManager.checkLevelProgress(score) // onScoreChange
+            );
+            
+            // Configurar callbacks del LevelManager
+            levelManager.setOnFormulaUnlocked(
+                audioManager::playUnlockSound      // onFormulaUnlocked
+            );
+            
+            // Configurar callbacks del AppleManager
+            appleManager.setCallbacks(
+                scoreManager::addScore,            // onScoreChange
+                this::loseLife                     // onLifeLost
+            );
+            
+            System.out.println("Todos los callbacks configurados correctamente");
+        } catch (Exception e) {
+            System.err.println("Error al configurar callbacks: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }    /**
+     * Inicia el bucle principal del juego
+     */
     private void startGameLoop() {
         try {
+            // Verificar componentes críticos antes de iniciar el bucle
+            if (renderManager == null) {
+                System.err.println("ERROR CRÍTICO: RenderManager es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
+            if (player == null) {
+                System.err.println("ERROR CRÍTICO: Player es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
+            if (appleManager == null) {
+                System.err.println("ERROR CRÍTICO: AppleManager es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
+            if (scoreManager == null) {
+                System.err.println("ERROR CRÍTICO: ScoreManager es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
+            if (levelManager == null) {
+                System.err.println("ERROR CRÍTICO: LevelManager es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
                     try {
+                        // Siempre renderizar, incluso cuando el juego está pausado
+                        render();
+                        
+                        // Solo actualizar cuando el juego no está pausado y no ha terminado
                         if (!isPaused && !gameOver) {
                             update();
-                            render();
                         }
                     } catch (Exception e) {
                         System.err.println("Error en el bucle del juego: " + e.getMessage());
@@ -254,11 +321,30 @@ public class GameController {
             System.out.println("Bucle del juego iniciado correctamente");
         } catch (Exception e) {
             System.err.println("Error al iniciar el bucle del juego: " + e.getMessage());
-            e.printStackTrace();        }
+            e.printStackTrace();
+        }
     }
-    
+      /**
+     * Actualiza el estado del juego
+     */
     private void update() {
         try {
+            // Verificar componentes críticos
+            if (player == null) {
+                System.err.println("ERROR: Player es null en update(), no se puede actualizar");
+                return;
+            }
+            
+            if (appleManager == null) {
+                System.err.println("ERROR: AppleManager es null en update(), no se puede actualizar");
+                return;
+            }
+            
+            if (levelManager == null) {
+                System.err.println("ERROR: LevelManager es null en update(), no se puede actualizar");
+                return;
+            }
+            
             // Actualizar el jugador
             player.update(FLOOR_Y);
             
@@ -269,75 +355,101 @@ public class GameController {
                 player.setPosition(GAME_WIDTH - player.getWidth(), player.getY());
             }
             
-            // Generar nuevas manzanas
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastAppleSpawnTime > APPLE_SPAWN_INTERVAL) {
-                spawnApple();
-                lastAppleSpawnTime = currentTime;
-            }
-            
-            // Actualizar manzanas y comprobar colisiones
-            updateApples();
-            
-            // Verificar progreso de nivel
-            checkLevelProgress();
+            // Actualizar manzanas y colisiones
+            appleManager.update(player);
             
             // Actualizar efecto de desbloqueo de fórmulas
-            updateUnlockEffect();
+            levelManager.updateUnlockEffect();
+            
         } catch (Exception e) {
             System.err.println("Error al actualizar el juego: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    
-    /**
-     * Actualiza el efecto visual de desbloqueo de fórmulas
+    }    /**
+     * Renderiza el estado actual del juego
      */
-    private void updateUnlockEffect() {
-        if (showingUnlockEffect) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - unlockEffectStartTime > UNLOCK_EFFECT_DURATION) {
-                // Terminar el efecto
-                showingUnlockEffect = false;
-            }        }
-    }
-    
     private void render() {
         try {
-            // Limpiar el canvas
-            gc.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            
-            // Dibujar la imagen de fondo
-            if (backgroundImage != null) {
-                gc.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-            } else {
-                // Dibujar el fondo (cielo) como respaldo si la imagen no se cargó
-                gc.setFill(Color.SKYBLUE);
-                gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            // Verificar componentes críticos
+            if (renderManager == null) {
+                System.err.println("ERROR: RenderManager es null en render(), no se puede renderizar");
+                return;
             }
             
-            // Dibujar el suelo
-            gc.setFill(Color.SADDLEBROWN);
-            gc.fillRect(0, FLOOR_Y, GAME_WIDTH, GAME_HEIGHT - FLOOR_Y);            // Dibujar las manzanas
-            for (Apple apple : apples) {
-                if (apple.isActive()) {
-                    apple.render(gc);
-                }
+            if (scoreManager == null) {
+                System.err.println("ERROR: ScoreManager es null en render(), no se puede renderizar");
+                return;
             }
-              // Dibujar el jugador
+            
+            if (levelManager == null) {
+                System.err.println("ERROR: LevelManager es null en render(), no se puede renderizar");
+                return;
+            }
+            
+            if (player == null) {
+                System.err.println("ERROR: Player es null en render(), no se puede renderizar al jugador");
+                // Continuamos para al menos mostrar el fondo y la interfaz
+            }
+            
+            if (appleManager == null) {
+                System.err.println("ERROR: AppleManager es null en render(), no se pueden renderizar las manzanas");
+                // Continuamos para al menos mostrar el fondo y la interfaz
+            }
+            
+            // Renderizar fondo
+            renderManager.renderBackground();
+            
+            // Renderizar manzanas si están disponibles
+            if (appleManager != null) {
+                renderManager.renderApples(appleManager.getApples());
+            }
+            
+            // Renderizar jugador si está disponible
             if (player != null) {
-                player.render(gc);
-            } else {
-                System.err.println("ERROR: Player es null en GameController.render()");
+                renderManager.renderPlayer(player);
+            }            // Determinar si debemos mostrar las interfaces de HUD o superposiciones modales
+            boolean mostrarPausa = isPaused && !gameOver && !renderManager.isShowingFormulaDetails();
+            boolean mostrarFormula = renderManager.isShowingFormulaDetails();
+            boolean mostrarDesbloqueo = levelManager.isShowingUnlockEffect();
+            boolean mostrarGameOver = gameOver;
+            
+            // Si vamos a mostrar una pantalla de pausa o detalles de fórmula, no renderizar el HUD
+            if (!mostrarPausa && !mostrarFormula && !mostrarGameOver) {
+                // Solo usar interfaz minimalista
+                renderManager.renderMinimalUI(
+                    scoreManager.getScore(), 
+                    scoreManager.getLives(), 
+                    scoreManager.getMaxLives(), 
+                    levelManager.getLevel(),
+                    mostrarDesbloqueo
+                );
             }
             
-            // Dibujar elementos de la interfaz según el modo
-            if (minimalUI && !isPaused && !gameOver) {
-                // Interfaz minimalista: solo lo esencial
-                drawMinimalUI();
-            } else {
-                // Interfaz completa
-                drawCompleteUI();
+            // Mostrar el popup de desbloqueo de fórmula si corresponde
+            if (mostrarDesbloqueo) {
+                // Actualizar el índice de la fórmula en el RenderManager
+                renderManager.setCurrentFormulaForUnlock(levelManager.getUnlockedFormulaIndex());
+                // Mostrar la notificación (ya no pausa el juego)
+                renderManager.renderUnlockPopup();
+            }
+            
+            // Renderizar detalles de fórmula si están activos
+            if (mostrarFormula) {
+                renderManager.renderFormulaDetailsModal();
+            } 
+            
+            // Mostrar pantalla de pausa solo si corresponde
+            if (mostrarPausa) {
+                renderManager.renderPauseScreen();
+            }
+            
+            // Mostrar pantalla de Game Over si el juego ha terminado
+            if (mostrarGameOver) {
+                renderManager.renderGameOverScreen(
+                    scoreManager.getScore(),
+                    levelManager.getUnlockedFormulas(),
+                    levelManager.getMaxLevel()
+                );
             }
             
         } catch (Exception e) {
@@ -347,213 +459,135 @@ public class GameController {
     }
     
     /**
-     * Dibuja solo los elementos esenciales de la interfaz (modo minimalista)
+     * Alterna entre pausa y reanudación del juego
      */
-    private void drawMinimalUI() {
-        try {
-            // Mostrar solo la puntuación en la esquina superior derecha (sin fondo)
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(24));
-            gc.fillText(score + "", GAME_WIDTH - 70, 30);            // Dibujar vidas como corazones simples en la esquina superior izquierda (sin fondo)
-            if (heartImage != null && emptyHeartImage != null) {
-                int heartSize = 20; // Tamaño reducido
-                int heartSpacing = 3; // Espacio reducido
-                
-                // Calcular el ancho total que ocuparían todos los corazones
-                int totalWidth = (MAX_LIVES * (heartSize + heartSpacing));
-                
-                // Si el ancho es mayor que un tercio de la pantalla, redimensionar
-                if (totalWidth > GAME_WIDTH / 3) {
-                    heartSize = Math.max(12, (GAME_WIDTH / 3) / MAX_LIVES - heartSpacing);
-                    totalWidth = (MAX_LIVES * (heartSize + heartSpacing));
-                }
-                
-                // Asegurarse de que los corazones no se salgan de la pantalla
-                int startX = Math.min(10, GAME_WIDTH - totalWidth - 5);
-                
-                for (int i = 0; i < MAX_LIVES; i++) {
-                    int x = startX + (i * (heartSize + heartSpacing));
-                    
-                    if (i < lives) {
-                        // Corazón lleno
-                        gc.drawImage(heartImage, x, 10, heartSize, heartSize);
-                    } else {
-                        // Corazón vacío
-                        gc.drawImage(emptyHeartImage, x, 10, heartSize, heartSize);
-                    }
-                }
-            }
-            
-            // Si se acaba de desbloquear una fórmula, mostrar el efecto
-            if (showingUnlockEffect) {
-                drawUnlockPopup();
-            }
-            
-            // Pequeño indicador de nivel en la esquina inferior
-            gc.setFill(new Color(1, 1, 1, 0.7));
-            gc.setFont(javafx.scene.text.Font.font(16));
-            gc.fillText("Nivel " + (level + 1), 10, GAME_HEIGHT - 10);
-            
-            // Pequeño indicador de modo minimalista
-            gc.setFill(new Color(1, 1, 1, 0.7));
-            gc.setFont(javafx.scene.text.Font.font(12));
-            gc.fillText("Presiona M para mostrar más detalles", GAME_WIDTH - 200, GAME_HEIGHT - 10);
-            
-        } catch (Exception e) {
-            System.err.println("Error al dibujar UI minimalista: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-      /**
-     * Dibuja todos los elementos de la interfaz (modo completo)
-     */
-    private void drawCompleteUI() {
-        try {
-            // Dibujar barra de puntuación
-            drawScoreBar();
-            
-            // Si el juego está pausado, mostrar mensaje
-            if (isPaused) {
-                gc.setFill(new Color(0, 0, 0, 0.5));
-                gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-                
-                gc.setFill(Color.WHITE);
-                gc.setFont(javafx.scene.text.Font.font(48));
-                gc.fillText("PAUSA", GAME_WIDTH / 2 - 80, GAME_HEIGHT / 2);
-                
-                gc.setFont(javafx.scene.text.Font.font(24));
-                gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 50);
-                gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 90);
-            }
-            
-            // Si el juego terminó, mostrar mensaje
-            if (gameOver) {
-                gc.setFill(new Color(0, 0, 0, 0.85));
-                gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-                
-                gc.setFill(Color.RED);
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 48));
-                gc.fillText("GAME OVER", GAME_WIDTH / 2 - 140, 120);
-                
-                // Mostrar puntuación final
-                gc.setFill(Color.WHITE);
-                gc.setFont(javafx.scene.text.Font.font("Arial", 32));
-                gc.fillText("Puntuación final: " + score, GAME_WIDTH / 2 - 150, 180);
-                
-                // Mostrar nivel alcanzado
-                gc.setFill(Color.YELLOW);
-                gc.fillText("Nivel alcanzado: " + level + " de " + MAX_LEVEL, GAME_WIDTH / 2 - 150, 220);
-                
-                // Mostrar fórmulas desbloqueadas
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-                gc.setFill(Color.WHITE);
-                gc.fillText("Fórmulas de física desbloqueadas:", 100, 280);
-                
-                // Dibujar un separador
-                gc.setStroke(Color.GRAY);
-                gc.setLineWidth(2);
-                gc.strokeLine(100, 290, GAME_WIDTH - 100, 290);
-                
-                int formulasShown = 0;
-                for (int i = 0; i < MAX_LEVEL; i++) {
-                    if (unlockedFormulas[i]) {
-                        formulasShown++;
-                        
-                        // Dibujar rectángulo de fondo para cada fórmula
-                        gc.setFill(new Color(0.2, 0.2, 0.2, 0.7));
-                        gc.fillRect(100, 300 + ((formulasShown - 1) * 75), GAME_WIDTH - 200, 65);
-                        gc.setStroke(Color.YELLOW);
-                        gc.setLineWidth(1);
-                        gc.strokeRect(100, 300 + ((formulasShown - 1) * 75), GAME_WIDTH - 200, 65);
-                        
-                        // Fórmula
-                        gc.setFill(Color.YELLOW);
-                        gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 22));
-                        gc.fillText((i+1) + ". " + FORMULAS_SHORT[i], 120, 325 + ((formulasShown - 1) * 75));
-                        
-                        // Descripción
-                        gc.setFill(Color.LIGHTGRAY);
-                        gc.setFont(javafx.scene.text.Font.font("Arial", 16));
-                        
-                        // Mostrar una versión recortada de la descripción para que quepa
-                        String desc = FORMULAS_DESCRIPTIONS[i];
-                        if (desc.length() > 85) {
-                            desc = desc.substring(0, 82) + "...";
-                        }
-                        gc.fillText(desc, 120, 350 + ((formulasShown - 1) * 75));
-                    }
-                }
-                
-                if (formulasShown == 0) {
-                    gc.setFill(Color.GRAY);
-                    gc.setFont(javafx.scene.text.Font.font("Arial", 20));
-                    gc.fillText("Ninguna fórmula desbloqueada", GAME_WIDTH / 2 - 150, 330);
-                    gc.fillText("¡Intenta conseguir al menos " + LEVEL_THRESHOLDS[0] + " puntos!", GAME_WIDTH / 2 - 200, 360);
-                } else if (formulasShown < MAX_LEVEL) {
-                    // Mostrar mensaje motivador
-                    gc.setFill(Color.WHITE);
-                    gc.setFont(javafx.scene.text.Font.font("Arial", 18));
-                    gc.fillText("¡Sigue jugando para desbloquear más fórmulas de física!", 
-                               GAME_WIDTH / 2 - 240, 300 + (formulasShown * 75) + 30);
-                } else {
-                    // Mensaje de felicitación por desbloquear todas las fórmulas
-                    gc.setFill(Color.GOLD);
-                    gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-                    gc.fillText("¡FELICIDADES! ¡Has desbloqueado todas las fórmulas de física!", 
-                               GAME_WIDTH / 2 - 300, 300 + (formulasShown * 75) + 30);
-                }
-                
-                // Instrucciones para volver a jugar
-                gc.setFill(Color.WHITE);
-                gc.setFont(javafx.scene.text.Font.font(24));
-                gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
-            } else {                // Mostrar instrucciones en modo no minimalista
-                gc.setFill(new Color(0, 0, 0, 0.7)); // Fondo para instrucciones
-                gc.fillRect(15, 15, 400, 135);
-                gc.setStroke(new Color(1, 1, 1, 0.4));
-                gc.setLineWidth(2);
-                gc.strokeRect(15, 15, 400, 135);
-                
-                gc.setFill(Color.WHITE);
-                gc.setFont(javafx.scene.text.Font.font(14));
-                gc.fillText("Controles: Flechas o WASD para mover, ESC para pausar", 20, 35);
-                gc.fillText("Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)", 20, 55);
-                gc.fillText("¡Cuidado! Perderás una vida si:", 20, 75);
-                gc.fillText("- Dejas caer una manzana roja", 40, 95);
-                gc.fillText("- Atrapas una manzana verde", 40, 115);
-                gc.fillText("Presiona M para alternar entre interfaz minimalista/completa", 20, 135);
-                
-                // Dibujar sistema de vidas
-                drawLives();
-                
-                // Dibujar nivel y fórmula actual
-                drawLevelAndFormula();
-                
-                // Dibujar panel de fórmulas
-                drawFormulasPanel();
-            }
-        } catch (Exception e) {
-            System.err.println("Error al dibujar UI completa: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
     private void togglePause() {
         isPaused = !isPaused;
         System.out.println("Juego " + (isPaused ? "pausado" : "reanudado"));
     }
+      /**
+     * Alterna entre interfaz minimalista y completa (desactivado)
+     */
+    private void toggleUI() {
+        // Siempre mantenemos la interfaz minimalista
+        minimalUI = true;
+        // No hacer nada más, ya que solo queremos la interfaz minimalista
+        System.out.println("Interfaz se mantiene en modo minimalista");
+    }
+      /**
+     * Marca el juego como terminado y configura el sprite de muerte del jugador
+     */
+    private void setGameOver() {
+        gameOver = true;
+        // Configurar el sprite de muerte del jugador
+        if (player != null) {
+            player.setDead(true);
+        }
+        System.out.println("Juego terminado");
+    }
     
-    // Método para volver al menú principal
+    /**
+     * Maneja la pérdida de una vida
+     */
+    private void loseLife() {
+        scoreManager.loseLife("Has perdido una vida");
+    }    /**
+     * Muestra los detalles de una fórmula específica
+     * @param formulaIndex Índice de la fórmula
+     */
+    private void showFormulaDetails(int formulaIndex) {
+        try {
+            // Verificar componentes críticos
+            if (levelManager == null) {
+                System.err.println("ERROR: LevelManager es null en showFormulaDetails, no se puede continuar");
+                return;
+            }
+            
+            if (renderManager == null) {
+                System.err.println("ERROR: RenderManager es null en showFormulaDetails, no se puede continuar");
+                return;
+            }
+            
+            // Verificar si el índice está fuera de rango
+            if (formulaIndex < 0 || formulaIndex >= levelManager.getMaxLevel()) {
+                System.err.println("ERROR: Índice de fórmula fuera de rango: " + formulaIndex);
+                return;
+            }
+            
+            // Verificar si la fórmula está desbloqueada
+            if (!levelManager.getUnlockedFormulas()[formulaIndex]) {
+                System.out.println("La fórmula " + (formulaIndex + 1) + " no está desbloqueada todavía");
+                return;
+            }
+            
+            // Si ya se están mostrando los detalles de esta fórmula, ocultarlos y reanudar el juego
+            if (renderManager.isShowingFormulaDetails() && formulaIndex == levelManager.getUnlockedFormulaIndex()) {
+                renderManager.hideFormulaDetails();
+                // Reanudar el juego si estaba pausado por mostrar la fórmula
+                if (isPaused) {
+                    isPaused = false;
+                }
+                System.out.println("Ocultando detalles de la fórmula y reanudando el juego");
+                return;
+            }
+            
+            // Pausar el juego mientras se muestran los detalles de la fórmula
+            isPaused = true;
+            
+            // Registrar en el LevelManager para tener consistencia
+            levelManager.showFormulaDetails(formulaIndex);
+            
+            // Obtener información de la fórmula
+            String[] formulasShort = levelManager.getFormulasShort();
+            String[] formulasDescriptions = levelManager.getFormulasDescriptions();
+            
+            // Verificar que los arreglos no sean nulos y tengan el índice solicitado
+            if (formulasShort == null || formulasDescriptions == null) {
+                System.err.println("ERROR: Los arreglos de fórmulas son nulos");
+                return;
+            }
+            
+            if (formulaIndex >= formulasShort.length || formulaIndex >= formulasDescriptions.length) {
+                System.err.println("ERROR: Índice de fórmula fuera de rango para los arreglos de información");
+                return;
+            }
+            
+            // Mostrar los detalles en pantalla mediante el RenderManager
+            renderManager.setFormulaDetails(
+                formulaIndex,
+                formulasShort[formulaIndex],
+                formulasDescriptions[formulaIndex]
+            );
+            
+            System.out.println("Mostrando detalles de la fórmula: " + formulasShort[formulaIndex]);
+            System.out.println("Descripción: " + formulasDescriptions[formulaIndex]);
+            System.out.println("Juego pausado mientras se muestran detalles de la fórmula");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar detalles de la fórmula: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+      /**
+     * Vuelve al menú principal
+     */
     public void returnToMainMenu() {
         try {
+            System.out.println("Preparando para volver al menú principal...");
+            
             // Detener el bucle del juego
             if (gameLoop != null) {
                 gameLoop.stop();
+                System.out.println("Bucle del juego detenido");
+            } else {
+                System.err.println("ADVERTENCIA: gameLoop es null al intentar detenerlo");
             }
             
             // Detener la música
-            if (musicPlayer != null) {
-                musicPlayer.stop();
+            if (audioManager != null) {
+                audioManager.stopBackgroundMusic();
+                System.out.println("Música de fondo detenida");
+            } else {
+                System.err.println("ADVERTENCIA: audioManager es null al intentar detener la música");
             }
             
             System.out.println("Volviendo al menú principal...");
@@ -603,903 +637,6 @@ public class GameController {
         } catch (Exception e) {
             System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Carga la imagen de fondo del juego
-     */
-    private void loadBackgroundImage() {
-        try {
-            String backgroundPath = "src/recursos/imagenes/fondo_juego.jpg";
-            File backgroundFile = new File(backgroundPath);
-            
-            if (backgroundFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                backgroundImage = new Image(new FileInputStream(backgroundFile));
-                System.out.println("Imagen de fondo cargada correctamente");
-            } else {
-                // Estamos en producción, usar getResource
-                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/fondo_juego.jpg"));
-                System.out.println("Imagen de fondo cargada desde recursos");
-            }
-        } catch (Exception e) {
-            System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
-            e.printStackTrace();
-            backgroundImage = null;        }
-    }
-    
-    /**
-     * Reproduce la música de fondo del juego
-     */
-    private void playBackgroundMusic() {
-        try {
-            String musicPath = "src/recursos/musica/musica_juego.mp3";
-            File musicFile = new File(musicPath);
-            
-            Media media;
-            if (musicFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                media = new Media(musicFile.toURI().toString());
-                System.out.println("Música cargada desde archivo: " + musicPath);
-            } else {
-                // Estamos en producción, usar getResource
-                String resourcePath = getClass().getResource("/recursos/musica/musica_juego.mp3").toString();
-                media = new Media(resourcePath);
-                System.out.println("Música cargada desde recursos");
-            }
-            
-            musicPlayer = new MediaPlayer(media);
-            musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Reproducir en bucle
-            musicPlayer.setVolume(0.5); // Volumen al 50%
-            musicPlayer.play();
-            
-            System.out.println("Música de fondo iniciada");
-        } catch (Exception e) {
-            System.err.println("Error al reproducir la música: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Genera una nueva manzana en una posición aleatoria en la parte superior de la pantalla
-     */
-    private void spawnApple() {
-        try {
-            // Posición X aleatoria (dejando margen en los bordes)
-            double x = 50 + random.nextDouble() * (GAME_WIDTH - 100);
-            
-            // Posición Y en la parte superior
-            double y = -50;
-            
-            // Velocidad aleatoria
-            double speed = MIN_APPLE_SPEED + random.nextDouble() * (MAX_APPLE_SPEED - MIN_APPLE_SPEED);
-            
-            // 70% de probabilidad de que sea manzana roja, 30% de que sea verde
-            boolean isRed = random.nextDouble() < 0.7;
-            
-            // Crear la manzana y añadirla a la lista
-            Apple apple = new Apple(x, y, isRed, speed);
-            apples.add(apple);
-            
-            System.out.println("Generada manzana " + (isRed ? "roja" : "verde") + " en (" + x + ", " + y + ") con velocidad " + speed);
-        } catch (Exception e) {
-            System.err.println("Error al generar manzana: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-      /**
-     * Actualiza todas las manzanas, comprobando colisiones y si han llegado al suelo
-     */
-    private void updateApples() {
-        try {
-            // Lista para guardar las manzanas que hay que eliminar
-            List<Apple> applesToRemove = new ArrayList<>();
-            
-            // Actualizar cada manzana
-            for (Apple apple : apples) {
-                if (!apple.isActive()) {
-                    applesToRemove.add(apple);
-                    continue;
-                }
-                
-                // Actualizar posición
-                apple.update();
-                
-                // Comprobar si ha colisionado con el jugador
-                if (apple.checkCollision(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
-                    // Actualizar puntuación según el tipo de manzana
-                    if (apple.isRed()) {
-                        score += RED_APPLE_POINTS;
-                        System.out.println("¡Manzana roja recogida! Puntos: +" + RED_APPLE_POINTS);
-                        // Verificar progreso de nivel
-                        checkLevelProgress();
-                    } else {
-                        score += GREEN_APPLE_POINTS;
-                        System.out.println("¡Manzana verde recogida! Puntos: " + GREEN_APPLE_POINTS);
-                        // Activar el sprite de manzana verde
-                        player.setGreenAppleEffect();
-                        // Perder una vida por atrapar manzana verde
-                        loseLife("Has atrapado una manzana verde");
-                    }
-                    
-                    // Desactivar la manzana para que se elimine
-                    apple.deactivate();
-                    applesToRemove.add(apple);
-                }
-                // Comprobar si ha llegado al suelo
-                else if (apple.hasReachedFloor(FLOOR_Y)) {
-                    // Si era roja y cayó al suelo, penalizar
-                    if (apple.isRed()) {
-                        score += MISSED_APPLE_POINTS;
-                        System.out.println("Manzana roja perdida. Puntos: " + MISSED_APPLE_POINTS);
-                        // Perder una vida por dejar caer una manzana roja
-                        loseLife("Has dejado caer una manzana roja");
-                    }
-                    
-                    // Desactivar la manzana para que se elimine
-                    apple.deactivate();
-                    applesToRemove.add(apple);
-                }
-            }
-            
-            // Eliminar las manzanas que ya no están activas
-            apples.removeAll(applesToRemove);
-              } catch (Exception e) {
-            System.err.println("Error al actualizar manzanas: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Dibuja la barra de puntuación en la parte superior de la pantalla
-     */    private void drawScoreBar() {
-        try {
-            // Dibujar un fondo semitransparente para la barra de puntuación
-            // Reubicada más abajo y ajustada al contorno de la pantalla
-            gc.setFill(new Color(0, 0, 0, 0.7)); // Aumentamos la opacidad para mejor visibilidad
-            gc.fillRect(GAME_WIDTH - 250, 70, 240, 80); // Movido más abajo para asegurar visibilidad completa
-            
-            // Borde para mejorar visibilidad
-            gc.setStroke(new Color(1, 1, 1, 0.4));
-            gc.setLineWidth(2);
-            gc.strokeRect(GAME_WIDTH - 250, 70, 240, 80);
-              // Dibujar el texto de la puntuación
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-            gc.fillText("PUNTUACIÓN: " + score, GAME_WIDTH - 230, 105);
-            
-            // Texto explicativo con mejor espaciado
-            gc.setFont(javafx.scene.text.Font.font("Arial", 14)); // Aumentamos tamaño de fuente
-            gc.fillText("Manzana roja: +" + RED_APPLE_POINTS + " pts", GAME_WIDTH - 230, 130);
-            gc.fillText("Manzana verde: " + GREEN_APPLE_POINTS + " pts", GAME_WIDTH - 230, 145);
-            
-        } catch (Exception e) {
-            System.err.println("Error al dibujar la barra de puntuación: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Dibuja los corazones que representan las vidas del jugador
-     */
-    private void drawLives() {
-        try {
-            if (heartImage == null || emptyHeartImage == null) {
-                return;
-            }
-            // Tamaño de cada corazón
-            int heartSize = 32; // Ligeramente más grande
-            // Espacio entre corazones
-            int heartSpacing = 10;
-            
-            // Calcular el ancho total que ocuparían todos los corazones
-            int totalWidth = (MAX_LIVES * (heartSize + heartSpacing)) + 20; // +20 para margen
-            
-            // Si el ancho es mayor que un tercio de la pantalla, redimensionar
-            if (totalWidth > GAME_WIDTH / 3) {
-                heartSize = Math.max(18, (GAME_WIDTH / 3 - 20) / MAX_LIVES - heartSpacing);
-                totalWidth = (MAX_LIVES * (heartSize + heartSpacing)) + 20;
-            }
-              // Posición inicial X
-            int startX = 20;
-            // Posición Y - reubicada más abajo y ajustada al contorno
-            int heartY = 180; // Movido significativamente más abajo para asegurar visibilidad completa
-            
-            // Dibujar fondo para los corazones
-            gc.setFill(new Color(0, 0, 0, 0.7)); // Aumentamos opacidad para mejor visibilidad
-            int backgroundWidth = Math.min((MAX_LIVES * (heartSize + heartSpacing)) + 10, GAME_WIDTH - 40);
-            gc.fillRect(startX - 10, heartY - 10, backgroundWidth, heartSize + 20);
-            
-            // Borde para mejorar visibilidad
-            gc.setStroke(new Color(1, 1, 1, 0.4));
-            gc.setLineWidth(2);
-            gc.strokeRect(startX - 10, heartY - 10, backgroundWidth, heartSize + 20);
-              // Dibujar texto "VIDAS"
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18)); // Mejor tipografía
-            gc.fillText("VIDAS:", startX, heartY - 15);
-            
-            // Dibujar cada corazón
-            for (int i = 0; i < MAX_LIVES; i++) {
-                int x = startX + (i * (heartSize + heartSpacing));
-                
-                if (i < lives) {
-                    // Dibujar corazón lleno
-                    gc.drawImage(heartImage, x, heartY, heartSize, heartSize);
-                } else {
-                    // Dibujar corazón vacío
-                    gc.drawImage(emptyHeartImage, x, heartY, heartSize, heartSize);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error al dibujar vidas: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Carga las imágenes de corazones para el sistema de vidas
-     */    private void loadHeartImages() {
-        try {
-            // Intentar cargar las imágenes de corazones
-            String heartPath = "src/recursos/sprites/corazon/corazon_lleno.png";
-            String emptyHeartPath = "src/recursos/sprites/corazon/corazon_vacio.png";
-            
-            File heartFile = new File(heartPath);
-            File emptyHeartFile = new File(emptyHeartPath);
-            
-            if (heartFile.exists() && emptyHeartFile.exists()) {
-                // Cargar desde archivos
-                heartImage = new Image(new FileInputStream(heartFile));
-                emptyHeartImage = new Image(new FileInputStream(emptyHeartFile));
-                System.out.println("Imágenes de corazones cargadas correctamente");
-            } else {
-                // Crear imágenes predeterminadas en caso de que no existan los archivos
-                // Corazón lleno (rojo)
-                heartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwklEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
-                // Corazón vacío (gris)
-                emptyHeartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwElEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
-                System.out.println("Utilizando imágenes de corazones predeterminadas");
-            }
-        } catch (Exception e) {
-            System.err.println("Error al cargar imágenes de corazones: " + e.getMessage());
-            e.printStackTrace();
-            
-            // Crear imágenes predeterminadas en caso de error
-            heartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwklEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
-            emptyHeartImage = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAwElEQVR42mNgGAWDFDAwEAv+E4WB6kkCxFnw/z9RGJNF/0nCJFvwnygMNXAUjFpAClDdAnAMgxNTCkiyADkpiY4jKAApAIrDxQmJw8nRLPhPKIHBxeHkqAXYYkKyRwSRYsR6TGwgLYvIPgkSKptJLkpItoC8ooQUD0jyALGAJA8QC4j2AKmAaA+QCoj2AKmAaA+QCoj2AKmAaA+QCoj2AKkAJOc/kZhoC5ATNrUt+A8WIw6Ta8F/sC7iMNkW/EcOjILBAwAZMkztv9sLSwAAAABJRU5ErkJggg==");
-        }
-    }      /**
-     * Reduce una vida del jugador y verifica si el juego ha terminado
-     * @param reason Motivo por el que perdió la vida
-     */    private void loseLife(String reason) {
-        if (lives > 0) {
-            lives--;
-            System.out.println("¡Has perdido una vida! Motivo: " + reason + ". Vidas restantes: " + lives);
-            
-            // Si se quedó sin vidas, terminar el juego
-            if (lives <= 0) {
-                gameOver = true;
-                // Activar el sprite de game over
-                player.setDead(true);
-                // Ya no centramos al jugador, se queda donde perdió
-                System.out.println("GAME OVER: Te has quedado sin vidas");
-            }
-        }
-    }
-      /**
-     * Dibuja el nivel actual y la fórmula correspondiente en la parte superior derecha de la pantalla
-     */    private void drawLevelAndFormula() {
-        try {
-            // Posición y tamaño del panel del nivel - ajustado para evitar solapamiento
-            int levelPanelX = GAME_WIDTH - 300;
-            int levelPanelY = 160; // Movido más abajo para evitar solapamiento con la barra de puntuación
-            int levelPanelWidth = 290;
-            int levelPanelHeight = 100;
-            
-            // Dibujar fondo semitransparente para el panel del nivel
-            gc.setFill(new Color(0, 0, 0, 0.7));
-            gc.fillRect(levelPanelX, levelPanelY, levelPanelWidth, levelPanelHeight);
-            
-            // Dibujar borde del panel
-            gc.setStroke(new Color(1, 1, 1, 0.4));
-            gc.setLineWidth(2);
-            gc.strokeRect(levelPanelX, levelPanelY, levelPanelWidth, levelPanelHeight);
-              // Dibujar el nivel actual
-            gc.setFill(Color.YELLOW);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-            gc.fillText("Nivel: " + (level + 1), levelPanelX + 10, levelPanelY + 30);
-            
-            // Dibujar la fórmula correspondiente al nivel
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", 18));
-            String formula = FORMULAS_SHORT[level];
-            gc.fillText("Fórmula: " + formula, levelPanelX + 10, levelPanelY + 60);
-            
-            // Si el nivel está bloqueado, mostrar mensaje de bloqueo
-            if (!unlockedFormulas[level]) {
-                gc.setFill(Color.RED);
-                gc.setFont(javafx.scene.text.Font.font(16));
-                gc.fillText("¡Desbloqueado al alcanzar " + LEVEL_THRESHOLDS[level] + " pts!", levelPanelX + 10, levelPanelY + 90);
-            } else {
-                // Si hay fórmulas desbloqueadas, mostrar instrucción para ver más detalles
-                gc.setFill(Color.LIGHTGRAY);
-                gc.setFont(javafx.scene.text.Font.font(14));
-                gc.fillText("Presiona 1-" + (level + 1) + " para ver detalles de las fórmulas", levelPanelX + 10, levelPanelY + 90);
-            }
-        } catch (Exception e) {
-            System.err.println("Error al dibujar el nivel y fórmula: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Verifica si el jugador ha alcanzado el puntaje necesario para desbloquear una nueva fórmula
-     */
-    private void checkLevelProgress() {
-        // Si ya estamos en el nivel máximo, no hay nada que hacer
-        if (level >= MAX_LEVEL) {
-            return;
-        }
-        
-        // Verificar si el puntaje actual es suficiente para desbloquear el siguiente nivel
-        if (score >= LEVEL_THRESHOLDS[level]) {
-            unlockFormula(level);
-        }
-    }
-      /**
-     * Desbloquea una fórmula y aumenta el nivel del jugador
-     * @param formulaIndex Índice de la fórmula a desbloquear
-     */
-    private void unlockFormula(int formulaIndex) {
-        if (formulaIndex < 0 || formulaIndex >= MAX_LEVEL || unlockedFormulas[formulaIndex]) {
-            return;
-        }
-        
-        unlockedFormulas[formulaIndex] = true;
-        level++;
-        
-        // Iniciar efecto visual de desbloqueo
-        showingUnlockEffect = true;
-        unlockedFormulaIndex = formulaIndex;
-        unlockEffectStartTime = System.currentTimeMillis();
-        
-        // Mostrar mensaje de felicitación
-        System.out.println("¡FELICIDADES! Has desbloqueado la fórmula: " + FORMULAS[formulaIndex]);
-        System.out.println("Has alcanzado el nivel " + level);
-        
-        // Reproducir sonido de desbloqueo
-        playUnlockSound();
-        
-        // Si ha desbloqueado todas las fórmulas, ha completado el juego
-        if (level >= MAX_LEVEL) {
-            System.out.println("¡FELICIDADES! ¡Has completado el juego y aprendido todas las fórmulas!");
-        }
-    }
-      /**
-     * Reproduce un sonido cuando se desbloquea una fórmula
-     */
-    private void playUnlockSound() {
-        try {
-            String soundPath = "src/recursos/sonidos/unlock.mp3";
-            File soundFile = new File(soundPath);
-            
-            // Verificar si existe el archivo de sonido
-            if (!soundFile.exists()) {
-                System.out.println("Archivo de sonido de desbloqueo no encontrado: " + soundPath);
-                return;
-            }
-            
-            Media media = new Media(soundFile.toURI().toString());
-            MediaPlayer soundPlayer = new MediaPlayer(media);
-            soundPlayer.setVolume(0.7);
-            soundPlayer.play();
-            
-            // Configurar para liberar recursos cuando termine de reproducirse
-            soundPlayer.setOnEndOfMedia(() -> {
-                soundPlayer.dispose();
-            });
-            
-            System.out.println("Reproduciendo sonido de desbloqueo");
-        } catch (Exception e) {
-            System.err.println("Error al reproducir sonido de desbloqueo: " + e.getMessage());
-            // No interrumpir el juego si hay un error con el sonido
-        }
-    }
-      /**
-     * Dibuja el panel de fórmulas en la pantalla
-     */
-    private void drawFormulasPanel() {
-        try {
-            // Dibujar un fondo semitransparente para el panel de fórmulas
-            gc.setFill(new Color(0, 0, 0, 0.7));
-            gc.fillRect(GAME_WIDTH - 350, 150, 330, 250); // Aumentado el alto para mostrar más información
-            
-            // Borde del panel
-            gc.setStroke(Color.GRAY);
-            gc.setLineWidth(2);
-            gc.strokeRect(GAME_WIDTH - 350, 150, 330, 250);
-            
-            // Título del panel
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18));
-            gc.fillText("FÓRMULAS DE FÍSICA", GAME_WIDTH - 330, 175);
-            
-            // Dibujar cada fórmula (o placeholders para las que no están desbloqueadas)
-            gc.setFont(javafx.scene.text.Font.font("Monospace", 16));
-            for (int i = 0; i < MAX_LEVEL; i++) {
-                if (unlockedFormulas[i]) {
-                    // Fórmula desbloqueada - mostrarla completa
-                    if (showingUnlockEffect && i == unlockedFormulaIndex) {
-                        // Efecto pulsante para la fórmula recién desbloqueada
-                        double pulse = Math.sin((System.currentTimeMillis() - unlockEffectStartTime) / 100.0) * 0.5 + 0.5;
-                        gc.setFill(new Color(1.0, 1.0, 0.0, 0.5 + pulse * 0.5)); // Amarillo pulsante
-                        
-                        // Rectángulo de fondo para destacar la fórmula
-                        gc.fillRect(GAME_WIDTH - 345, 190 + (i * 45), 320, 40);
-                        gc.setFill(Color.WHITE);
-                    } else {
-                        gc.setFill(Color.YELLOW);
-                    }
-                    
-                    // Dibujar la fórmula
-                    gc.fillText((i+1) + ". " + FORMULAS[i], GAME_WIDTH - 340, 205 + (i * 45));
-                    
-                    // Si está desbloqueada y se selecciona, mostrar la descripción
-                    if (i == level - 1) {
-                        gc.setFill(Color.LIGHTGRAY);
-                        gc.setFont(javafx.scene.text.Font.font("Arial", 12));
-                        
-                        // Dividir la descripción en múltiples líneas si es necesario
-                        String description = FORMULAS_DESCRIPTIONS[i];
-                        List<String> lines = splitDescription(description, 45); // 45 caracteres por línea aproximadamente
-                        
-                        for (int j = 0; j < lines.size(); j++) {
-                            gc.fillText(lines.get(j), GAME_WIDTH - 340, 222 + (i * 45) + (j * 15));
-                        }
-                    }
-                } else if (i == level) {
-                    // Próxima fórmula a desbloquear - mostrar pistas
-                    gc.setFill(Color.GRAY);
-                    gc.fillText((i+1) + ". " + FORMULAS_SHORT[i] + " (Puntos: " + LEVEL_THRESHOLDS[i] + ")", 
-                               GAME_WIDTH - 340, 205 + (i * 45));
-                } else {
-                    // Fórmula bloqueada - mostrar solo "???"
-                    gc.setFill(Color.GRAY);
-                    gc.fillText((i+1) + ". ??? (Nivel " + (i+1) + ")", GAME_WIDTH - 340, 205 + (i * 45));
-                }
-            }
-            
-            // Mostrar progreso actual
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font(14));
-            
-            // Si no hemos completado todos los niveles, mostrar el progreso hacia el siguiente nivel
-            if (level < MAX_LEVEL) {
-                int nextLevelPoints = LEVEL_THRESHOLDS[level];
-                int percentage = (int)((score * 100.0) / nextLevelPoints);
-                percentage = Math.min(percentage, 100);
-                
-                gc.fillText("Progreso al nivel " + (level+1) + ": " + percentage + "%", 
-                           GAME_WIDTH - 330, 375);
-                
-                // Dibujar barra de progreso
-                gc.setFill(Color.DARKGRAY);
-                gc.fillRect(GAME_WIDTH - 330, 385, 300, 10);
-                
-                gc.setFill(Color.GREEN);
-                gc.fillRect(GAME_WIDTH - 330, 385, 300 * percentage / 100, 10);
-            } else {
-                // Si ya completó todos los niveles
-                gc.setFill(Color.GOLD);
-                gc.fillText("¡JUEGO COMPLETADO! ¡Has aprendido todas las fórmulas!", 
-                           GAME_WIDTH - 330, 375);
-            }
-            
-            // Dibujar popup de nueva fórmula desbloqueada
-            if (showingUnlockEffect) {
-                drawUnlockPopup();
-            }
-            
-        } catch (Exception e) {
-            System.err.println("Error al dibujar panel de fórmulas: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-      /**
-     * Divide un texto en múltiples líneas sin exceder un máximo de caracteres por línea
-     * @param text Texto a dividir
-     * @param maxCharsPerLine Máximo número de caracteres por línea
-     * @return Lista de líneas
-     */
-    private List<String> splitDescription(String text, int maxCharsPerLine) {
-        List<String> lines = new ArrayList<>();
-        
-        // Detectar saltos de línea explícitos y respetarlos
-        String[] paragraphs = text.split("\n");
-        for (String paragraph : paragraphs) {
-            // Si es un párrafo vacío (doble salto de línea), agregar una línea vacía
-            if (paragraph.trim().isEmpty()) {
-                lines.add("");
-                continue;
-            }
-            
-            String[] words = paragraph.split(" ");
-            StringBuilder currentLine = new StringBuilder();
-            
-            for (String word : words) {
-                // Tratar con símbolos especiales que podrían causar problemas (como fórmulas)
-                if (word.contains("×") || word.contains("²") || word.contains("≈")) {
-                    word = word.replace("×", " × ").replace("²", " ² ").replace("≈", " ≈ ");
-                    word = word.trim();
-                }
-                
-                // Si la palabra es más larga que el máximo permitido, dividirla
-                if (word.length() > maxCharsPerLine - 2) {
-                    // Si la línea actual tiene contenido, añadirla primero
-                    if (currentLine.length() > 0) {
-                        lines.add(currentLine.toString());
-                        currentLine = new StringBuilder();
-                    }
-                    
-                    // Dividir la palabra larga en fragmentos
-                    int startIndex = 0;
-                    while (startIndex < word.length()) {
-                        int endIndex = Math.min(startIndex + maxCharsPerLine - 2, word.length());
-                        String fragment = word.substring(startIndex, endIndex);
-                        lines.add(fragment);
-                        startIndex = endIndex;
-                    }
-                } 
-                // Proceso normal para palabras que caben en una línea
-                else if (currentLine.length() + word.length() + 1 <= maxCharsPerLine - 2) {
-                    if (currentLine.length() > 0) {
-                        currentLine.append(" ");
-                    }
-                    currentLine.append(word);
-                } else {
-                    // La palabra no cabe, comenzar nueva línea
-                    lines.add(currentLine.toString());
-                    currentLine = new StringBuilder(word);
-                }
-            }
-            
-            // Agregar la última línea del párrafo si tiene contenido
-            if (currentLine.length() > 0) {
-                lines.add(currentLine.toString());
-            }
-        }
-        
-        return lines;
-    }
-      /**
-     * Dibuja un popup cuando se desbloquea una nueva fórmula
-     */
-    private void drawUnlockPopup() {
-        try {
-            if (unlockedFormulaIndex < 0 || unlockedFormulaIndex >= MAX_LEVEL) {
-                return;
-            }
-            
-            // Calcular tiempo transcurrido y opacidad (para efecto de fade)
-            long timeElapsed = System.currentTimeMillis() - unlockEffectStartTime;
-            double opacity = 1.0;
-            
-            // Hacer que el popup se desvanezca al final
-            if (timeElapsed > UNLOCK_EFFECT_DURATION * 0.7) {
-                opacity = 1.0 - ((timeElapsed - (UNLOCK_EFFECT_DURATION * 0.7)) / (UNLOCK_EFFECT_DURATION * 0.3));
-                opacity = Math.max(0.0, Math.min(1.0, opacity));
-            }
-            
-            // En modo minimalista, hacer el popup más pequeño y centrado
-            if (minimalUI) {
-                // Dimensiones y posición del popup minimalista
-                int popupWidth = 450; // Aumentamos un poco el ancho
-                int popupHeight = 120; // Aumentamos un poco el alto
-                int popupX = (GAME_WIDTH - popupWidth) / 2;
-                int popupY = (GAME_HEIGHT / 3) - (popupHeight / 2);
-                
-                // Dibujar fondo del popup
-                gc.setFill(new Color(0.0, 0.0, 0.0, 0.85 * opacity));
-                gc.fillRect(popupX, popupY, popupWidth, popupHeight);
-                
-                // Borde dorado
-                gc.setStroke(new Color(1.0, 0.84, 0.0, opacity));
-                gc.setLineWidth(3);
-                gc.strokeRect(popupX, popupY, popupWidth, popupHeight);
-                
-                // Título y fórmula (en formato compacto)
-                gc.setFill(new Color(1.0, 1.0, 0.0, opacity));
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20)); // Aumentamos el tamaño
-                gc.fillText("¡NUEVA FÓRMULA! " + FORMULAS_SHORT[unlockedFormulaIndex], popupX + 20, popupY + 45); // Ajustamos posición
-                
-                // Instrucción para ver detalles
-                gc.setFill(new Color(1.0, 1.0, 1.0, opacity));
-                gc.setFont(javafx.scene.text.Font.font("Arial", 16)); // Aumentamos el tamaño
-                gc.fillText("Presiona " + (unlockedFormulaIndex + 1) + " para ver detalles", popupX + 20, popupY + 80); // Ajustamos posición
-            } else {
-                // Dimensiones y posición del popup completo
-                int popupWidth = 500;
-                int popupHeight = 200;
-                int popupX = (GAME_WIDTH - popupWidth) / 2;
-                int popupY = (GAME_HEIGHT - popupHeight) / 2;
-                
-                // Dibujar fondo del popup
-                gc.setFill(new Color(0.0, 0.0, 0.0, 0.85 * opacity));
-                gc.fillRect(popupX - 5, popupY - 5, popupWidth + 10, popupHeight + 10);
-                
-                // Borde dorado
-                gc.setStroke(new Color(1.0, 0.84, 0.0, opacity));
-                gc.setLineWidth(5);
-                gc.strokeRect(popupX, popupY, popupWidth, popupHeight);
-                
-                // Título del popup
-                gc.setFill(new Color(1.0, 1.0, 0.0, opacity));
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 28));
-                gc.fillText("¡NUEVA FÓRMULA DESBLOQUEADA!", popupX + 25, popupY + 40);
-                
-                // Dibujar la fórmula
-                gc.setFill(new Color(1.0, 1.0, 1.0, opacity));
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
-                gc.fillText(FORMULAS[unlockedFormulaIndex], popupX + 25, popupY + 85);
-                
-                // Dibujar la descripción
-                gc.setFill(new Color(0.9, 0.9, 0.9, opacity));
-                gc.setFont(javafx.scene.text.Font.font("Arial", 16));
-                
-                // Dividir la descripción en múltiples líneas
-                String description = FORMULAS_DESCRIPTIONS[unlockedFormulaIndex];
-                List<String> lines = splitDescription(description, 60);
-                
-                for (int i = 0; i < lines.size(); i++) {
-                    gc.fillText(lines.get(i), popupX + 25, popupY + 120 + (i * 20));
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error al dibujar popup de desbloqueo: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Muestra una ventana de información detallada sobre una fórmula específica
-     * @param formulaIndex Índice de la fórmula a mostrar
-     */
-    private void showFormulaDetails(int formulaIndex) {
-        try {
-            // Pausar el juego mientras se muestra la información
-            boolean wasPaused = isPaused;
-            isPaused = true;
-            
-            // Información extendida sobre cada fórmula
-            final String[] EXTENDED_INFO = {
-                "La ley de gravedad de Newton establece que la fuerza de gravedad entre dos objetos es directamente proporcional al producto de sus masas e inversamente proporcional al cuadrado de la distancia entre ellos. Para un objeto cerca de la superficie terrestre, esta fuerza se simplifica a F = m × g, donde g ≈ 9.8 m/s² en la Tierra.\n\nEsta fórmula explica por qué objetos con diferentes masas caen a la misma velocidad en ausencia de resistencia del aire, ya que la aceleración gravitacional g es constante independientemente de la masa.",
-                
-                "Cuando un objeto cae libremente bajo la influencia de la gravedad (ignorando la resistencia del aire), su velocidad aumenta constantemente con el tiempo. La tasa de este aumento es determinada por la aceleración gravitacional g. Después de t segundos, un objeto inicialmente en reposo alcanzará una velocidad de v = g × t.\n\nEsta ecuación nos permite calcular la velocidad de un objeto en cualquier momento durante su caída.",
-                
-                "Esta fórmula permite calcular la distancia que recorre un objeto en caída libre después de un tiempo t. La distancia es proporcional al cuadrado del tiempo, lo que significa que un objeto recorre distancias cada vez mayores en intervalos de tiempo iguales.\n\nPor ejemplo, en los primeros 1, 2 y 3 segundos, un objeto caerá aproximadamente 4.9 m, 19.6 m y 44.1 m respectivamente, demostrando cómo la distancia aumenta cuadráticamente.",
-                
-                "La energía potencial gravitacional es la energía almacenada en un objeto debido a su posición en un campo gravitacional. Depende de la masa del objeto, la aceleración gravitacional y la altura sobre un nivel de referencia.\n\nEsta energía potencial se convierte en energía cinética a medida que el objeto cae, siguiendo el principio de conservación de la energía.",
-                
-                "La energía cinética es la energía que posee un objeto debido a su movimiento. Es proporcional a la masa del objeto y al cuadrado de su velocidad.\n\nA medida que un objeto cae, su energía potencial gravitacional se convierte en energía cinética, haciendo que se mueva cada vez más rápido. En ausencia de resistencia del aire, la suma de las energías potencial y cinética permanece constante durante la caída."
-            };
-            
-            // Aplicaciones prácticas de cada fórmula
-            final String[] PRACTICAL_APPLICATIONS = {
-                "• Cálculo del peso de objetos en diferentes planetas\n• Diseño de estructuras y edificios\n• Desarrollo de sistemas de elevación y grúas\n• Planificación de misiones espaciales",
-                
-                "• Predicción del tiempo de caída de objetos\n• Diseño de paracaídas y sistemas de frenado\n• Análisis de impactos y colisiones\n• Programación de simuladores de física",
-                
-                "• Cálculo de la altura de estructuras por tiempo de caída\n• Diseño de experimentos de caída libre\n• Estudio de rebotes en diferentes superficies\n• Análisis forense de caídas",
-                
-                "• Diseño de presas hidroeléctricas\n• Cálculo de almacenamiento de energía\n• Análisis de montañas rusas y parques de atracciones\n• Estudio de sistemas de resortes y péndulos",
-                
-                "• Diseño de sistemas de protección contra impactos\n• Análisis de eficiencia en vehículos\n• Cálculo de fuerzas en deportes y juegos\n• Desarrollo de armas de proyectiles"
-            };
-            
-            // Dibujar el fondo semi-transparente para toda la pantalla
-            gc.setFill(new Color(0, 0, 0, 0.85));
-            gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            
-            // Dibujar el panel de información
-            int panelX = 50;
-            int panelY = 50;
-            int panelWidth = GAME_WIDTH - 100;
-            int panelHeight = GAME_HEIGHT - 100;
-            
-            // Asegurarse de que el panel no sea demasiado grande para la pantalla
-            if (panelWidth > GAME_WIDTH - 20) {
-                panelWidth = GAME_WIDTH - 20;
-                panelX = 10;
-            }
-            if (panelHeight > GAME_HEIGHT - 20) {
-                panelHeight = GAME_HEIGHT - 20;
-                panelY = 10;
-            }
-            
-            // Fondo del panel con degradado
-            gc.setFill(new Color(0.12, 0.12, 0.22, 0.95));
-            gc.fillRect(panelX, panelY, panelWidth, panelHeight);
-            
-            // Borde del panel
-            gc.setStroke(Color.GOLD);
-            gc.setLineWidth(3);
-            gc.strokeRect(panelX, panelY, panelWidth, panelHeight);
-            
-            // Título - Nombre de la fórmula
-            gc.setFill(Color.GOLD);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 32));
-            gc.fillText(FORMULAS_SHORT[formulaIndex], panelX + 30, panelY + 50);
-            
-            // Descripción completa
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
-            gc.setFill(Color.WHITE);
-            gc.fillText(FORMULAS[formulaIndex], panelX + 30, panelY + 90);
-            
-            // Separador
-            gc.setStroke(new Color(0.5, 0.5, 0.8, 0.6));
-            gc.setLineWidth(2);
-            gc.strokeLine(panelX + 30, panelY + 110, panelX + panelWidth - 30, panelY + 110);
-            
-            // Título para la información extendida
-            gc.setFill(new Color(0.7, 0.7, 1.0, 1.0));
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
-            gc.fillText("Explicación:", panelX + 30, panelY + 140);
-            
-            // Información extendida
-            gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
-            gc.setFont(javafx.scene.text.Font.font("Arial", 16));
-              // Calcular cuántos caracteres caben en el ancho del panel - más conservador para evitar problemas
-            int maxCharsPerLine = Math.max(50, (panelWidth - 100) / 9); // Más espacio por carácter (9px) para mejor legibilidad
-            
-            // Dividir la información extendida en líneas
-            List<String> infoLines = splitDescription(EXTENDED_INFO[formulaIndex], maxCharsPerLine);
-            
-            // Contar líneas que contienen símbolos especiales para ajustar altura
-            int specialLines = 0;
-            for (String line : infoLines) {
-                if (line.contains("×") || line.contains("²") || line.contains("≈") || 
-                    line.contains("m/s") || line.contains("g")) {
-                    specialLines++;
-                }
-            }
-            
-            // Calcular cuántas líneas podemos mostrar en el espacio disponible
-            int maxLinesForInfo = Math.min(infoLines.size(), (panelHeight - 300) / 26);
-            
-            // Dibujar fondo para la explicación - altura ajustada para acomodar símbolos especiales
-            gc.setFill(new Color(0.15, 0.15, 0.25, 0.7));
-            int explanationHeight = (maxLinesForInfo * 26) + (specialLines * 4) + 30; // Altura base + extra para líneas especiales
-            gc.fillRoundRect(panelX + 25, panelY + 150, panelWidth - 60, explanationHeight, 10, 10);
-              // Dibujar texto de explicación con mejor espaciado y control de superposición
-            gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
-            
-            // Ajustar el espaciado vertical según el tamaño del texto
-            int lineHeight = 26; // Altura base para cada línea de texto
-            for (int i = 0; i < maxLinesForInfo; i++) {
-                String line = infoLines.get(i);
-                
-                // Espacio extra para líneas que contienen símbolos matemáticos
-                if (line.contains("×") || line.contains("²") || line.contains("≈") || 
-                    line.contains("m/s") || line.contains("m/s²")) {
-                    lineHeight = 30; // Mayor altura para fórmulas
-                } else if (line.isEmpty()) {
-                    // Tratar líneas vacías como separadores de párrafos
-                    lineHeight = 10;
-                } else {
-                    lineHeight = 26; // Altura normal para texto regular
-                }
-                
-                // Si no es una línea vacía, dibujarla
-                if (!line.isEmpty()) {
-                    gc.fillText(line, panelX + 40, panelY + 170 + (i * lineHeight));
-                }
-            }
-            
-            // Título para aplicaciones prácticas - ajustado dinámicamente
-            int applicationsY = panelY + 170 + explanationHeight + 20; // Extra padding
-            
-            // Verificar si hay espacio suficiente para mostrar aplicaciones prácticas
-            int remainingHeight = panelHeight - (applicationsY - panelY) - 80; // 80px para las instrucciones de salida
-            
-            if (remainingHeight >= 100) { // Altura mínima para título y al menos dos líneas
-                gc.setFill(new Color(0.7, 0.7, 1.0, 1.0));
-                gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 20));
-                gc.fillText("Aplicaciones prácticas:", panelX + 30, applicationsY);
-                
-                // Fondo para aplicaciones prácticas
-                gc.setFill(new Color(0.15, 0.15, 0.25, 0.7));
-                int appsHeight = Math.min(remainingHeight - 50, 150); // Altura máxima para aplicaciones
-                gc.fillRoundRect(panelX + 25, applicationsY + 10, panelWidth - 60, appsHeight, 10, 10);
-                
-                // Listar aplicaciones prácticas
-                gc.setFill(new Color(0.9, 0.9, 0.9, 1.0));
-                gc.setFont(javafx.scene.text.Font.font("Arial", 16));
-                  // Calcular caracteres por línea basado en el ancho del panel
-                int maxCharsPerLinePractical = Math.max(50, (panelWidth - 100) / 8); // Reducir máximo para seguridad
-                
-                // Dividir las aplicaciones prácticas en líneas
-                List<String> appLines = splitDescription(PRACTICAL_APPLICATIONS[formulaIndex], maxCharsPerLinePractical);
-                
-                // Calcular cuántas líneas podemos mostrar en el espacio restante
-                int maxLinesForApps = Math.min(appLines.size(), (appsHeight - 20) / 30);
-                
-                // Ajustar el espaciado vertical según contenido
-                int appLineHeight = 30;
-                for (int i = 0; i < maxLinesForApps; i++) {
-                    String line = appLines.get(i);
-                    
-                    // Aplicar sangría especial para líneas que comienzan con viñetas
-                    if (line.startsWith("•")) {
-                        gc.fillText(line, panelX + 40, applicationsY + 35 + (i * appLineHeight));
-                    } else {
-                        gc.fillText(line, panelX + 40, applicationsY + 35 + (i * appLineHeight));
-                    }
-                }
-            }
-            
-            // Instrucciones para cerrar
-            gc.setFill(Color.WHITE);
-            gc.setFont(javafx.scene.text.Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18));
-            
-            // Centrar texto horizontalmente y colocarlo en la parte inferior del panel
-            String closeText = "Presiona ESCAPE para volver al juego";
-            double textWidth = closeText.length() * 10; // Aproximación del ancho del texto
-            double textX = panelX + (panelWidth / 2) - (textWidth / 2);
-            double textY = panelY + panelHeight - 30;
-            
-            // Fondo para el texto de cierre
-            gc.setFill(new Color(0.2, 0.2, 0.3, 0.8));
-            gc.fillRoundRect(textX - 20, textY - 20, textWidth + 40, 30, 15, 15);
-            
-            // Texto de cierre
-            gc.setFill(new Color(1.0, 1.0, 1.0, 0.9));
-            gc.fillText(closeText, textX, textY);
-            
-            // Esperar a que el usuario presione ESC para cerrar
-            Scene scene = gameCanvas.getScene();
-            EventHandler<KeyEvent> originalKeyPressedHandler = (EventHandler<KeyEvent>) scene.getOnKeyPressed();
-            EventHandler<KeyEvent> originalKeyReleasedHandler = (EventHandler<KeyEvent>) scene.getOnKeyReleased();
-            
-            // Temporalmente reemplazamos los manejadores de eventos
-            scene.setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.ESCAPE) {
-                    // Restaurar los manejadores de eventos originales
-                    scene.setOnKeyPressed(originalKeyPressedHandler);
-                    scene.setOnKeyReleased(originalKeyReleasedHandler);
-                    
-                    // Restaurar el estado de pausa anterior
-                    isPaused = wasPaused;
-                    
-                    // Forzar la actualización de los controles
-                    if (originalKeyPressedHandler != null) {
-                        Platform.runLater(() -> {
-                            System.out.println("Controles de juego restaurados correctamente");
-                        });
-                    }
-                }
-            });
-            
-            // Desactivamos temporalmente el manejador de liberación de teclas
-            scene.setOnKeyReleased(null);
-        } catch (Exception e) {
-            System.err.println("Error al mostrar detalles de fórmula: " + e.getMessage());
-            e.printStackTrace();
-            
-            // Asegurarse de restaurar los controles del juego en caso de error
-            isPaused = false; // Aseguramos que el juego no quede pausado
-            
-            // Restaurar los manejadores de eventos originales si es posible
-            try {
-                Scene scene = gameCanvas.getScene();
-                if (scene != null) {
-                    setupKeyHandlers(); // Restauramos los manejadores de eventos de teclado
-                    System.out.println("Controles restaurados después de error");
-                }
-            } catch (Exception ex) {
-                System.err.println("Error al restaurar controles: " + ex.getMessage());
-            }
         }
     }
 }
