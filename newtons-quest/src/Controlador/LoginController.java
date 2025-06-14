@@ -2,6 +2,7 @@ package Controlador;
 
 import Modelo.UsuarioDAO;
 import Modelo.ConexionDB;
+import Controlador.componentes.RankingManager;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -93,6 +94,15 @@ public class LoginController {
 
         // Si llegamos aquí, las credenciales son válidas
         currentUsername = username;
+        
+        // Configurar el usuario actual en el RankingManager
+        int userId = UsuarioDAO.obtenerIdUsuario(username);
+        if (userId != -1) {
+            RankingManager.getInstance().setCurrentUser(userId, username);
+            System.out.println("Usuario configurado en RankingManager: " + username + " (ID: " + userId + ")");
+        } else {
+            System.err.println("Error: No se pudo obtener el ID del usuario " + username);
+        }
 
         // Abrir el menú principal
         try {
