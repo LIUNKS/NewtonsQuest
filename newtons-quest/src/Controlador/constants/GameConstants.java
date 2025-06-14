@@ -27,14 +27,13 @@ public final class GameConstants {
     // === PROBABILIDADES ===
     public static final double RED_APPLE_PROBABILITY = 0.7;
     public static final double GREEN_APPLE_PROBABILITY = 0.3;
-    
-    // === DIMENSIONES DE VENTANA ===
+      // === DIMENSIONES DE VENTANA ===
     public static final int MAIN_WINDOW_WIDTH = 900;
     public static final int MAIN_WINDOW_HEIGHT = 700;
     public static final int RULES_DIALOG_WIDTH = 700;
     public static final int RULES_DIALOG_HEIGHT = 600;
-    public static final int SETTINGS_DIALOG_WIDTH = 400;
-    public static final int SETTINGS_DIALOG_HEIGHT = 250;
+    public static final int SETTINGS_DIALOG_WIDTH = 500;
+    public static final int SETTINGS_DIALOG_HEIGHT = 600;
     
     // === COLORES TEMÁTICOS ===
     public static final String PRIMARY_COLOR = "#e94560";
