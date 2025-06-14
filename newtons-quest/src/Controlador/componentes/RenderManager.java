@@ -29,6 +29,11 @@ public class RenderManager {
     private String currentFormulaDetails = "";
     private String currentFormulaName = "";
     
+    // Estado para mostrar celebración de completación
+    private boolean showingCompletionCelebration = false;
+    private long completionCelebrationStartTime = 0;
+    private static final long COMPLETION_CELEBRATION_DURATION = 5000; // 5 segundos
+    
     // Información de fórmulas para el desbloqueo
     private String[] FORMULAS_SHORT;
     private String[] FORMULAS_DESCRIPTIONS;
@@ -199,6 +204,9 @@ public class RenderManager {
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
             gc.fillText("Nivel " + (level + 1), 35, GAME_HEIGHT - 25);
             
+            // Indicador de tecla de configuración en la esquina inferior derecha
+            renderSettingsIndicator();
+            
             // Ya no mostramos el indicador de modo minimalista
             
         } catch (Exception e) {
@@ -314,11 +322,15 @@ public class RenderManager {
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
         gc.fillText("PAUSA", GAME_WIDTH / 2 - 80, GAME_HEIGHT / 2 - 20);
-        
-        // Instrucciones
+          // Instrucciones
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 24));
         gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 30);
         gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 70);
+        
+        // Información adicional sobre configuración
+        gc.setFill(new Color(0.8, 0.8, 0.8, 1));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.fillText("Presiona S para abrir Configuración", GAME_WIDTH / 2 - 140, GAME_HEIGHT / 2 + 110);
     }    /**
      * Renderiza la pantalla de Game Over con el resumen del juego
      * @param score Puntuación final
@@ -400,13 +412,9 @@ public class RenderManager {
             gc.setFill(Color.WHITE);
             gc.setFont(Font.font("Arial", 18));
             gc.fillText("¡Sigue jugando para desbloquear más fórmulas de física!", 
-                       GAME_WIDTH / 2 - 240, 300 + (formulasShown * 75) + 30);
-        } else {
-            // Mensaje de felicitación por desbloquear todas las fórmulas
-            gc.setFill(Color.GOLD);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-            gc.fillText("¡FELICIDADES! ¡Has desbloqueado todas las fórmulas de física!", 
-                       GAME_WIDTH / 2 - 300, 300 + (formulasShown * 75) + 30);
+                       GAME_WIDTH / 2 - 240, 300 + (formulasShown * 75) + 30);        } else {
+            // Mensaje de felicitación por desbloquear todas las fórmulas con información de ranking
+            renderCompletionCelebration(score, 300 + (formulasShown * 75) + 30);
         }
         
         // Instrucciones para volver a jugar
@@ -414,16 +422,15 @@ public class RenderManager {
         gc.setFont(Font.font(24));
         gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
     }
-    
-    /**
+      /**
      * Dibuja las instrucciones del juego
      */
     private void renderInstructions() {
         gc.setFill(new Color(0, 0, 0, 0.7)); // Fondo para instrucciones
-        gc.fillRect(15, 15, 400, 135);
+        gc.fillRect(15, 15, 400, 155);
         gc.setStroke(new Color(1, 1, 1, 0.4));
         gc.setLineWidth(2);
-        gc.strokeRect(15, 15, 400, 135);
+        gc.strokeRect(15, 15, 400, 155);
         
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font(14));
@@ -433,6 +440,7 @@ public class RenderManager {
         gc.fillText("- Dejas caer una manzana roja", 40, 95);
         gc.fillText("- Atrapas una manzana verde", 40, 115);
         gc.fillText("Presiona M para alternar entre interfaz minimalista/completa", 20, 135);
+        gc.fillText("Presiona S para abrir Configuración (volumen, brillo)", 20, 155);
     }
     
     /**
@@ -793,5 +801,122 @@ public class RenderManager {
      */
     public void setCurrentFormulaForUnlock(int formulaIndex) {
         this.currentFormulaIndex = formulaIndex;
+    }
+    
+    /**
+     * Renderiza un indicador pequeño para la tecla de configuración
+     */
+    private void renderSettingsIndicator() {
+        // Dibujar un pequeño indicador para la tecla de configuración
+        gc.setFill(Color.LIGHTGRAY);
+        gc.setFont(Font.font("Arial", 12));
+        gc.fillText("⚙️ S", GAME_WIDTH - 50, 30);
+    }
+    
+    /**
+     * Inicia la celebración de completación de todas las fórmulas
+     */
+    public void startCompletionCelebration() {
+        showingCompletionCelebration = true;
+        completionCelebrationStartTime = System.currentTimeMillis();
+        System.out.println("Iniciando celebración de completación de todas las fórmulas");
+    }
+    
+    /**
+     * Verifica si se está mostrando la celebración de completación
+     */
+    public boolean isShowingCompletionCelebration() {
+        return showingCompletionCelebration;
+    }
+    
+    /**
+     * Actualiza el estado de la celebración de completación
+     */
+    public void updateCompletionCelebration() {
+        if (showingCompletionCelebration) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - completionCelebrationStartTime > COMPLETION_CELEBRATION_DURATION) {
+                showingCompletionCelebration = false;
+                System.out.println("Celebración de completación terminada");
+            }
+        }
+    }
+    
+    /**
+     * Renderiza la celebración cuando el jugador completa todas las fórmulas durante el juego
+     */
+    public void renderCompletionCelebrationDuringGame(int score) {
+        if (showingCompletionCelebration) {
+            renderCompletionCelebration(score, GAME_HEIGHT / 2 - 75); // Centrado en la pantalla
+        }
+    }
+    
+    /**
+     * Renderiza la celebración cuando el jugador completa todas las fórmulas
+     */
+    private void renderCompletionCelebration(int score, int yPosition) {
+        try {
+            // Importar RankingManager
+            Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
+            
+            // Obtener mensaje de felicitación personalizado
+            String celebrationMessage = rankingManager.generateCongratulationMessage(score, true);
+            
+            // Verificar si hay logros especiales
+            String achievementMessage = rankingManager.checkForAchievements(score, true);
+            
+            // Renderizar fondo especial para la celebración
+            gc.setFill(new Color(1, 0.8, 0, 0.2)); // Fondo dorado semi-transparente
+            gc.fillRect(50, yPosition - 20, GAME_WIDTH - 100, 150);
+            
+            gc.setStroke(Color.GOLD);
+            gc.setLineWidth(3);
+            gc.strokeRect(50, yPosition - 20, GAME_WIDTH - 100, 150);
+            
+            // Título principal
+            gc.setFill(Color.GOLD);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
+            gc.fillText("🎉 ¡MAESTRO DE LA FÍSICA! 🎉", GAME_WIDTH / 2 - 160, yPosition + 10);
+            
+            // Información de ranking
+            int position = rankingManager.getCurrentUserPosition();
+            int totalPlayers = rankingManager.getTotalCompletedPlayers();
+            
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            
+            if (position > 0) {
+                gc.fillText(String.format("🏆 Ranking: #%d de %d maestros | Puntaje: %d", 
+                          position, totalPlayers, score), GAME_WIDTH / 2 - 200, yPosition + 40);
+            } else {
+                gc.fillText(String.format("🎯 Puntaje: %d | Total de maestros: %d", 
+                          score, totalPlayers), GAME_WIDTH / 2 - 150, yPosition + 40);
+            }
+            
+            // Mensaje de logro especial si existe
+            if (achievementMessage != null) {
+                gc.setFill(Color.ORANGE);
+                gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+                gc.fillText(achievementMessage, GAME_WIDTH / 2 - 200, yPosition + 65);
+            }
+            
+            // Motivación para seguir jugando
+            gc.setFill(Color.LIGHTGREEN);
+            gc.setFont(Font.font("Arial", 14));
+            gc.fillText("💡 ¡Intenta conseguir una puntuación aún mejor!", GAME_WIDTH / 2 - 150, yPosition + 90);
+            
+            // Instrucción para ver ranking completo
+            gc.setFill(Color.CYAN);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+            gc.fillText("Presiona 'R' para ver el ranking completo", GAME_WIDTH / 2 - 130, yPosition + 115);
+            
+        } catch (Exception e) {
+            System.err.println("Error al renderizar celebración de completado: " + e.getMessage());
+            // Fallback a mensaje simple
+            gc.setFill(Color.GOLD);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            gc.fillText("¡FELICITACIONES! ¡Has desbloqueado todas las fórmulas!", 
+                       GAME_WIDTH / 2 - 300, yPosition);
+        }
     }
 }
