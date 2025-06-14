@@ -1,5 +1,6 @@
 package Controlador.componentes;
 
+import Controlador.utils.GameSettings;
 import java.io.File;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -42,10 +43,9 @@ public class AudioManager {
                 media = new Media(resourcePath);
                 System.out.println("Música cargada desde recursos");
             }
-            
-            musicPlayer = new MediaPlayer(media);
+              musicPlayer = new MediaPlayer(media);
             musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Reproducir en bucle
-            musicPlayer.setVolume(0.5); // Volumen al 50%
+            musicPlayer.setVolume(GameSettings.getInstance().getMusicVolume());
             musicPlayer.play();
             
             System.out.println("Música de fondo iniciada");
@@ -78,9 +78,8 @@ public class AudioManager {
             if (effectPlayer != null) {
                 effectPlayer.stop();
             }
-            
-            effectPlayer = new MediaPlayer(media);
-            effectPlayer.setVolume(0.7); // Volumen al 70%
+              effectPlayer = new MediaPlayer(media);
+            effectPlayer.setVolume(GameSettings.getInstance().getEffectVolume());
             effectPlayer.play();
             
             System.out.println("Sonido de desbloqueo reproducido");
@@ -119,8 +118,7 @@ public class AudioManager {
             System.out.println("Música de fondo reanudada");
         }
     }
-    
-    /**
+      /**
      * Ajusta el volumen de la música de fondo
      * @param volume Valor entre 0.0 y 1.0
      */
@@ -128,5 +126,29 @@ public class AudioManager {
         if (musicPlayer != null) {
             musicPlayer.setVolume(Math.max(0.0, Math.min(1.0, volume)));
         }
+    }
+    
+    /**
+     * Ajusta el volumen de los efectos de sonido
+     * @param volume Valor entre 0.0 y 1.0
+     */
+    public void setEffectVolume(double volume) {
+        if (effectPlayer != null) {
+            effectPlayer.setVolume(Math.max(0.0, Math.min(1.0, volume)));
+        }
+    }
+    
+    /**
+     * Obtiene el volumen actual de la música
+     */
+    public double getMusicVolume() {
+        return musicPlayer != null ? musicPlayer.getVolume() : 0.0;
+    }
+    
+    /**
+     * Obtiene el volumen actual de los efectos
+     */
+    public double getEffectVolume() {
+        return effectPlayer != null ? effectPlayer.getVolume() : 0.0;
     }
 }
