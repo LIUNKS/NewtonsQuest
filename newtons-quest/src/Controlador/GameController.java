@@ -2,6 +2,8 @@ package Controlador;
 
 import Controlador.componentes.InputManager;
 import Controlador.componentes.*;
+import Controlador.dialogs.SettingsDialog;
+import Controlador.utils.GameSettings;
 import Modelo.Player;
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +33,7 @@ public class GameController {
     private GraphicsContext gc;
     private Player player;
     private AnimationTimer gameLoop;
-    
-    // Managers especializados
+      // Managers especializados
     private RenderManager renderManager;
     private InputManager inputManager;
     private AudioManager audioManager;
@@ -40,11 +41,14 @@ public class GameController {
     private LevelManager levelManager;
     private AppleManager appleManager;
     private ScoreManager scoreManager;
+    private VisualEffectsManager visualEffectsManager;
+    private RankingManager rankingManager; // Nuevo manager para el ranking
     
     // Estado del juego
     private boolean isPaused = false;
     private boolean gameOver = false;
     private boolean minimalUI = true; // Interfaz minimalista por defecto
+    private boolean showingSettings = false; // Nueva variable para controlar el estado de configuración
     
     /**
      * Inicializa el controlador y todos los componentes del juego
@@ -189,10 +193,49 @@ public class GameController {
             // Inicializar gestor de puntuación (5 vidas máximo)
             scoreManager = new ScoreManager(5);
             System.out.println("ScoreManager inicializado");
-            
-            // Inicializar gestor de manzanas
+              // Inicializar gestor de manzanas
             appleManager = new AppleManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 1500, 2.0, 5.0);
             System.out.println("AppleManager inicializado");
+            
+            // Inicializar gestor de efectos visuales
+            if (gameCanvas != null && gameCanvas.getScene() != null) {
+                visualEffectsManager = new VisualEffectsManager(gameCanvas.getScene());
+                System.out.println("VisualEffectsManager inicializado");            } else {
+                System.out.println("VisualEffectsManager se inicializará más tarde cuando la escena esté disponible");
+            }
+            
+            // Inicializar gestor de ranking
+            rankingManager = RankingManager.getInstance();
+            
+            // Configurar usuario actual desde LoginController
+            String currentUsername = Controlador.LoginController.getCurrentUsername();
+            if (currentUsername != null && !currentUsername.isEmpty()) {
+                int userId = Modelo.UsuarioDAO.obtenerIdUsuario(currentUsername);
+                rankingManager.setCurrentUser(userId, currentUsername);
+                System.out.println("RankingManager configurado para usuario: " + currentUsername);
+            } else {
+                System.out.println("No hay usuario actual definido para el ranking");
+            }
+            
+            // Configurar callback para cuando se completan todas las fórmulas
+            if (levelManager != null && renderManager != null) {
+                levelManager.setOnAllFormulasCompleted(() -> {
+                    System.out.println("¡Todas las fórmulas completadas! Iniciando celebración...");
+                    renderManager.startCompletionCelebration();
+                    
+                    // También guardar inmediatamente en el ranking
+                    if (rankingManager != null && scoreManager != null) {
+                        boolean saved = rankingManager.checkAndSaveCompletedGame(
+                            levelManager.getUnlockedFormulas(), 
+                            scoreManager.getScore()
+                        );
+                        if (saved) {
+                            System.out.println("Completación guardada en ranking inmediatamente");
+                        }
+                    }
+                });
+                System.out.println("Callback de completación de todas las fórmulas configurado");
+            }
             
             System.out.println("Todos los componentes inicializados correctamente");
         } catch (Exception e) {
@@ -235,15 +278,16 @@ public class GameController {
             if (audioManager == null) {
                 System.err.println("ERROR: AudioManager es null en setupComponentCallbacks");
                 return;
-            }
-            
-            // Configurar callbacks del InputManager
+            }            // Configurar callbacks del InputManager
             inputManager.setCallbacks(
-                this::togglePause,                 // onPauseToggle
+                this::handleEscapeKey,             // onPauseToggle (ahora maneja ESCAPE inteligentemente)
                 this::returnToMainMenu,            // onReturnToMenu
                 this::toggleUI,                    // onUIToggle
+                this::showSettings,                // onShowSettings
                 this::showFormulaDetails,          // onFormulaDetails
-                () -> renderManager.hideFormulaDetails() // onHideFormulaDetails
+                () -> {}, // Dummy callback ya que ESCAPE maneja esto
+                this::showRanking,                 // onShowRanking
+                () -> {} // Dummy callback ya que ESCAPE maneja esto
             );
             
             // Configurar callbacks del ScoreManager
@@ -354,12 +398,16 @@ public class GameController {
             } else if (player.getX() > GAME_WIDTH - player.getWidth()) {
                 player.setPosition(GAME_WIDTH - player.getWidth(), player.getY());
             }
-            
-            // Actualizar manzanas y colisiones
+              // Actualizar manzanas y colisiones
             appleManager.update(player);
             
             // Actualizar efecto de desbloqueo de fórmulas
             levelManager.updateUnlockEffect();
+            
+            // Actualizar estado de la celebración de completación
+            if (renderManager != null) {
+                renderManager.updateCompletionCelebration();
+            }
             
         } catch (Exception e) {
             System.err.println("Error al actualizar el juego: " + e.getMessage());
@@ -412,8 +460,7 @@ public class GameController {
             boolean mostrarFormula = renderManager.isShowingFormulaDetails();
             boolean mostrarDesbloqueo = levelManager.isShowingUnlockEffect();
             boolean mostrarGameOver = gameOver;
-            
-            // Si vamos a mostrar una pantalla de pausa o detalles de fórmula, no renderizar el HUD
+              // Si vamos a mostrar una pantalla de pausa, detalles de fórmula o game over, no renderizar el HUD
             if (!mostrarPausa && !mostrarFormula && !mostrarGameOver) {
                 // Solo usar interfaz minimalista
                 renderManager.renderMinimalUI(
@@ -432,11 +479,15 @@ public class GameController {
                 // Mostrar la notificación (ya no pausa el juego)
                 renderManager.renderUnlockPopup();
             }
-            
-            // Renderizar detalles de fórmula si están activos
+              // Renderizar detalles de fórmula si están activos
             if (mostrarFormula) {
                 renderManager.renderFormulaDetailsModal();
-            } 
+            }
+            
+            // Mostrar celebración de completación si está activa
+            if (renderManager.isShowingCompletionCelebration()) {
+                renderManager.renderCompletionCelebrationDuringGame(scoreManager.getScore());
+            }
             
             // Mostrar pantalla de pausa solo si corresponde
             if (mostrarPausa) {
@@ -473,8 +524,7 @@ public class GameController {
         minimalUI = true;
         // No hacer nada más, ya que solo queremos la interfaz minimalista
         System.out.println("Interfaz se mantiene en modo minimalista");
-    }
-      /**
+    }    /**
      * Marca el juego como terminado y configura el sprite de muerte del jugador
      */
     private void setGameOver() {
@@ -483,6 +533,19 @@ public class GameController {
         if (player != null) {
             player.setDead(true);
         }
+        
+        // Verificar si el jugador completó todas las fórmulas y guardar en ranking
+        if (levelManager != null && scoreManager != null && rankingManager != null) {
+            boolean allFormulasCompleted = rankingManager.checkAndSaveCompletedGame(
+                levelManager.getUnlockedFormulas(), 
+                scoreManager.getScore()
+            );
+            
+            if (allFormulasCompleted) {
+                System.out.println("¡Jugador completó todas las fórmulas! Datos guardados en ranking.");
+            }
+        }
+        
         System.out.println("Juego terminado");
     }
     
@@ -636,6 +699,117 @@ public class GameController {
             e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Abre el diálogo de configuración del juego
+     */
+    private void showSettings() {
+        try {
+            isPaused = true; // Pausar el juego mientras se muestran las configuraciones
+            showingSettings = true;
+            
+            Stage gameStage = (Stage) gameCanvas.getScene().getWindow();
+            
+            // Crear el diálogo de configuración con callbacks
+            SettingsDialog settingsDialog = new SettingsDialog(
+                gameStage,
+                this::updateBrightness,  // Callback para brillo
+                this::updateVolume       // Callback para volumen
+            );
+            
+            settingsDialog.showAndWait();
+            
+            // Cuando se cierra el diálogo, reanudar el juego si no estaba en game over
+            showingSettings = false;
+            if (!gameOver) {
+                isPaused = false;
+            }
+            
+            System.out.println("Configuración cerrada, juego reanudado");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar configuración: " + e.getMessage());
+            e.printStackTrace();
+            showingSettings = false;
+            if (!gameOver) {
+                isPaused = false;
+            }
+        }
+    }
+    
+    /**
+     * Actualiza el brillo del juego
+     */
+    private void updateBrightness() {
+        try {
+            if (visualEffectsManager == null && gameCanvas != null && gameCanvas.getScene() != null) {
+                // Inicializar el gestor de efectos visuales si no existe
+                visualEffectsManager = new VisualEffectsManager(gameCanvas.getScene());
+            }
+            
+            if (visualEffectsManager != null) {
+                visualEffectsManager.updateBrightness();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al actualizar brillo: " + e.getMessage());
+        }
+    }
+      /**
+     * Actualiza el volumen del juego
+     */
+    private void updateVolume() {
+        try {
+            if (audioManager != null) {
+                GameSettings settings = GameSettings.getInstance();
+                audioManager.setMusicVolume(settings.getMusicVolume());
+                audioManager.setEffectVolume(settings.getEffectVolume());
+            }
+        } catch (Exception e) {
+            System.err.println("Error al actualizar volumen: " + e.getMessage());
+        }
+    }    /**
+     * Muestra la pantalla de ranking (método deshabilitado - funcionalidad no implementada)
+     */
+    private void showRanking() {
+        try {
+            // La funcionalidad de ranking completo no está implementada en RenderManager
+            // El ranking se muestra solo en la celebración de completitud al terminar el juego
+            System.out.println("Funcionalidad de ranking no implementada - el ranking se muestra al completar las 5 fórmulas");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar ranking: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }/**
+     * Oculta la pantalla de ranking (método deshabilitado - funcionalidad no implementada)
+     */
+    private void hideRanking() {
+        try {
+            // La funcionalidad de ranking completo no está implementada en RenderManager
+            // El ranking se muestra solo en la celebración de completitud
+            System.out.println("Funcionalidad de ranking no implementada");
+        } catch (Exception e) {
+            System.err.println("Error al ocultar ranking: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+      /**
+     * Maneja la tecla ESCAPE con prioridades: detalles de fórmula > pausa
+     */
+    private void handleEscapeKey() {
+        try {
+            // Prioridad 1: Si se están mostrando detalles de fórmula, cerrarlos
+            if (renderManager != null && renderManager.isShowingFormulaDetails()) {
+                renderManager.hideFormulaDetails();
+                System.out.println("Cerrando detalles de fórmula");
+                return;
+            }
+            
+            // Prioridad 3: Alternar pausa
+            togglePause();
+        } catch (Exception e) {
+            System.err.println("Error al manejar tecla ESCAPE: " + e.getMessage());
             e.printStackTrace();
         }
     }
