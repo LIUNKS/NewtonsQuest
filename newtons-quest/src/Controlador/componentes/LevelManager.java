@@ -46,10 +46,9 @@ public class LevelManager {
     
     // Callback para cuando se desbloquea una fórmula
     private Runnable onFormulaUnlocked;
-    
-    /**
-     * Constructor del LevelManager
-     */
+    private Runnable onAllFormulasCompleted; // Nuevo callback para cuando se completan todas las fórmulas
+
+    // Constructores
     public LevelManager() {
         unlockedFormulas = new boolean[MAX_LEVEL];
         for (int i = 0; i < MAX_LEVEL; i++) {
@@ -64,6 +63,14 @@ public class LevelManager {
      */
     public void setOnFormulaUnlocked(Runnable onFormulaUnlocked) {
         this.onFormulaUnlocked = onFormulaUnlocked;
+    }
+    
+    /**
+     * Establece el callback para cuando se completan todas las fórmulas
+     * @param onAllFormulasCompleted Acción a ejecutar cuando se completan todas las fórmulas
+     */
+    public void setOnAllFormulasCompleted(Runnable onAllFormulasCompleted) {
+        this.onAllFormulasCompleted = onAllFormulasCompleted;
     }
     
     /**
@@ -102,10 +109,16 @@ public class LevelManager {
             level = newLevel;
             System.out.println("¡Nivel aumentado a " + (level + 1) + "!");
         }
+          // Verificar si se completaron todas las fórmulas
+        if (formulaDesbloqueada && areAllFormulasUnlocked()) {
+            System.out.println("¡Todas las fórmulas han sido desbloqueadas!");
+            if (onAllFormulasCompleted != null) {
+                onAllFormulasCompleted.run();
+            }
+        }
         
         return formulaDesbloqueada;
-    }
-      /**
+    }    /**
      * Desbloquea una fórmula específica y muestra el efecto visual
      * @param formulaIndex Índice de la fórmula a desbloquear
      */
@@ -118,6 +131,12 @@ public class LevelManager {
         unlockEffectStartTime = System.currentTimeMillis();
         
         System.out.println("¡Fórmula desbloqueada: " + FORMULAS_SHORT[formulaIndex] + "!");
+        
+        // Verificar si se han desbloqueado todas las fórmulas
+        if (areAllFormulasUnlocked() && onAllFormulasCompleted != null) {
+            System.out.println("¡TODAS LAS FÓRMULAS DESBLOQUEADAS! Ejecutando celebración...");
+            onAllFormulasCompleted.run();
+        }
     }
     
     /**
@@ -145,6 +164,19 @@ public class LevelManager {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Verifica si todas las fórmulas han sido desbloqueadas
+     * @return true si todas las fórmulas están desbloqueadas
+     */
+    public boolean areAllFormulasUnlocked() {
+        for (boolean unlocked : unlockedFormulas) {
+            if (!unlocked) {
+                return false;
+            }
+        }
+        return true;
     }
     
     // Getters
