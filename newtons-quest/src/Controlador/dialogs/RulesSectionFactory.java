@@ -58,8 +58,7 @@ public class RulesSectionFactory {
             "Acumula puntos para desbloquear las fórmulas físicas famosas de Isaac Newton."
         );
     }
-    
-    /**
+      /**
      * Crea la sección de controles del juego
      */
     public static VBox createControlsSection() {
@@ -67,6 +66,7 @@ public class RulesSectionFactory {
             "🎮 CONTROLES", "#3498db",
             "• FLECHAS ⬅️ ➡️ o A/D: Mover a Newton\n" +
             "• ESC: Pausar el juego o cerrar ventanas\n" +
+            "• S: Abrir configuración del juego\n" +
             "• NÚMEROS 1️⃣-5️⃣: Ver detalles de fórmulas desbloqueadas"
         );
     }
