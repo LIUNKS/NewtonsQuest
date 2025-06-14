@@ -16,13 +16,14 @@ public class InputManager {
     
     // Estado de las teclas
     private boolean leftKeyPressed = false;
-    private boolean rightKeyPressed = false;
-    
-    // Callbacks para acciones
+    private boolean rightKeyPressed = false;    // Callbacks para acciones
     private Runnable onPauseToggle;
-    private Runnable onReturnToMenu;    private Runnable onUIToggle;
+    private Runnable onReturnToMenu;    
+    private Runnable onUIToggle;    private Runnable onShowSettings;
     private java.util.function.Consumer<Integer> onFormulaDetails;
     private Runnable onHideFormulaDetails;
+    private Runnable onShowRanking; // Nuevo callback para mostrar ranking
+    private Runnable onHideRanking; // Nuevo callback para ocultar ranking
     
     /**
      * Constructor del InputManager
@@ -74,8 +75,7 @@ public class InputManager {
             e.printStackTrace();
         }
     }
-    
-    /**
+      /**
      * Configura los callbacks para acciones específicas incluyendo ocultar detalles de fórmula
      * @param onPauseToggle Acción para alternar pausa
      * @param onReturnToMenu Acción para volver al menú
@@ -97,7 +97,65 @@ public class InputManager {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
         }
-    }    /**
+    }
+      /**
+     * Configura los callbacks para acciones específicas incluyendo configuración
+     * @param onPauseToggle Acción para alternar pausa
+     * @param onReturnToMenu Acción para volver al menú
+     * @param onUIToggle Acción para alternar UI
+     * @param onShowSettings Acción para mostrar configuración
+     * @param onFormulaDetails Acción para mostrar detalles de fórmula
+     * @param onHideFormulaDetails Acción para ocultar detalles de fórmula
+     */
+    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
+                            Runnable onUIToggle, Runnable onShowSettings,
+                            java.util.function.Consumer<Integer> onFormulaDetails,
+                            Runnable onHideFormulaDetails) {
+        try {
+            this.onPauseToggle = onPauseToggle;
+            this.onReturnToMenu = onReturnToMenu;
+            this.onUIToggle = onUIToggle;
+            this.onShowSettings = onShowSettings;
+            this.onFormulaDetails = onFormulaDetails;
+            this.onHideFormulaDetails = onHideFormulaDetails;
+            System.out.println("Callbacks configurados en InputManager (versión 3 con configuración)");
+        } catch (Exception e) {
+            System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Configura los callbacks para acciones específicas incluyendo sistema de ranking
+     * @param onPauseToggle Acción para alternar pausa
+     * @param onReturnToMenu Acción para volver al menú
+     * @param onUIToggle Acción para alternar UI
+     * @param onShowSettings Acción para mostrar configuración
+     * @param onFormulaDetails Acción para mostrar detalles de fórmula
+     * @param onHideFormulaDetails Acción para ocultar detalles de fórmula
+     * @param onShowRanking Acción para mostrar ranking
+     * @param onHideRanking Acción para ocultar ranking
+     */
+    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
+                            Runnable onUIToggle, Runnable onShowSettings,
+                            java.util.function.Consumer<Integer> onFormulaDetails,
+                            Runnable onHideFormulaDetails, Runnable onShowRanking,
+                            Runnable onHideRanking) {
+        try {
+            this.onPauseToggle = onPauseToggle;
+            this.onReturnToMenu = onReturnToMenu;
+            this.onUIToggle = onUIToggle;
+            this.onShowSettings = onShowSettings;
+            this.onFormulaDetails = onFormulaDetails;
+            this.onHideFormulaDetails = onHideFormulaDetails;
+            this.onShowRanking = onShowRanking;
+            this.onHideRanking = onHideRanking;
+            System.out.println("Callbacks configurados en InputManager (versión 4 con ranking)");
+        } catch (Exception e) {
+            System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }/**
      * Configura los manejadores de teclas para el juego
      */
     public void setupKeyHandlers() {
@@ -204,19 +262,13 @@ public class InputManager {
                         System.out.println("Moviendo a la derecha");
                     } else {
                         System.out.println("No se puede mover a la derecha: player es null");
-                    }
-                } else if (code == KeyCode.ESCAPE) {
-                    // Si hay una ventana de detalles de fórmula abierta, cerrarla primero
-                    if (onHideFormulaDetails != null) {
-                        onHideFormulaDetails.run();
-                        System.out.println("Cerrando detalles de fórmula");
-                    }
-                    // Si no, alternar pausa
-                    else if (onPauseToggle != null) {
+                    }                } else if (code == KeyCode.ESCAPE) {
+                    // Delegar el manejo de ESCAPE al GameController
+                    if (onPauseToggle != null) {
                         onPauseToggle.run();
-                        System.out.println("Alternando pausa");
+                        System.out.println("Procesando tecla ESCAPE");
                     } else {
-                        System.out.println("No hay callback configurado para onPauseToggle");
+                        System.out.println("No hay callback configurado para ESCAPE");
                     }
                 } else if (code == KeyCode.BACK_SPACE) {
                     if (onReturnToMenu != null) {
@@ -224,13 +276,25 @@ public class InputManager {
                         System.out.println("Volviendo al menú principal");
                     } else {
                         System.out.println("No hay callback configurado para onReturnToMenu");
-                    }
-                } else if (code == KeyCode.M) {
+                    }                } else if (code == KeyCode.M) {
                     if (onUIToggle != null) {
                         onUIToggle.run();
                         System.out.println("Alternando interfaz de usuario");
                     } else {
                         System.out.println("No hay callback configurado para onUIToggle");
+                    }                } else if (code == KeyCode.S) {
+                    if (onShowSettings != null) {
+                        onShowSettings.run();
+                        System.out.println("Abriendo configuración");
+                    } else {
+                        System.out.println("No hay callback configurado para onShowSettings");
+                    }
+                } else if (code == KeyCode.R) {
+                    if (onShowRanking != null) {
+                        onShowRanking.run();
+                        System.out.println("Mostrando ranking");
+                    } else {
+                        System.out.println("No hay callback configurado para onShowRanking");
                     }
                 } else if (code.isDigitKey()) {
                     try {
