@@ -4,6 +4,7 @@ import Controlador.componentes.InputManager;
 import Controlador.componentes.*;
 import Controlador.dialogs.SettingsDialog;
 import Controlador.utils.GameSettings;
+import Controlador.navigation.NavigationManager;
 import Modelo.Player;
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +44,9 @@ public class GameController {
     private ScoreManager scoreManager;
     private VisualEffectsManager visualEffectsManager;
     private RankingManager rankingManager; // Nuevo manager para el ranking
-    
-    // Estado del juego
+      // Estado del juego
     private boolean isPaused = false;
+    private boolean isPausedForCelebration = false; // Nueva variable para pausa de celebración
     private boolean gameOver = false;
     private boolean minimalUI = true; // Interfaz minimalista por defecto
     private boolean showingSettings = false; // Nueva variable para controlar el estado de configuración
@@ -215,13 +216,12 @@ public class GameController {
                 System.out.println("RankingManager configurado para usuario: " + currentUsername);
             } else {
                 System.out.println("No hay usuario actual definido para el ranking");
-            }
-              // Configurar callback para cuando se completan todas las fórmulas
+            }              // Configurar callback para cuando se completan todas las fórmulas
             if (levelManager != null && renderManager != null) {
                 levelManager.setOnAllFormulasCompleted(() -> {
                     System.out.println("¡Todas las fórmulas completadas! Iniciando celebración...");
-                    // Pausar el juego para mostrar el mensaje
-                    isPaused = true;
+                    // Activar pausa especial para celebración (sin mostrar interfaz de pausa)
+                    isPausedForCelebration = true;
                     renderManager.startCompletionCelebration();
                     
                     // También guardar inmediatamente en el ranking
@@ -289,7 +289,8 @@ public class GameController {
                 () -> {}, // Dummy callback ya que ESCAPE maneja esto
                 this::showRanking,                 // onShowRanking
                 () -> {}, // Dummy callback ya que ESCAPE maneja esto
-                this::continueAfterCompletion      // onContinueAfterCompletion
+                this::continueAfterCompletion,     // onContinueAfterCompletion
+                this::handleMouseClick             // onMouseClick (nuevo)
             );
             
             // Configurar callbacks del ScoreManager
@@ -369,8 +370,7 @@ public class GameController {
             System.err.println("Error al iniciar el bucle del juego: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-      /**
+    }    /**
      * Actualiza el estado del juego
      */
     private void update() {
@@ -391,7 +391,23 @@ public class GameController {
                 return;
             }
             
-            // Actualizar el jugador
+            // NO actualizar el juego si está pausado por celebración (pausa silenciosa)
+            if (isPausedForCelebration) {
+                // Solo actualizar el estado de la celebración para detectar cuándo termina
+                if (renderManager != null) {
+                    boolean wasShowingCelebration = renderManager.isShowingCompletionCelebration();
+                    renderManager.updateCompletionCelebration();
+                    
+                    // Si la celebración terminó, reanudar el juego
+                    if (wasShowingCelebration && !renderManager.isShowingCompletionCelebration()) {
+                        System.out.println("Celebración terminada, reanudando el juego...");
+                        isPausedForCelebration = false;
+                    }
+                }
+                return; // No actualizar nada más durante la pausa de celebración
+            }
+            
+            // Actualizar el jugador solo si no está pausado
             player.update(FLOOR_Y);
             
             // Mantener al jugador dentro de los límites de la pantalla
@@ -401,21 +417,15 @@ public class GameController {
                 player.setPosition(GAME_WIDTH - player.getWidth(), player.getY());
             }
               // Actualizar manzanas y colisiones
-            appleManager.update(player);
-            
+            appleManager.update(player);            
             // Actualizar efecto de desbloqueo de fórmulas
             levelManager.updateUnlockEffect();
-            
-            // Actualizar estado de la celebración de completación
-            if (renderManager != null) {
-                renderManager.updateCompletionCelebration();
-            }
             
         } catch (Exception e) {
             System.err.println("Error al actualizar el juego: " + e.getMessage());
             e.printStackTrace();
         }
-    }    /**
+    }/**
      * Renderiza el estado actual del juego
      */
     private void render() {
@@ -458,7 +468,8 @@ public class GameController {
             if (player != null) {
                 renderManager.renderPlayer(player);
             }            // Determinar si debemos mostrar las interfaces de HUD o superposiciones modales
-            boolean mostrarPausa = isPaused && !gameOver && !renderManager.isShowingFormulaDetails();
+            boolean mostrarCelebracion = renderManager.isShowingCompletionCelebration();
+            boolean mostrarPausa = isPaused && !gameOver && !renderManager.isShowingFormulaDetails() && !mostrarCelebracion && !isPausedForCelebration;
             boolean mostrarFormula = renderManager.isShowingFormulaDetails();
             boolean mostrarDesbloqueo = levelManager.isShowingUnlockEffect();
             boolean mostrarGameOver = gameOver;
@@ -480,22 +491,16 @@ public class GameController {
                 renderManager.setCurrentFormulaForUnlock(levelManager.getUnlockedFormulaIndex());
                 // Mostrar la notificación (ya no pausa el juego)
                 renderManager.renderUnlockPopup();
-            }
-              // Renderizar detalles de fórmula si están activos
+            }            // Renderizar detalles de fórmula si están activos
             if (mostrarFormula) {
                 renderManager.renderFormulaDetailsModal();
             }
-            
-            // Mostrar celebración de completación si está activa
-            if (renderManager.isShowingCompletionCelebration()) {
-                renderManager.renderCompletionCelebrationDuringGame(scoreManager.getScore());
-            }
-            
-            // Mostrar pantalla de pausa solo si corresponde
+
+            // Mostrar pantalla de pausa solo si corresponde (y NO si hay celebración activa)
             if (mostrarPausa) {
                 renderManager.renderPauseScreen();
             }
-            
+
             // Mostrar pantalla de Game Over si el juego ha terminado
             if (mostrarGameOver) {
                 renderManager.renderGameOverScreen(
@@ -503,6 +508,11 @@ public class GameController {
                     levelManager.getUnlockedFormulas(),
                     levelManager.getMaxLevel()
                 );
+            }
+
+            // Mostrar celebración de completación AL FINAL para que aparezca en primer plano
+            if (mostrarCelebracion) {
+                renderManager.renderCompletionCelebrationDuringGame(scoreManager.getScore());
             }
             
         } catch (Exception e) {
@@ -631,8 +641,7 @@ public class GameController {
             System.err.println("Error al mostrar detalles de la fórmula: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-      /**
+    }    /**
      * Vuelve al menú principal
      */
     public void returnToMainMenu() {
@@ -657,42 +666,9 @@ public class GameController {
             
             System.out.println("Volviendo al menú principal...");
             
-            // Obtener la ruta del archivo FXML
-            String mainFxmlPath = "src/Main/Main.fxml";
-            String mainCssPath = "src/Vista/main.css";
-            
-            // Verificar si estamos en desarrollo o en producción
-            File mainFxmlFile = new File(mainFxmlPath);
-            File mainCssFile = new File(mainCssPath);
-            
-            FXMLLoader loader;
-            String cssPath;
-            
-            if (mainFxmlFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                loader = new FXMLLoader(mainFxmlFile.toURI().toURL());
-                cssPath = mainCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Main.fxml"));
-                cssPath = getClass().getResource("/Vista/main.css").toExternalForm();
-            }
-            
-            // Cargar el menú principal
-            Parent root = loader.load();
-            
-            // Crear una nueva escena
-            Scene scene = new Scene(root, 900, 700);
-            
-            // Añadir el CSS
-            scene.getStylesheets().add(cssPath);
-            
-            // Obtener el stage actual
+            // Usar el NavigationManager para volver al menú principal con el usuario configurado
             Stage stage = (Stage) gameCanvas.getScene().getWindow();
-            
-            // Cambiar la escena
-            stage.setScene(scene);
-            stage.setTitle("Newton's Apple Quest - Menú Principal");
+            NavigationManager.navigateToMainWithUser(stage);
             
             System.out.println("Vuelto al menú principal correctamente");
             
@@ -827,8 +803,7 @@ public class GameController {
             e.printStackTrace();
         }
     }
-    
-    /**
+      /**
      * Continúa el juego después del mensaje de completación
      */
     private void continueAfterCompletion() {
@@ -836,13 +811,43 @@ public class GameController {
             if (renderManager != null && renderManager.isShowingCompletionCelebration()) {
                 // Ocultar la celebración y reanudar el juego
                 renderManager.stopCompletionCelebration();
-                isPaused = false;
+                isPausedForCelebration = false; // Reanudar desde pausa de celebración
                 System.out.println("Continuando juego después del mensaje de completación");
             } else {
                 System.out.println("No hay celebración activa para continuar");
             }
         } catch (Exception e) {
             System.err.println("Error al continuar después de completación: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Maneja clics del mouse en la interfaz
+     */
+    private void handleMouseClick(double mouseX, double mouseY) {
+        try {
+            // Solo manejar clics si estamos en pausa (menu de pausa visible)
+            if (isPaused && !gameOver && !renderManager.isShowingFormulaDetails() && !isPausedForCelebration) {
+                String action = renderManager.handlePauseMenuClick(mouseX, mouseY);
+                
+                if (action != null) {
+                    switch (action) {
+                        case "back":
+                            System.out.println("Botón 'Volver al menú' clickeado");
+                            returnToMainMenu();
+                            break;
+                        case "settings":
+                            System.out.println("Botón 'Configuración' clickeado");
+                            showSettings();
+                            break;
+                        default:
+                            System.out.println("Acción desconocida: " + action);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al manejar clic del mouse: " + e.getMessage());
             e.printStackTrace();
         }
     }
