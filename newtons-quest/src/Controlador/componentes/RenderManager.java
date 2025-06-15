@@ -340,8 +340,7 @@ public class RenderManager {
     public void renderGameOverScreen(int score, boolean[] unlockedFormulas, int maxLevel) {
         renderGameOverScreen(score, 0, maxLevel, unlockedFormulas, FORMULAS_SHORT, FORMULAS_DESCRIPTIONS);
     }
-    
-    /**
+      /**
      * Dibuja la pantalla de fin de juego
      */
     private void renderGameOverScreen(int score, int level, int maxLevel, boolean[] unlockedFormulas,
@@ -349,9 +348,25 @@ public class RenderManager {
         gc.setFill(new Color(0, 0, 0, 0.85));
         gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         
-        gc.setFill(Color.RED);
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-        gc.fillText("GAME OVER", GAME_WIDTH / 2 - 140, 120);
+        // Verificar si el jugador completó todas las fórmulas
+        int formulasUnlocked = 0;
+        for (boolean unlocked : unlockedFormulas) {
+            if (unlocked) formulasUnlocked++;
+        }
+        
+        boolean allFormulasCompleted = (formulasUnlocked == maxLevel);
+        
+        if (allFormulasCompleted) {
+            // Mensaje de completación exitosa
+            gc.setFill(Color.GOLD);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 42));
+            gc.fillText("¡HAS COMPLETADO EL JUEGO!", GAME_WIDTH / 2 - 220, 120);
+        } else {
+            // Mensaje tradicional de game over
+            gc.setFill(Color.RED);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
+            gc.fillText("GAME OVER", GAME_WIDTH / 2 - 140, 120);
+        }
         
         // Mostrar puntuación final
         gc.setFill(Color.WHITE);
@@ -417,10 +432,17 @@ public class RenderManager {
             renderCompletionCelebration(score, 300 + (formulasShown * 75) + 30);
         }
         
-        // Instrucciones para volver a jugar
+        // Instrucciones para volver a jugar - diferentes según si completó el juego
         gc.setFill(Color.WHITE);
-        gc.setFont(Font.font(24));
-        gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
+        gc.setFont(Font.font(20));
+        
+        if (allFormulasCompleted) {
+            // Instrucciones especiales para cuando completa el juego
+            gc.fillText("Presiona 'R' para ver el ranking | BACKSPACE para volver al menú", GAME_WIDTH / 2 - 250, GAME_HEIGHT - 50);
+        } else {
+            // Instrucciones normales para game over
+            gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
+        }
     }
       /**
      * Dibuja las instrucciones del juego
@@ -823,6 +845,14 @@ public class RenderManager {
     }
     
     /**
+     * Detiene la celebración de completación
+     */
+    public void stopCompletionCelebration() {
+        showingCompletionCelebration = false;
+        System.out.println("Celebración de completación detenida manualmente");
+    }
+    
+    /**
      * Verifica si se está mostrando la celebración de completación
      */
     public boolean isShowingCompletionCelebration() {
@@ -872,11 +902,10 @@ public class RenderManager {
             gc.setStroke(Color.GOLD);
             gc.setLineWidth(3);
             gc.strokeRect(50, yPosition - 20, GAME_WIDTH - 100, 150);
-            
-            // Título principal
+              // Título principal
             gc.setFill(Color.GOLD);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
-            gc.fillText("🎉 ¡MAESTRO DE LA FÍSICA! 🎉", GAME_WIDTH / 2 - 160, yPosition + 10);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            gc.fillText("🎉 ¡FELICITACIONES, SUPERASTE LOS 5 NIVELES! 🎉", GAME_WIDTH / 2 - 220, yPosition + 10);
             
             // Información de ranking
             int position = rankingManager.getCurrentUserPosition();
@@ -899,16 +928,15 @@ public class RenderManager {
                 gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
                 gc.fillText(achievementMessage, GAME_WIDTH / 2 - 200, yPosition + 65);
             }
-            
-            // Motivación para seguir jugando
+              // Motivación para seguir jugando
             gc.setFill(Color.LIGHTGREEN);
             gc.setFont(Font.font("Arial", 14));
-            gc.fillText("💡 ¡Intenta conseguir una puntuación aún mejor!", GAME_WIDTH / 2 - 150, yPosition + 90);
+            gc.fillText("💡 ¡Sigue buscando el mejor puntaje para entrar en el ranking de los Maestros de Física!", GAME_WIDTH / 2 - 270, yPosition + 90);
             
-            // Instrucción para ver ranking completo
+            // Instrucción para continuar jugando
             gc.setFill(Color.CYAN);
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-            gc.fillText("Presiona 'R' para ver el ranking completo", GAME_WIDTH / 2 - 130, yPosition + 115);
+            gc.fillText("Presiona ENTER o ESPACIO para continuar | 'R' para ver el ranking completo", GAME_WIDTH / 2 - 220, yPosition + 115);
             
         } catch (Exception e) {
             System.err.println("Error al renderizar celebración de completado: " + e.getMessage());
