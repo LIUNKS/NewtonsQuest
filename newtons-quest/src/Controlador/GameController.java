@@ -216,11 +216,12 @@ public class GameController {
             } else {
                 System.out.println("No hay usuario actual definido para el ranking");
             }
-            
-            // Configurar callback para cuando se completan todas las fórmulas
+              // Configurar callback para cuando se completan todas las fórmulas
             if (levelManager != null && renderManager != null) {
                 levelManager.setOnAllFormulasCompleted(() -> {
                     System.out.println("¡Todas las fórmulas completadas! Iniciando celebración...");
+                    // Pausar el juego para mostrar el mensaje
+                    isPaused = true;
                     renderManager.startCompletionCelebration();
                     
                     // También guardar inmediatamente en el ranking
@@ -287,7 +288,8 @@ public class GameController {
                 this::showFormulaDetails,          // onFormulaDetails
                 () -> {}, // Dummy callback ya que ESCAPE maneja esto
                 this::showRanking,                 // onShowRanking
-                () -> {} // Dummy callback ya que ESCAPE maneja esto
+                () -> {}, // Dummy callback ya que ESCAPE maneja esto
+                this::continueAfterCompletion      // onContinueAfterCompletion
             );
             
             // Configurar callbacks del ScoreManager
@@ -770,13 +772,26 @@ public class GameController {
             System.err.println("Error al actualizar volumen: " + e.getMessage());
         }
     }    /**
-     * Muestra la pantalla de ranking (método deshabilitado - funcionalidad no implementada)
+     * Muestra la pantalla de ranking
      */
     private void showRanking() {
         try {
-            // La funcionalidad de ranking completo no está implementada en RenderManager
-            // El ranking se muestra solo en la celebración de completitud al terminar el juego
-            System.out.println("Funcionalidad de ranking no implementada - el ranking se muestra al completar las 5 fórmulas");
+            // Solo mostrar ranking si el juego está terminado y se han completado todas las fórmulas
+            if (!gameOver) {
+                System.out.println("El ranking solo se puede ver cuando el juego ha terminado");
+                return;
+            }
+            
+            if (levelManager == null || !levelManager.areAllFormulasUnlocked()) {
+                System.out.println("El ranking solo se puede ver cuando se han completado todas las fórmulas");
+                return;
+            }
+            
+            Stage gameStage = (Stage) gameCanvas.getScene().getWindow();
+            Controlador.dialogs.RankingDialog rankingDialog = new Controlador.dialogs.RankingDialog(gameStage);
+            rankingDialog.showAndWait();
+            
+            System.out.println("Ranking mostrado exitosamente");
         } catch (Exception e) {
             System.err.println("Error al mostrar ranking: " + e.getMessage());
             e.printStackTrace();
@@ -793,8 +808,7 @@ public class GameController {
             System.err.println("Error al ocultar ranking: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-      /**
+    }      /**
      * Maneja la tecla ESCAPE con prioridades: detalles de fórmula > pausa
      */
     private void handleEscapeKey() {
@@ -810,6 +824,25 @@ public class GameController {
             togglePause();
         } catch (Exception e) {
             System.err.println("Error al manejar tecla ESCAPE: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Continúa el juego después del mensaje de completación
+     */
+    private void continueAfterCompletion() {
+        try {
+            if (renderManager != null && renderManager.isShowingCompletionCelebration()) {
+                // Ocultar la celebración y reanudar el juego
+                renderManager.stopCompletionCelebration();
+                isPaused = false;
+                System.out.println("Continuando juego después del mensaje de completación");
+            } else {
+                System.out.println("No hay celebración activa para continuar");
+            }
+        } catch (Exception e) {
+            System.err.println("Error al continuar después de completación: " + e.getMessage());
             e.printStackTrace();
         }
     }
