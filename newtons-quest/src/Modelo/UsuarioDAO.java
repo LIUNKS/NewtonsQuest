@@ -8,10 +8,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 
-public class UsuarioDAO {
-
-    // Método para registrar un nuevo usuario
+public class UsuarioDAO {    // Método para registrar un nuevo usuario
     public static boolean registrarUsuario(String username, String password) {
+        return registrarUsuario(username, password, "", "");
+    }
+    
+    // Método sobrecargado para registrar un nuevo usuario con información completa
+    public static boolean registrarUsuario(String username, String password, String nombreCompleto, String email) {
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -33,11 +36,13 @@ public class UsuarioDAO {
             // Hashear la contraseña
             String hashedPassword = hashPassword(password);
 
-            // Preparar la consulta SQL
-            String sql = "INSERT INTO usuarios (username, password) VALUES (?, ?)";
+            // Preparar la consulta SQL con todas las columnas
+            String sql = "INSERT INTO usuarios (username, password, nombre_completo, correo, fecha_registro, activo) VALUES (?, ?, ?, ?, NOW(), 1)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             stmt.setString(2, hashedPassword);
+            stmt.setString(3, nombreCompleto != null ? nombreCompleto : "");
+            stmt.setString(4, email != null ? email : "");
 
             // Ejecutar la consulta
             int filasAfectadas = stmt.executeUpdate();
@@ -193,10 +198,8 @@ public class UsuarioDAO {
             if (conn == null) {
                 System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return -1;
-            }
-
-            // Preparar la consulta SQL
-            String sql = "SELECT id_usuario FROM usuarios WHERE username = ?";
+            }            // Preparar la consulta SQL
+            String sql = "SELECT id FROM usuarios WHERE username = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
 
@@ -204,7 +207,7 @@ public class UsuarioDAO {
             rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt("id_usuario");
+                return rs.getInt("id");
             }
 
             return -1; // Usuario no encontrado
@@ -233,8 +236,7 @@ public class UsuarioDAO {
 
     /**
      * Obtiene el nombre completo de un usuario
-     */
-    public static String obtenerNombreCompleto(int userId) {
+     */    public static String obtenerNombreCompleto(int userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -243,22 +245,25 @@ public class UsuarioDAO {
             conn = ConexionDB.getConnection();
             if (conn == null) return null;
             
-            String sql = "SELECT nombre_completo FROM usuarios WHERE id = ?";
+            String sql = "SELECT nombre_completo, username FROM usuarios WHERE id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
             
             if (rs.next()) {
-                return rs.getString("nombre_completo");
+                String nombreCompleto = rs.getString("nombre_completo");
+                // Si no hay nombre completo, devolver el username
+                return (nombreCompleto != null && !nombreCompleto.trim().isEmpty()) ? 
+                       nombreCompleto : rs.getString("username");
             }
-            
-        } catch (SQLException e) {
+              } catch (SQLException e) {
             System.err.println("Error al obtener nombre completo: " + e.getMessage());
         } finally {
             ConexionDB.cerrarRecursos(conn, stmt, rs);
         }
         
-        return null;
+        // Si no se pudo obtener de la base de datos, devolver "Usuario desconocido"
+        return "Usuario desconocido";
     }
     
     /**
@@ -277,9 +282,9 @@ public class UsuarioDAO {
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getString("correo");
+              if (rs.next()) {
+                String email = rs.getString("correo");
+                return email != null ? email : "";
             }
             
         } catch (SQLException e) {
@@ -288,7 +293,7 @@ public class UsuarioDAO {
             ConexionDB.cerrarRecursos(conn, stmt, rs);
         }
         
-        return null;
+        return "";
     }
     
     /**
@@ -299,9 +304,8 @@ public class UsuarioDAO {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
-        try {
-            conn = ConexionDB.getConnection();
-            if (conn == null) return null;
+        try {            conn = ConexionDB.getConnection();
+            if (conn == null) return "Fecha no disponible";
             
             String sql = "SELECT fecha_registro FROM usuarios WHERE id = ?";
             stmt = conn.prepareStatement(sql);
@@ -315,14 +319,13 @@ public class UsuarioDAO {
                     return formatter.format(timestamp);
                 }
             }
-            
-        } catch (SQLException e) {
+              } catch (SQLException e) {
             System.err.println("Error al obtener fecha de registro: " + e.getMessage());
         } finally {
             ConexionDB.cerrarRecursos(conn, stmt, rs);
         }
         
-        return null;
+        return "Fecha no disponible";
     }
     
     /**
