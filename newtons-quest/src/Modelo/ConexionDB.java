@@ -12,7 +12,7 @@ public class ConexionDB {
     public static Connection getConnection() {
         Connection cnx = null;
 
-        String url = "jdbc:mysql://localhost:3306/NewtonQuest?useTimeZone=true&"
+        String url = "jdbc:mysql://localhost:3306/newtons_quest?useTimeZone=true&"
                    + "serverTimezone=UTC&autoReconnect=true";
         String user = "root";
         String clave = "Johan12315912";
