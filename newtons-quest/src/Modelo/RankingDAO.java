@@ -34,11 +34,10 @@ public class RankingDAO {
                 System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return false;
             }
-            
-            // Verificar si el usuario ya tiene un registro
+              // Verificar si el usuario ya tiene un registro
             if (existeUsuarioEnRanking(userId)) {
                 // Actualizar solo si el nuevo puntaje es mayor
-                int puntajeActual = obtenerMejorPuntaje(userId);
+                int puntajeActual = obtenerMejorPuntajeInterno(userId);
                 if (score > puntajeActual) {
                     return actualizarPuntaje(userId, score);
                 } else {
@@ -111,11 +110,10 @@ public class RankingDAO {
         
         return false;
     }
-    
-    /**
-     * Obtiene el mejor puntaje actual de un usuario
+      /**
+     * Obtiene el mejor puntaje actual de un usuario (método interno)
      */
-    private static int obtenerMejorPuntaje(int userId) {
+    private static int obtenerMejorPuntajeInterno(int userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -323,4 +321,65 @@ public class RankingDAO {
         
         return 0;
     }
+    
+    /**
+     * Obtiene el mejor puntaje de un usuario específico
+     */
+    public static int obtenerMejorPuntaje(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return 0;
+            
+            String sql = "SELECT mejor_puntaje FROM ranking_completo WHERE id_usuario = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("mejor_puntaje");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener mejor puntaje: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Obtiene la fecha de completación de un usuario
+     */
+    public static java.sql.Timestamp obtenerFechaCompletacion(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return null;
+            
+            String sql = "SELECT fecha_completado FROM ranking_completo WHERE id_usuario = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getTimestamp("fecha_completado");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener fecha de completación: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return null;
+    }
+    
 }
