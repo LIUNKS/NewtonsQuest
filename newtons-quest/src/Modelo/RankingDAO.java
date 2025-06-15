@@ -44,9 +44,8 @@ public class RankingDAO {
                     System.out.println("El puntaje actual (" + puntajeActual + ") es mayor o igual al nuevo (" + score + ")");
                     return true; // No es error, simplemente no se actualiza
                 }
-            } else {
-                // Insertar nuevo registro
-                String sql = "INSERT INTO ranking_completo (id_usuario, mejor_puntaje, formulas_completadas, fecha_completado) VALUES (?, ?, ?, NOW())";
+            } else {                // Insertar nuevo registro
+                String sql = "INSERT INTO ranking (usuario_id, mejor_puntaje, partidas_completadas, fecha_mejor_puntaje) VALUES (?, ?, ?, NOW())";
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, userId);
                 stmt.setInt(2, score);
@@ -86,8 +85,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return false;
-            
-            String sql = "SELECT COUNT(*) FROM ranking_completo WHERE id_usuario = ?";
+              String sql = "SELECT COUNT(*) FROM ranking WHERE usuario_id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             
@@ -121,8 +119,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return 0;
-            
-            String sql = "SELECT mejor_puntaje FROM ranking_completo WHERE id_usuario = ?";
+              String sql = "SELECT mejor_puntaje FROM ranking WHERE usuario_id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             
@@ -156,8 +153,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return false;
-            
-            String sql = "UPDATE ranking_completo SET mejor_puntaje = ?, fecha_completado = NOW() WHERE id_usuario = ?";
+              String sql = "UPDATE ranking SET mejor_puntaje = ?, fecha_mejor_puntaje = NOW() WHERE usuario_id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, nuevoPuntaje);
             stmt.setInt(2, userId);
@@ -200,10 +196,9 @@ public class RankingDAO {
                 System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return ranking;
             }
-            
-            String sql = "SELECT r.id_usuario, u.username, r.mejor_puntaje, r.fecha_completado " +
-                        "FROM ranking_completo r " +
-                        "INNER JOIN usuarios u ON r.id_usuario = u.id_usuario " +
+              String sql = "SELECT r.usuario_id, u.username, r.mejor_puntaje, r.fecha_mejor_puntaje " +
+                        "FROM ranking r " +
+                        "INNER JOIN usuarios u ON r.usuario_id = u.id " +
                         "ORDER BY r.mejor_puntaje DESC " +
                         "LIMIT ?";
             
@@ -212,14 +207,13 @@ public class RankingDAO {
             
             rs = stmt.executeQuery();
             
-            int posicion = 1;
-            while (rs.next()) {
+            int posicion = 1;            while (rs.next()) {
                 RankingEntry entry = new RankingEntry(
                     posicion++,
-                    rs.getInt("id_usuario"),
+                    rs.getInt("usuario_id"),
                     rs.getString("username"),
                     rs.getInt("mejor_puntaje"),
-                    rs.getTimestamp("fecha_completado")
+                    rs.getTimestamp("fecha_mejor_puntaje")
                 );
                 ranking.add(entry);
             }
@@ -255,13 +249,12 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return -1;
-            
-            String sql = "SELECT COUNT(*) + 1 as posicion " +
-                        "FROM ranking_completo r1 " +
+              String sql = "SELECT COUNT(*) + 1 as posicion " +
+                        "FROM ranking r1 " +
                         "WHERE r1.mejor_puntaje > (" +
                         "    SELECT r2.mejor_puntaje " +
-                        "    FROM ranking_completo r2 " +
-                        "    WHERE r2.id_usuario = ?" +
+                        "    FROM ranking r2 " +
+                        "    WHERE r2.usuario_id = ?" +
                         ")";
             
             stmt = conn.prepareStatement(sql);
@@ -333,8 +326,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return 0;
-            
-            String sql = "SELECT mejor_puntaje FROM ranking_completo WHERE id_usuario = ?";
+              String sql = "SELECT mejor_puntaje FROM ranking WHERE usuario_id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -363,14 +355,13 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return null;
-            
-            String sql = "SELECT fecha_completado FROM ranking_completo WHERE id_usuario = ?";
+              String sql = "SELECT fecha_mejor_puntaje FROM ranking WHERE usuario_id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
             
             if (rs.next()) {
-                return rs.getTimestamp("fecha_completado");
+                return rs.getTimestamp("fecha_mejor_puntaje");
             }
             
         } catch (SQLException e) {
