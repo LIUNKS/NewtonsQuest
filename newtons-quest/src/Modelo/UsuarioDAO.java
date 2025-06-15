@@ -231,6 +231,128 @@ public class UsuarioDAO {
         }
     }
 
+    /**
+     * Obtiene el nombre completo de un usuario
+     */
+    public static String obtenerNombreCompleto(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return null;
+            
+            String sql = "SELECT nombre_completo FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("nombre_completo");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener nombre completo: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Obtiene el correo electrónico de un usuario
+     */
+    public static String obtenerCorreo(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return null;
+            
+            String sql = "SELECT correo FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("correo");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener correo: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Obtiene la fecha de registro de un usuario
+     */
+    public static String obtenerFechaRegistro(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return null;
+            
+            String sql = "SELECT fecha_registro FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                java.sql.Timestamp timestamp = rs.getTimestamp("fecha_registro");
+                if (timestamp != null) {
+                    java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                    return formatter.format(timestamp);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener fecha de registro: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Actualiza el perfil de un usuario (nombre completo y correo)
+     */
+    public static boolean actualizarPerfilUsuario(int userId, String nombreCompleto, String correo) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return false;
+            
+            String sql = "UPDATE usuarios SET nombre_completo = ?, correo = ? WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, nombreCompleto.isEmpty() ? null : nombreCompleto);
+            stmt.setString(2, correo.isEmpty() ? null : correo);
+            stmt.setInt(3, userId);
+            
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar perfil de usuario: " + e.getMessage());
+            return false;
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, null);
+        }
+    }
+    
     // Método para hashear contraseñas usando SHA-256
     private static String hashPassword(String password) {
         try {
