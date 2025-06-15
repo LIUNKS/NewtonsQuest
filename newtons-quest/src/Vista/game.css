@@ -20,3 +20,29 @@
 .pause-overlay {
     -fx-background-color: rgba(0, 0, 0, 0.7);
 }
+
+/* Estilos para los botones de interfaz */
+.interface-button {
+    -fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #3498db;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 4, 0, 0, 2);
+    -fx-cursor: hand;
+}
+
+.interface-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #3498db, #2980b9);
+    -fx-border-color: #5dade2;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.interface-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #2980b9, #1abc9c);
+    -fx-translate-y: 1;
+}
