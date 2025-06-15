@@ -316,21 +316,17 @@ public class RenderManager {
         // Borde del panel
         gc.setStroke(new Color(0.7, 0.7, 0.7, 0.6));
         gc.setLineWidth(2);
-        gc.strokeRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);
-        
-        // Título
+        gc.strokeRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);          // Título
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
         gc.fillText("PAUSA", GAME_WIDTH / 2 - 80, GAME_HEIGHT / 2 - 20);
-          // Instrucciones
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 24));
-        gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2 + 30);
-        gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 70);
         
-        // Información adicional sobre configuración
-        gc.setFill(new Color(0.8, 0.8, 0.8, 1));
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
-        gc.fillText("Presiona S para abrir Configuración", GAME_WIDTH / 2 - 140, GAME_HEIGHT / 2 + 110);
+        // Instrucción para ESC (mantener como texto ya que ESC es estándar)
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 20));
+        gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 130, GAME_HEIGHT / 2 + 30);
+          // Botones clickeables modernos - solo íconos
+        renderClickableButton("🔙", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 65, 80, 40);
+        renderClickableButton("⚙️", GAME_WIDTH / 2 + 40, GAME_HEIGHT / 2 + 65, 80, 40);
     }    /**
      * Renderiza la pantalla de Game Over con el resumen del juego
      * @param score Puntuación final
@@ -435,13 +431,12 @@ public class RenderManager {
         // Instrucciones para volver a jugar - diferentes según si completó el juego
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font(20));
-        
-        if (allFormulasCompleted) {
-            // Instrucciones especiales para cuando completa el juego
-            gc.fillText("Presiona 'R' para ver el ranking | BACKSPACE para volver al menú", GAME_WIDTH / 2 - 250, GAME_HEIGHT - 50);
+          if (allFormulasCompleted) {
+            // Instrucciones especiales para cuando completa el juego con íconos
+            gc.fillText("Presiona 'R' para ver el ranking | 🔙 para volver al menú", GAME_WIDTH / 2 - 240, GAME_HEIGHT - 50);
         } else {
-            // Instrucciones normales para game over
-            gc.fillText("Presiona BACKSPACE para volver al menú", GAME_WIDTH / 2 - 200, GAME_HEIGHT - 50);
+            // Instrucciones normales para game over con ícono
+            gc.fillText("Presiona 🔙 para volver al menú", GAME_WIDTH / 2 - 140, GAME_HEIGHT - 50);
         }
     }
       /**
@@ -460,9 +455,8 @@ public class RenderManager {
         gc.fillText("Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)", 20, 55);
         gc.fillText("¡Cuidado! Perderás una vida si:", 20, 75);
         gc.fillText("- Dejas caer una manzana roja", 40, 95);
-        gc.fillText("- Atrapas una manzana verde", 40, 115);
-        gc.fillText("Presiona M para alternar entre interfaz minimalista/completa", 20, 135);
-        gc.fillText("Presiona S para abrir Configuración (volumen, brillo)", 20, 155);
+        gc.fillText("- Atrapas una manzana verde", 40, 115);        gc.fillText("Presiona M para alternar entre interfaz minimalista/completa", 20, 135);
+        gc.fillText("Presiona ⚙️ para abrir Configuración (volumen, brillo)", 20, 155);
     }
     
     /**
@@ -894,17 +888,31 @@ public class RenderManager {
             
             // Verificar si hay logros especiales
             String achievementMessage = rankingManager.checkForAchievements(score, true);
+              // Renderizar fondo especial para la celebración - MÁS OPACO para mejor visibilidad
+            gc.setFill(new Color(0, 0, 0, 0.8)); // Fondo negro semi-transparente para contraste
+            gc.fillRect(30, yPosition - 40, GAME_WIDTH - 60, 180);
             
-            // Renderizar fondo especial para la celebración
-            gc.setFill(new Color(1, 0.8, 0, 0.2)); // Fondo dorado semi-transparente
+            // Fondo dorado interior
+            gc.setFill(new Color(1, 0.8, 0, 0.85)); // Fondo dorado más opaco
             gc.fillRect(50, yPosition - 20, GAME_WIDTH - 100, 150);
             
+            // Borde dorado más grueso
             gc.setStroke(Color.GOLD);
-            gc.setLineWidth(3);
+            gc.setLineWidth(4);
             gc.strokeRect(50, yPosition - 20, GAME_WIDTH - 100, 150);
-              // Título principal
-            gc.setFill(Color.GOLD);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            
+            // Borde exterior para mayor contraste
+            gc.setStroke(Color.WHITE);
+            gc.setLineWidth(2);
+            gc.strokeRect(30, yPosition - 40, GAME_WIDTH - 60, 180);              // Título principal con sombra para mejor legibilidad
+            // Sombra del texto más marcada
+            gc.setFill(Color.BLACK);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
+            gc.fillText("🎉 ¡FELICITACIONES, SUPERASTE LOS 5 NIVELES! 🎉", GAME_WIDTH / 2 - 218, yPosition + 12);
+            
+            // Texto principal en color más brillante
+            gc.setFill(Color.YELLOW);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
             gc.fillText("🎉 ¡FELICITACIONES, SUPERASTE LOS 5 NIVELES! 🎉", GAME_WIDTH / 2 - 220, yPosition + 10);
             
             // Información de ranking
@@ -921,22 +929,20 @@ public class RenderManager {
                 gc.fillText(String.format("🎯 Puntaje: %d | Total de maestros: %d", 
                           score, totalPlayers), GAME_WIDTH / 2 - 150, yPosition + 40);
             }
-            
-            // Mensaje de logro especial si existe
+              // Mensaje de logro especial si existe - Color más oscuro para mejor contraste
             if (achievementMessage != null) {
-                gc.setFill(Color.ORANGE);
+                gc.setFill(Color.DARKORANGE);
                 gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
                 gc.fillText(achievementMessage, GAME_WIDTH / 2 - 200, yPosition + 65);
-            }
-              // Motivación para seguir jugando
-            gc.setFill(Color.LIGHTGREEN);
-            gc.setFont(Font.font("Arial", 14));
+            }// Motivación para seguir jugando - Color oscuro para mejor contraste
+            gc.setFill(Color.DARKGREEN);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
             gc.fillText("💡 ¡Sigue buscando el mejor puntaje para entrar en el ranking de los Maestros de Física!", GAME_WIDTH / 2 - 270, yPosition + 90);
             
-            // Instrucción para continuar jugando
-            gc.setFill(Color.CYAN);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-            gc.fillText("Presiona ENTER o ESPACIO para continuar | 'R' para ver el ranking completo", GAME_WIDTH / 2 - 220, yPosition + 115);
+            // Instrucción para continuar jugando - Solo ENTER/ESPACIO, sin mención de ranking
+            gc.setFill(Color.DARKBLUE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.fillText("Presiona ENTER o ESPACIO para continuar", GAME_WIDTH / 2 - 140, yPosition + 115);
             
         } catch (Exception e) {
             System.err.println("Error al renderizar celebración de completado: " + e.getMessage());
@@ -946,5 +952,64 @@ public class RenderManager {
             gc.fillText("¡FELICITACIONES! ¡Has desbloqueado todas las fórmulas!", 
                        GAME_WIDTH / 2 - 300, yPosition);
         }
+    }
+      /**
+     * Renderiza un botón clickeable moderno - solo ícono
+     */
+    private void renderClickableButton(String icon, double x, double y, double width, double height) {
+        // Fondo del botón con gradiente sutil
+        gc.setFill(new Color(0.2, 0.2, 0.3, 0.9));
+        gc.fillRoundRect(x, y, width, height, 10, 10);
+        
+        // Borde del botón
+        gc.setStroke(new Color(0.6, 0.6, 0.7, 0.8));
+        gc.setLineWidth(2);
+        gc.strokeRoundRect(x, y, width, height, 10, 10);
+        
+        // Efecto de hover/destacado (siempre visible para indicar que es clickeable)
+        gc.setStroke(Color.LIGHTBLUE);
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(x + 1, y + 1, width - 2, height - 2, 8, 8);
+        
+        // Ícono centrado
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        double iconX = x + (width / 2) - 12; // Centrar ícono
+        double iconY = y + (height / 2) + 8; // Centrar verticalmente
+        gc.fillText(icon, iconX, iconY);
+    }
+
+    /**
+     * Verifica si un clic del mouse está dentro de un área específica
+     */
+    public boolean isClickInArea(double mouseX, double mouseY, double areaX, double areaY, double areaWidth, double areaHeight) {
+        return mouseX >= areaX && mouseX <= areaX + areaWidth && 
+               mouseY >= areaY && mouseY <= areaY + areaHeight;
+    }
+    
+    /**
+     * Maneja clics en el menú de pausa y retorna la acción a realizar
+     * @param mouseX Coordenada X del clic
+     * @param mouseY Coordenada Y del clic
+     * @return String con la acción: "back", "settings", o null si no hay acción
+     */
+    public String handlePauseMenuClick(double mouseX, double mouseY) {
+        // Coordenadas de los botones (deben coincidir con renderPauseScreen)
+        double backButtonX = GAME_WIDTH / 2 - 120;
+        double backButtonY = GAME_HEIGHT / 2 + 65;
+        double settingsButtonX = GAME_WIDTH / 2 + 40;
+        double settingsButtonY = GAME_HEIGHT / 2 + 65;
+        double buttonWidth = 80;
+        double buttonHeight = 40;
+        
+        if (isClickInArea(mouseX, mouseY, backButtonX, backButtonY, buttonWidth, buttonHeight)) {
+            return "back";
+        }
+        
+        if (isClickInArea(mouseX, mouseY, settingsButtonX, settingsButtonY, buttonWidth, buttonHeight)) {
+            return "settings";
+        }
+        
+        return null; // No hay acción
     }
 }
