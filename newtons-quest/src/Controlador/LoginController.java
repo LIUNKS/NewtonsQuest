@@ -3,6 +3,7 @@ package Controlador;
 import Modelo.UsuarioDAO;
 import Modelo.ConexionDB;
 import Controlador.componentes.RankingManager;
+import Controlador.utils.SessionManager;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -90,10 +91,11 @@ public class LoginController {
             passwordField.clear();
             showError("Contraseña incorrecta");
             return;
-        }
-
-        // Si llegamos aquí, las credenciales son válidas
+        }        // Si llegamos aquí, las credenciales son válidas
         currentUsername = username;
+        
+        // Iniciar sesión en el SessionManager
+        SessionManager.getInstance().login(username);
         
         // Configurar el usuario actual en el RankingManager
         int userId = UsuarioDAO.obtenerIdUsuario(username);
