@@ -2,6 +2,7 @@ package Controlador.componentes;
 
 import Modelo.RankingDAO;
 import Modelo.RankingEntry;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -93,6 +94,19 @@ public class RankingManager {
     }
     
     /**
+     * Obtiene los mejores jugadores del ranking
+     * @param limit Número máximo de jugadores a retornar
+     * @return Lista de entradas del ranking ordenadas por puntaje
+     */    public List<RankingEntry> getTopPlayers(int limit) {
+        try {
+            return RankingDAO.obtenerTopRanking(limit);
+        } catch (Exception e) {
+            System.err.println("Error al obtener top players: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
      * Obtiene la posición del usuario actual en el ranking
      */
     public int getCurrentUserPosition() {
@@ -111,14 +125,13 @@ public class RankingManager {
     
     /**
      * Genera un mensaje de felicitación personalizado según el ranking
-     */
-    public String generateCongratulationMessage(int score, boolean allFormulasCompleted) {
+     */    public String generateCongratulationMessage(int score, boolean allFormulasCompleted) {
         if (!allFormulasCompleted) {
             return "¡Buen trabajo! Sigue jugando para desbloquear todas las fórmulas y entrar al ranking de maestros de la física.";
         }
         
         StringBuilder message = new StringBuilder();
-        message.append("🎉 ¡FELICITACIONES! 🎉\n\n");
+        message.append("🎉 ¡FELICITACIONES, SUPERASTE LOS 5 NIVELES! 🎉\n\n");
         message.append("¡Has desbloqueado las 5 fórmulas de Newton y te has convertido en un Maestro de la Física!\n\n");
         
         int position = getCurrentUserPosition();
@@ -135,14 +148,14 @@ public class RankingManager {
             } else if (position <= 10) {
                 message.append("⭐ ¡Estás en el TOP 10! ¡Sigue mejorando para llegar al podio!\n");
             } else {
-                message.append("🎯 ¡Sigue practicando para mejorar tu posición en el ranking!\n");
+                message.append("🎯 ¡Sigue buscando el mejor puntaje para entrar en el ranking de los Maestros de Física!\n");
             }
         } else {
             message.append(String.format("📊 Puntaje: %d puntos\n", score));
             message.append("🎯 ¡Ya formas parte del selecto grupo de Maestros de la Física!\n");
         }
         
-        message.append("\n💡 ¿Puedes conseguir una puntuación aún mejor? ¡Inténtalo de nuevo!");
+        message.append("\n💡 ¡Sigue buscando el mejor puntaje para entrar en el ranking de los Maestros de Física!");
         
         return message.toString();
     }
