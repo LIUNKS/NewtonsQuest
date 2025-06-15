@@ -37,8 +37,27 @@ public class RankingEntry {
         return puntaje;
     }
     
+    /**
+     * Obtiene el puntaje (alias para getPuntaje)
+     */
+    public int getScore() {
+        return puntaje;
+    }
+    
     public Timestamp getFechaCompletado() {
         return fechaCompletado;
+    }
+    
+    /**
+     * Obtiene la fecha de completación formateada
+     */
+    public String getFormattedCompletionDate() {
+        if (fechaCompletado == null) {
+            return "N/A";
+        }
+        // Formatear fecha como "dd/MM/yyyy"
+        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        return formatter.format(fechaCompletado);
     }
     
     // Setters
