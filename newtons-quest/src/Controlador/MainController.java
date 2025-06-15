@@ -7,6 +7,7 @@ import Controlador.dialogs.RankingDialog;
 import Controlador.navigation.NavigationManager;
 import Controlador.constants.GameConstants;
 import Controlador.utils.ErrorHandler;
+import Controlador.utils.SessionManager;
 import Modelo.UsuarioDAO;
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -24,9 +25,7 @@ public class MainController {
     @FXML private Button rankingButton; // Botón de ranking
     @FXML private Label welcomeLabel;
     
-    private String username;    private int userId;
-    
-    public void initialize() {
+    private String username;    private int userId;    public void initialize() {
         // Configurar acciones para los botones
         startButton.setOnAction(event -> startGame());
         rulesButton.setOnAction(event -> showRules());
@@ -34,6 +33,16 @@ public class MainController {
         
         // Configurar el botón de cerrar sesión
         logoutButton.setOnAction(event -> handleLogout());
+        
+        // Configurar los nuevos botones de interfaz
+        userProfileButton.setOnAction(event -> showUserProfile());
+        rankingButton.setOnAction(event -> showRanking());
+        
+        // Verificar si hay una sesión activa y configurar el usuario
+        SessionManager sessionManager = SessionManager.getInstance();
+        if (sessionManager.isLoggedIn()) {
+            setUsername(sessionManager.getCurrentUsername());
+        }
         
         ErrorHandler.logInfo("MainController inicializado correctamente");
     }
@@ -82,11 +91,14 @@ public class MainController {
             ErrorHandler.handleDialogError("configuración", e, (Stage) settingsButton.getScene().getWindow());
         }
     }
-    
-    // Método para manejar el cierre de sesión
+      // Método para manejar el cierre de sesión
     private void handleLogout() {
         try {
             ErrorHandler.logInfo(GameConstants.LOGOUT_MESSAGE);
+            
+            // Cerrar sesión en el SessionManager
+            SessionManager.getInstance().logout();
+            
             Stage stage = (Stage) logoutButton.getScene().getWindow();
             NavigationManager.navigateToLogin(stage);
             ErrorHandler.logInfo(GameConstants.LOGOUT_SUCCESS_MESSAGE);
