@@ -16,8 +16,7 @@
            fx:controller="Controlador.MainController"
            prefWidth="900" prefHeight="700"
            styleClass="main-background">
-    
-    <!-- Elementos decorativos de fondo -->
+      <!-- Elementos decorativos de fondo -->
     <Circle radius="20" fill="#ff6b6b" opacity="0.2" translateX="-300" translateY="-200" />
     <Circle radius="12" fill="#ff6b6b" opacity="0.15" translateX="250" translateY="-180" />
     <Circle radius="15" fill="#ff6b6b" opacity="0.1" translateX="-220" translateY="220" />
@@ -29,40 +28,6 @@
     <Line startX="-300" startY="100" endX="-150" endY="250" strokeWidth="1.5" stroke="#ff6b6b" opacity="0.2" />
     <Line startX="150" startY="100" endX="300" endY="250" strokeWidth="1.5" stroke="#ff6b6b" opacity="0.2" />
 
-    <!-- Panel de botones de interfaz superior -->
-    <VBox alignment="TOP_RIGHT" spacing="8" StackPane.alignment="TOP_RIGHT">
-        <padding>
-            <Insets top="15" right="15" />
-        </padding>
-        
-        <!-- Botones de usuario y ranking -->
-        <VBox spacing="8" alignment="CENTER_RIGHT">
-            <Button fx:id="userProfileButton" 
-                    text="👤" 
-                    styleClass="interface-button-compact"
-                    onAction="#showUserProfile"
-                    prefWidth="45" 
-                    prefHeight="45"
-                    style="-fx-font-size: 18px;">
-                <tooltip>
-                    <Tooltip text="Ver perfil de usuario" />
-                </tooltip>
-            </Button>
-            
-            <Button fx:id="rankingButton" 
-                    text="🏆" 
-                    styleClass="interface-button-compact"
-                    onAction="#showRanking"
-                    prefWidth="45" 
-                    prefHeight="45"
-                    style="-fx-font-size: 18px;">
-                <tooltip>
-                    <Tooltip text="Ver ranking de jugadores" />
-                </tooltip>
-            </Button>
-        </VBox>
-    </VBox>
-    
     <!-- Contenido del menú -->
     <VBox alignment="CENTER" spacing="30" styleClass="content-container">
         <!-- Título del juego con efecto visual -->
@@ -121,12 +86,45 @@
             <Label text="E = mc²" styleClass="formula-text" />
             <Label text="F = G(m₁m₂)/r²" styleClass="formula-text" />
         </HBox>
-        
-        <!-- Versión del juego -->
+          <!-- Versión del juego -->
         <Label text="v1.0" textFill="white" opacity="0.5" styleClass="version-text">
             <VBox.margin>
                 <Insets top="20" />
             </VBox.margin>
         </Label>
+    </VBox>
+    
+    <!-- Panel de botones de interfaz superior (debe ir al final para estar encima) -->
+    <VBox alignment="TOP_RIGHT" spacing="8" StackPane.alignment="TOP_RIGHT" pickOnBounds="false">
+        <padding>
+            <Insets top="15" right="15" />
+        </padding>
+        
+        <!-- Botones de usuario y ranking -->
+        <VBox spacing="8" alignment="CENTER_RIGHT" pickOnBounds="false">
+            <Button fx:id="userProfileButton" 
+                    text="👤" 
+                    styleClass="interface-button-compact"
+                    onAction="#showUserProfile"
+                    prefWidth="45" 
+                    prefHeight="45"
+                    style="-fx-font-size: 18px;">
+                <tooltip>
+                    <Tooltip text="Ver perfil de usuario" />
+                </tooltip>
+            </Button>
+            
+            <Button fx:id="rankingButton" 
+                    text="🏆" 
+                    styleClass="interface-button-compact"
+                    onAction="#showRanking"
+                    prefWidth="45" 
+                    prefHeight="45"
+                    style="-fx-font-size: 18px;">
+                <tooltip>
+                    <Tooltip text="Ver ranking de jugadores" />
+                </tooltip>
+            </Button>
+        </VBox>
     </VBox>
 </StackPane>
