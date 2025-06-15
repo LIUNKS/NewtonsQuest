@@ -30,7 +30,7 @@ public class AppleManager {
     private final int FLOOR_Y;
     
     // Puntuaciones
-    private final int RED_APPLE_POINTS = 10;
+    private final int RED_APPLE_POINTS = 100;
     private final int GREEN_APPLE_POINTS = -5;
     private final int MISSED_APPLE_POINTS = -3;
     
