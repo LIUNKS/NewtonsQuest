@@ -1,5 +1,6 @@
 package Controlador;
 
+import Controlador.navigation.NavigationManager;
 import java.io.File;
 import java.io.IOException;
 import javafx.event.ActionEvent;
@@ -102,48 +103,13 @@ public class MapController {
         // Este botón solo imprime un mensaje en la consola por el momento
         System.out.println("Botón Quiz presionado - Funcionalidad no implementada aún");
     }
-    
-    // Método para volver al menú principal
+      // Método para volver al menú principal
     private void returnToMainMenu() {
         try {
             System.out.println("Volviendo al menú principal desde el mapa...");
             
-            // Obtener la ruta del archivo FXML
-            String mainFxmlPath = "src/Main/Main.fxml";
-            String mainCssPath = "src/Vista/main.css";
-            
-            // Verificar si estamos en desarrollo o en producción
-            File mainFxmlFile = new File(mainFxmlPath);
-            File mainCssFile = new File(mainCssPath);
-            
-            FXMLLoader loader;
-            String cssPath;
-            
-            if (mainFxmlFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                loader = new FXMLLoader(mainFxmlFile.toURI().toURL());
-                cssPath = mainCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Main.fxml"));
-                cssPath = getClass().getResource("/Vista/main.css").toExternalForm();
-            }
-            
-            // Cargar el menú principal
-            Parent root = loader.load();
-            
-            // Crear una nueva escena
-            Scene scene = new Scene(root, 900, 700);
-            
-            // Añadir el CSS
-            scene.getStylesheets().add(cssPath);
-            
-            // Obtener el stage actual
             Stage stage = (Stage) btnJugar.getScene().getWindow();
-            
-            // Cambiar la escena
-            stage.setScene(scene);
-            stage.setTitle("Newton's Apple Quest - Menú Principal");
+            NavigationManager.navigateToMainWithUser(stage);
             
             System.out.println("Vuelto al menú principal correctamente");
             
