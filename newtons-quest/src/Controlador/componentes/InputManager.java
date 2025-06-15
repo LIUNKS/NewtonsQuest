@@ -25,6 +25,7 @@ public class InputManager {
     private Runnable onShowRanking; // Nuevo callback para mostrar ranking
     private Runnable onHideRanking; // Nuevo callback para ocultar ranking
     private Runnable onContinueAfterCompletion; // Callback para continuar después del mensaje de completación
+    private java.util.function.BiConsumer<Double, Double> onMouseClick; // Callback para clics del mouse
     
     /**
      * Constructor del InputManager
@@ -135,12 +136,12 @@ public class InputManager {
      * @param onFormulaDetails Acción para mostrar detalles de fórmula
      * @param onHideFormulaDetails Acción para ocultar detalles de fórmula
      * @param onShowRanking Acción para mostrar ranking
-     * @param onHideRanking Acción para ocultar ranking
-     */    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
+     * @param onHideRanking Acción para ocultar ranking     */    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
                             Runnable onUIToggle, Runnable onShowSettings,
                             java.util.function.Consumer<Integer> onFormulaDetails,
                             Runnable onHideFormulaDetails, Runnable onShowRanking,
-                            Runnable onHideRanking, Runnable onContinueAfterCompletion) {
+                            Runnable onHideRanking, Runnable onContinueAfterCompletion,
+                            java.util.function.BiConsumer<Double, Double> onMouseClick) {
         try {
             this.onPauseToggle = onPauseToggle;
             this.onReturnToMenu = onReturnToMenu;
@@ -151,7 +152,8 @@ public class InputManager {
             this.onShowRanking = onShowRanking;
             this.onHideRanking = onHideRanking;
             this.onContinueAfterCompletion = onContinueAfterCompletion;
-            System.out.println("Callbacks configurados en InputManager (versión 5 con completación)");
+            this.onMouseClick = onMouseClick;
+            System.out.println("Callbacks configurados en InputManager (versión 6 con mouse)");
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -194,12 +196,16 @@ public class InputManager {
                         
                         // Configurar los eventos de teclado para la escena
                         setupSceneKeyHandlers(newScene);
-                        
-                        // También añadir el foco al canvas cuando se hace clic en él
+                          // También añadir el foco al canvas cuando se hace clic en él
                         try {
                             gameCanvas.setOnMouseClicked(event -> {
                                 gameCanvas.requestFocus();
                                 System.out.println("Foco solicitado para el canvas por clic de ratón");
+                                
+                                // Notificar sobre el clic para manejo de botones
+                                if (onMouseClick != null) {
+                                    onMouseClick.accept(event.getX(), event.getY());
+                                }
                             });
                             System.out.println("Listener de ratón configurado en el canvas");
                         } catch (Exception e) {
