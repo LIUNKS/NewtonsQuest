@@ -171,7 +171,7 @@ public class UserProfileDialog {
         Label iconLabel = new Label(icon);
         iconLabel.setFont(Font.font("Arial", 16));
         
-        Label valueLabel = new Label(value.isEmpty() ? "No disponible" : value);
+        Label valueLabel = new Label((value == null || value.isEmpty()) ? "No disponible" : value);
         valueLabel.setFont(Font.font("Arial", 14));
         valueLabel.setTextFill(Color.LIGHTGRAY);
         valueLabel.setStyle("-fx-background-color: rgba(0,0,0,0.3); -fx-padding: 8; -fx-background-radius: 5;");
@@ -246,9 +246,7 @@ public class UserProfileDialog {
         buttonsBox.getChildren().addAll(saveButton, closeButton);
         
         return buttonsBox;
-    }
-    
-    private String[] getUserData() {
+    }    private String[] getUserData() {
         try {
             // Obtener datos del usuario desde la base de datos
             String nombreCompleto = UsuarioDAO.obtenerNombreCompleto(currentUserId);
@@ -262,6 +260,7 @@ public class UserProfileDialog {
             };
         } catch (Exception e) {
             System.err.println("Error al obtener datos del usuario: " + e.getMessage());
+            e.printStackTrace();
             return new String[]{"", "", "No disponible"};
         }
     }
