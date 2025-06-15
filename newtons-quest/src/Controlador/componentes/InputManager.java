@@ -24,6 +24,7 @@ public class InputManager {
     private Runnable onHideFormulaDetails;
     private Runnable onShowRanking; // Nuevo callback para mostrar ranking
     private Runnable onHideRanking; // Nuevo callback para ocultar ranking
+    private Runnable onContinueAfterCompletion; // Callback para continuar después del mensaje de completación
     
     /**
      * Constructor del InputManager
@@ -135,12 +136,11 @@ public class InputManager {
      * @param onHideFormulaDetails Acción para ocultar detalles de fórmula
      * @param onShowRanking Acción para mostrar ranking
      * @param onHideRanking Acción para ocultar ranking
-     */
-    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
+     */    public void setCallbacks(Runnable onPauseToggle, Runnable onReturnToMenu, 
                             Runnable onUIToggle, Runnable onShowSettings,
                             java.util.function.Consumer<Integer> onFormulaDetails,
                             Runnable onHideFormulaDetails, Runnable onShowRanking,
-                            Runnable onHideRanking) {
+                            Runnable onHideRanking, Runnable onContinueAfterCompletion) {
         try {
             this.onPauseToggle = onPauseToggle;
             this.onReturnToMenu = onReturnToMenu;
@@ -150,7 +150,8 @@ public class InputManager {
             this.onHideFormulaDetails = onHideFormulaDetails;
             this.onShowRanking = onShowRanking;
             this.onHideRanking = onHideRanking;
-            System.out.println("Callbacks configurados en InputManager (versión 4 con ranking)");
+            this.onContinueAfterCompletion = onContinueAfterCompletion;
+            System.out.println("Callbacks configurados en InputManager (versión 5 con completación)");
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -288,13 +289,19 @@ public class InputManager {
                         System.out.println("Abriendo configuración");
                     } else {
                         System.out.println("No hay callback configurado para onShowSettings");
-                    }
-                } else if (code == KeyCode.R) {
+                    }                } else if (code == KeyCode.R) {
                     if (onShowRanking != null) {
                         onShowRanking.run();
                         System.out.println("Mostrando ranking");
                     } else {
                         System.out.println("No hay callback configurado para onShowRanking");
+                    }
+                } else if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
+                    if (onContinueAfterCompletion != null) {
+                        onContinueAfterCompletion.run();
+                        System.out.println("Continuando después del mensaje de completación");
+                    } else {
+                        System.out.println("No hay callback configurado para onContinueAfterCompletion");
                     }
                 } else if (code.isDigitKey()) {
                     try {
