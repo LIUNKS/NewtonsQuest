@@ -2,7 +2,10 @@ package Modelo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ConexionDB {
     
@@ -55,5 +58,46 @@ public class ConexionDB {
                 }
             }
         }
+    }
+    
+    /**
+     * Método utilitario para cerrar recursos de base de datos de forma segura
+     * @param conn Conexión a cerrar
+     * @param stmt Statement a cerrar
+     * @param rs ResultSet a cerrar
+     */
+    public static void cerrarRecursos(Connection conn, java.sql.Statement stmt, java.sql.ResultSet rs) {
+        try {
+            if (rs != null) {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar ResultSet: " + e.getMessage());
+        }
+        
+        try {
+            if (stmt != null) {
+                stmt.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar Statement: " + e.getMessage());
+        }
+        
+        try {
+            if (conn != null) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar Connection: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Sobrecarga del método para cerrar solo conexión y statement
+     * @param conn Conexión a cerrar
+     * @param stmt Statement a cerrar
+     */
+    public static void cerrarRecursos(Connection conn, java.sql.Statement stmt) {
+        cerrarRecursos(conn, stmt, null);
     }
 }
