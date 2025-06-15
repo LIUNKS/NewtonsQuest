@@ -85,10 +85,8 @@ public class RegisterController {
         if (password.length() < 6) {
             showError("La contraseña debe tener al menos 6 caracteres");
             return;
-        }
-
-        // Registrar al usuario en la base de datos
-        boolean registroExitoso = UsuarioDAO.registrarUsuario(username, password);
+        }        // Registrar al usuario en la base de datos con toda la información
+        boolean registroExitoso = UsuarioDAO.registrarUsuario(username, password, fullName, email);
 
         if (registroExitoso) {
             // Mostrar mensaje de éxito y volver a la pantalla de login
