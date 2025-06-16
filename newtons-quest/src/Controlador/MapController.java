@@ -1,7 +1,9 @@
 package Controlador;
 
 import Controlador.navigation.NavigationManager;
+import Controlador.utils.ErrorHandler;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -9,7 +11,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.stage.Stage;
 
 public class MapController {
@@ -17,10 +26,14 @@ public class MapController {
     @FXML private Button btnJugar;
     @FXML private Button btnVideo;
     @FXML private Button btnQuiz;
+    @FXML private AnchorPane mapBackground; // Añadimos referencia al AnchorPane
     
     public void initialize() {
         try {
             System.out.println("Inicializando MapController");
+            
+            // Cargar la imagen de fondo
+            loadBackgroundImage();
             
             // Configurar eventos de teclado para la escena
             btnJugar.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -36,6 +49,47 @@ public class MapController {
         } catch (Exception e) {
             System.err.println("Error al inicializar MapController: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Carga la imagen de fondo directamente desde código
+     */
+    private void loadBackgroundImage() {
+        try {
+            // Ruta de la imagen
+            String imagePath = "src/recursos/imagenes/map_background.jpg";
+            File imageFile = new File(imagePath);
+            
+            Image backgroundImage;
+            
+            if (imageFile.exists()) {
+                // Estamos en desarrollo, usar ruta de archivo
+                backgroundImage = new Image(new FileInputStream(imageFile));
+                ErrorHandler.logInfo("Imagen de fondo del mapa cargada desde: " + imagePath);
+            } else {
+                // Estamos en producción, usar getResource
+                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/map_background.jpg"));
+                ErrorHandler.logInfo("Imagen de fondo del mapa cargada desde recursos");
+            }
+            
+            // Crear el objeto BackgroundImage
+            BackgroundImage bgImage = new BackgroundImage(
+                backgroundImage, 
+                BackgroundRepeat.NO_REPEAT, 
+                BackgroundRepeat.NO_REPEAT, 
+                BackgroundPosition.CENTER, 
+                new BackgroundSize(100, 100, true, true, false, true)
+            );
+            
+            // Establecer el fondo
+            mapBackground.setBackground(new Background(bgImage));
+              } catch (Exception e) {
+            System.err.println("Error al cargar la imagen de fondo del mapa: " + e.getMessage());
+            e.printStackTrace();
+            ErrorHandler.logWarning("No se pudo cargar la imagen de fondo del mapa: " + e.getMessage());
+            // También podemos usar handleResourceError que es específico para errores de recursos
+            ErrorHandler.handleResourceError("imagen de fondo del mapa", e);
         }
     }
     
