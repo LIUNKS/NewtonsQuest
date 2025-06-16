@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane id="mapBackground" prefHeight="700.0" prefWidth="900.0" styleClass="map-background" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controlador.MapController">
+<AnchorPane fx:id="mapBackground" prefHeight="700.0" prefWidth="900.0" styleClass="map-background" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controlador.MapController">
    <children>
       <Label layoutX="300.0" layoutY="50.0" text="Mapa de Aventuras" textFill="#ffffff">
          <font>
