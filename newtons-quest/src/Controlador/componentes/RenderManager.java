@@ -1,6 +1,7 @@
 package Controlador.componentes;
 
 import Modelo.Apple;
+import Modelo.Potion;
 import Modelo.Player;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -95,8 +96,7 @@ public class RenderManager {
         gc.setFill(Color.SADDLEBROWN);
         gc.fillRect(0, FLOOR_Y, GAME_WIDTH, GAME_HEIGHT - FLOOR_Y);
     }
-    
-    /**
+      /**
      * Renderiza todas las manzanas activas
      * @param apples Lista de manzanas a renderizar
      */
@@ -104,6 +104,18 @@ public class RenderManager {
         for (Apple apple : apples) {
             if (apple.isActive()) {
                 apple.render(gc);
+            }
+        }
+    }
+    
+    /**
+     * Renderiza todas las pociones activas
+     * @param potions Lista de pociones a renderizar
+     */
+    public void renderPotions(java.util.List<Potion> potions) {
+        for (Potion potion : potions) {
+            if (potion.isActive()) {
+                potion.render(gc);
             }
         }
     }
@@ -119,16 +131,19 @@ public class RenderManager {
             System.err.println("ERROR: Player es null en RenderManager.renderPlayer()");
         }
     }
-    
-    /**
+      /**
      * Dibuja solo los elementos esenciales de la interfaz (modo minimalista)
      * @param score Puntuación actual
      * @param lives Vidas actuales
      * @param maxLives Máximo de vidas
      * @param level Nivel actual
      * @param showingUnlockEffect Si se está mostrando el efecto de desbloqueo
+     * @param hasSlownessEffect Si el jugador tiene efecto de lentitud
+     * @param hasPointsEffect Si el jugador tiene efecto de puntos dobles
+     * @param hasHealthEffect Si el jugador tiene efecto de salud
      */
-    public void renderMinimalUI(int score, int lives, int maxLives, int level, boolean showingUnlockEffect) {
+    public void renderMinimalUI(int score, int lives, int maxLives, int level, boolean showingUnlockEffect,
+                               boolean hasSlownessEffect, boolean hasPointsEffect, boolean hasHealthEffect) {
         try {            // Crear un fondo semi-transparente para el puntaje
             gc.setFill(new Color(0, 0, 0, 0.5));
             gc.fillRoundRect(GAME_WIDTH - 135, 15, 120, 45, 10, 10);
@@ -203,9 +218,11 @@ public class RenderManager {
             gc.setFill(new Color(0.4, 0.8, 1, 1)); // Azul claro
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
             gc.fillText("Nivel " + (level + 1), 35, GAME_HEIGHT - 25);
-            
-            // Indicador de tecla de configuración en la esquina inferior derecha
+              // Indicador de tecla de configuración en la esquina inferior derecha
             renderSettingsIndicator();
+            
+            // Indicadores de efectos de pociones activos
+            renderPotionEffects(hasSlownessEffect, hasPointsEffect, hasHealthEffect);
             
             // Ya no mostramos el indicador de modo minimalista
             
@@ -336,12 +353,22 @@ public class RenderManager {
     public void renderGameOverScreen(int score, boolean[] unlockedFormulas, int maxLevel) {
         renderGameOverScreen(score, 0, maxLevel, unlockedFormulas, FORMULAS_SHORT, FORMULAS_DESCRIPTIONS);
     }
-      /**
+    
+    /**
+     * Renderiza la pantalla de Game Over con el resumen del juego (con nivel actual)
+     * @param score Puntuación final
+     * @param currentLevel Nivel actual del jugador
+     * @param unlockedFormulas Array de fórmulas desbloqueadas
+     * @param maxLevel Nivel máximo del juego
+     */
+    public void renderGameOverScreen(int score, int currentLevel, boolean[] unlockedFormulas, int maxLevel) {
+        renderGameOverScreen(score, currentLevel, maxLevel, unlockedFormulas, FORMULAS_SHORT, FORMULAS_DESCRIPTIONS);
+    }    /**
      * Dibuja la pantalla de fin de juego
      */
     private void renderGameOverScreen(int score, int level, int maxLevel, boolean[] unlockedFormulas,
                                      String[] formulasShort, String[] formulasDescriptions) {
-        gc.setFill(new Color(0, 0, 0, 0.85));
+        gc.setFill(new Color(0, 0, 0, 0.9));
         gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         
         // Verificar si el jugador completó todas las fórmulas
@@ -351,18 +378,81 @@ public class RenderManager {
         }
         
         boolean allFormulasCompleted = (formulasUnlocked == maxLevel);
-        
-        if (allFormulasCompleted) {
-            // Mensaje de completación exitosa
-            gc.setFill(Color.GOLD);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 42));
-            gc.fillText("¡HAS COMPLETADO EL JUEGO!", GAME_WIDTH / 2 - 220, 120);
+          if (allFormulasCompleted) {
+            // BANNER DE COMPLETACIÓN MEJORADO
+            renderCompletionBanner(score, level, maxLevel);
+            // Fórmulas empiezan más arriba: y=300 en lugar de y=380
+            renderFormulasSummary(unlockedFormulas, formulasShort, formulasDescriptions, maxLevel, 300);
+            renderCompletionInstructions();
         } else {
-            // Mensaje tradicional de game over
-            gc.setFill(Color.RED);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-            gc.fillText("GAME OVER", GAME_WIDTH / 2 - 140, 120);
+            // Pantalla de Game Over tradicional
+            renderGameOverBanner(score, level, maxLevel);
+            renderFormulasSummary(unlockedFormulas, formulasShort, formulasDescriptions, maxLevel, 280);
+            renderGameOverInstructions(formulasUnlocked, maxLevel);
         }
+    }
+      /**
+     * Renderiza el banner mejorado de completación del juego
+     */
+    private void renderCompletionBanner(int score, int level, int maxLevel) {
+        // Banner más compacto - altura reducida de 320 a 240
+        int bannerHeight = 240;
+        int bannerY = 20;
+        
+        // Fondo principal del banner
+        gc.setFill(new Color(0.1, 0.1, 0.1, 0.95));
+        gc.fillRoundRect(50, bannerY, GAME_WIDTH - 100, bannerHeight, 15, 15);
+        
+        // Borde dorado brillante
+        gc.setStroke(Color.GOLD);
+        gc.setLineWidth(3);
+        gc.strokeRoundRect(50, bannerY, GAME_WIDTH - 100, bannerHeight, 15, 15);
+        
+        // Borde interior más sutil
+        gc.setStroke(new Color(1, 1, 1, 0.3));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(53, bannerY + 3, GAME_WIDTH - 106, bannerHeight - 6, 12, 12);
+        
+        // Título principal más compacto - tamaño reducido de 42 a 32
+        gc.setFill(new Color(0, 0, 0, 0.7));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.fillText("¡JUEGO COMPLETADO!", GAME_WIDTH / 2 - 152, bannerY + 47);
+        
+        gc.setFill(Color.GOLD);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.fillText("¡JUEGO COMPLETADO!", GAME_WIDTH / 2 - 150, bannerY + 45);
+        
+        // Separador decorativo más corto
+        gc.setStroke(Color.GOLD);
+        gc.setLineWidth(2);
+        gc.strokeLine(GAME_WIDTH / 2 - 150, bannerY + 60, GAME_WIDTH / 2 + 150, bannerY + 60);
+        
+        // Información en una sola línea para ahorrar espacio
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        gc.fillText("Puntuación: " + score + " | Nivel: " + level + "/" + maxLevel, 
+                   GAME_WIDTH / 2 - 180, bannerY + 95);
+        
+        // Mensaje de felicitación más compacto
+        renderPersonalizedCongratulation(score, bannerY + 120);
+        
+        // Estrellitas decorativas en las esquinas
+        gc.setFill(Color.YELLOW);
+        gc.setFont(Font.font("Arial", 16));
+        gc.fillText("⭐", 60, bannerY + 25);
+        gc.fillText("⭐", GAME_WIDTH - 75, bannerY + 25);
+        gc.fillText("⭐", 60, bannerY + bannerHeight - 10);
+        gc.fillText("⭐", GAME_WIDTH - 75, bannerY + bannerHeight - 10);
+    }
+    
+    /**
+     * Renderiza el banner tradicional de Game Over
+     */
+    private void renderGameOverBanner(int score, int level, int maxLevel) {
+        // Mensaje tradicional de game over
+        gc.setFill(Color.RED);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
+        gc.fillText("GAME OVER", GAME_WIDTH / 2 - 140, 120);
         
         // Mostrar puntuación final
         gc.setFill(Color.WHITE);
@@ -372,72 +462,144 @@ public class RenderManager {
         // Mostrar nivel alcanzado
         gc.setFill(Color.YELLOW);
         gc.fillText("Nivel alcanzado: " + level + " de " + maxLevel, GAME_WIDTH / 2 - 150, 220);
-        
-        // Mostrar fórmulas desbloqueadas
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+    }
+      /**
+     * Renderiza la felicitación personalizada basada en el ranking
+     */
+    private void renderPersonalizedCongratulation(int score, int yPosition) {
+        try {
+            Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
+            
+            int position = rankingManager.getCurrentUserPosition();
+            int totalPlayers = rankingManager.getTotalCompletedPlayers();
+            
+            // Área de felicitación más compacta: altura reducida de 80 a 60
+            gc.setFill(new Color(0.2, 0.8, 0.2, 0.8));
+            gc.fillRoundRect(80, yPosition, GAME_WIDTH - 160, 60, 8, 8);
+            
+            gc.setStroke(new Color(0.3, 1, 0.3, 1));
+            gc.setLineWidth(1);
+            gc.strokeRoundRect(80, yPosition, GAME_WIDTH - 160, 60, 8, 8);
+            
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            
+            if (position > 0 && totalPlayers > 0) {
+                // Texto más compacto en una línea
+                String rankText = "🏆 Ranking: " + position + "/" + totalPlayers + " - ";
+                
+                if (position == 1) {
+                    gc.setFill(Color.GOLD);
+                    gc.fillText(rankText + "👑 ¡ERES EL #1!", GAME_WIDTH / 2 - 140, yPosition + 25);
+                } else if (position <= 3) {
+                    gc.setFill(Color.ORANGE);
+                    gc.fillText(rankText + "🥉 ¡TOP 3!", GAME_WIDTH / 2 - 120, yPosition + 25);
+                } else {
+                    gc.setFill(Color.LIGHTGREEN);
+                    gc.fillText(rankText + "✨ ¡Excelente!", GAME_WIDTH / 2 - 130, yPosition + 25);
+                }
+                
+                // Mensaje adicional más pequeño
+                gc.setFill(Color.LIGHTGRAY);
+                gc.setFont(Font.font("Arial", 14));
+                gc.fillText("¡Has dominado las leyes de la física!", GAME_WIDTH / 2 - 120, yPosition + 45);
+            } else {
+                gc.setFill(Color.LIGHTGREEN);
+                gc.fillText("🎉 ¡Primer jugador en completar el juego!", GAME_WIDTH / 2 - 150, yPosition + 30);
+            }
+            
+        } catch (Exception e) {
+            // Mensaje de respaldo más compacto
+            gc.setFill(Color.LIGHTGREEN);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.fillText("🎉 ¡Todas las fórmulas desbloqueadas!", GAME_WIDTH / 2 - 140, yPosition + 30);
+        }
+    }
+      /**
+     * Renderiza el resumen de fórmulas de manera organizada
+     */
+    private void renderFormulasSummary(boolean[] unlockedFormulas, String[] formulasShort, 
+                                     String[] formulasDescriptions, int maxLevel, int startY) {
+        // Título del resumen más compacto
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         gc.setFill(Color.WHITE);
-        gc.fillText("Fórmulas de física desbloqueadas:", 100, 280);
+        gc.fillText("Fórmulas de física desbloqueadas:", 100, startY);
         
-        // Dibujar un separador
+        // Separador más sutil
         gc.setStroke(Color.GRAY);
-        gc.setLineWidth(2);
-        gc.strokeLine(100, 290, GAME_WIDTH - 100, 290);
+        gc.setLineWidth(1);
+        gc.strokeLine(100, startY + 5, GAME_WIDTH - 100, startY + 5);
         
         int formulasShown = 0;
         for (int i = 0; i < maxLevel; i++) {
             if (unlockedFormulas[i]) {
                 formulasShown++;
+                // Altura reducida de 70 a 50 píxeles por fórmula
+                int yPos = startY + 20 + ((formulasShown - 1) * 50);
                 
-                // Dibujar rectángulo de fondo para cada fórmula
-                gc.setFill(new Color(0.2, 0.2, 0.2, 0.7));
-                gc.fillRect(100, 300 + ((formulasShown - 1) * 75), GAME_WIDTH - 200, 65);
+                // Salir si no hay espacio suficiente (evitar que se salga de pantalla)
+                if (yPos + 50 > GAME_HEIGHT - 80) {
+                    // Mostrar indicador de que hay más fórmulas
+                    gc.setFill(Color.YELLOW);
+                    gc.setFont(Font.font("Arial", 14));
+                    gc.fillText("... y más fórmulas desbloqueadas", 120, yPos + 20);
+                    break;
+                }
+                
+                // Fondo de cada fórmula más compacto
+                gc.setFill(new Color(0.15, 0.15, 0.15, 0.8));
+                gc.fillRoundRect(100, yPos, GAME_WIDTH - 200, 45, 6, 6);
+                
                 gc.setStroke(Color.YELLOW);
                 gc.setLineWidth(1);
-                gc.strokeRect(100, 300 + ((formulasShown - 1) * 75), GAME_WIDTH - 200, 65);
+                gc.strokeRoundRect(100, yPos, GAME_WIDTH - 200, 45, 6, 6);
                 
-                // Fórmula
+                // Número y fórmula en una línea
                 gc.setFill(Color.YELLOW);
-                gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
-                gc.fillText((i+1) + ". " + formulasShort[i], 120, 325 + ((formulasShown - 1) * 75));
+                gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+                gc.fillText((i+1) + ". " + formulasShort[i], 120, yPos + 20);
                 
-                // Descripción
+                // Descripción más compacta
                 gc.setFill(Color.LIGHTGRAY);
-                gc.setFont(Font.font("Arial", 16));
-                
-                // Mostrar una versión recortada de la descripción para que quepa
+                gc.setFont(Font.font("Arial", 12));
                 String desc = formulasDescriptions[i];
-                if (desc.length() > 85) {
-                    desc = desc.substring(0, 82) + "...";
+                if (desc.length() > 70) {
+                    desc = desc.substring(0, 67) + "...";
                 }
-                gc.fillText(desc, 120, 350 + ((formulasShown - 1) * 75));
+                gc.fillText(desc, 120, yPos + 35);
             }
         }
         
         if (formulasShown == 0) {
             gc.setFill(Color.GRAY);
-            gc.setFont(Font.font("Arial", 20));
-            gc.fillText("Ninguna fórmula desbloqueada", GAME_WIDTH / 2 - 150, 330);
-            gc.fillText("¡Intenta conseguir al menos 100 puntos!", GAME_WIDTH / 2 - 200, 360);
-        } else if (formulasShown < maxLevel) {
-            // Mostrar mensaje motivador
+            gc.setFont(Font.font("Arial", 16));
+            gc.fillText("Ninguna fórmula desbloqueada", GAME_WIDTH / 2 - 120, startY + 50);
+            gc.fillText("¡Intenta conseguir al menos 100 puntos!", GAME_WIDTH / 2 - 140, startY + 70);
+        }
+    }    /**
+     * Renderiza las instrucciones para cuando se completa el juego
+     */
+    private void renderCompletionInstructions() {
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        gc.fillText("Presiona 'R' para ver el ranking | ESC para volver al mapa", 
+                   GAME_WIDTH / 2 - 240, GAME_HEIGHT - 25);
+    }
+      /**
+     * Renderiza las instrucciones para Game Over normal
+     */
+    private void renderGameOverInstructions(int formulasUnlocked, int maxLevel) {
+        if (formulasUnlocked < maxLevel) {
+            // Mensaje motivador
             gc.setFill(Color.WHITE);
             gc.setFont(Font.font("Arial", 18));
             gc.fillText("¡Sigue jugando para desbloquear más fórmulas de física!", 
-                       GAME_WIDTH / 2 - 240, 300 + (formulasShown * 75) + 30);        } else {
-            // Mensaje de felicitación por desbloquear todas las fórmulas con información de ranking
-            renderCompletionCelebration(score, 300 + (formulasShown * 75) + 30);
+                       GAME_WIDTH / 2 - 240, GAME_HEIGHT - 60);
         }
         
-        // Instrucciones para volver a jugar - diferentes según si completó el juego
         gc.setFill(Color.WHITE);
-        gc.setFont(Font.font(20));
-          if (allFormulasCompleted) {
-            // Instrucciones especiales para cuando completa el juego con íconos
-            gc.fillText("Presiona 'R' para ver el ranking | 🔙 para volver al menú", GAME_WIDTH / 2 - 240, GAME_HEIGHT - 50);
-        } else {
-            // Instrucciones normales para game over con ícono
-            gc.fillText("Presiona 🔙 para volver al menú", GAME_WIDTH / 2 - 140, GAME_HEIGHT - 50);
-        }
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        gc.fillText("Presiona ESC para volver al mapa", GAME_WIDTH / 2 - 140, GAME_HEIGHT - 30);
     }
       /**
      * Dibuja las instrucciones del juego
@@ -1012,4 +1174,108 @@ public class RenderManager {
         
         return null; // No hay acción
     }
+    
+    /**
+     * Renderiza los indicadores de efectos de pociones activos
+     * @param hasSlownessEffect Si el efecto de lentitud está activo
+     * @param hasPointsEffect Si el efecto de puntos dobles está activo
+     * @param hasHealthEffect Si el efecto de salud está activo
+     */
+    private void renderPotionEffects(boolean hasSlownessEffect, boolean hasPointsEffect, boolean hasHealthEffect) {
+        // Contar cuántos efectos están activos
+        int activeEffects = 0;
+        if (hasSlownessEffect) activeEffects++;
+        if (hasPointsEffect) activeEffects++;
+        if (hasHealthEffect) activeEffects++;
+        
+        if (activeEffects == 0) return; // No hay efectos activos
+        
+        // Posición inicial para los indicadores (parte superior central)
+        int startX = GAME_WIDTH / 2 - (activeEffects * 60) / 2;
+        int startY = 15;
+        int effectWidth = 50;
+        int effectHeight = 50;
+        int spacing = 10;
+        
+        int currentX = startX;
+        
+        // Efecto de lentitud (icono azul)
+        if (hasSlownessEffect) {
+            // Fondo semi-transparente
+            gc.setFill(new Color(0, 0, 1, 0.3));
+            gc.fillRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Borde azul
+            gc.setStroke(new Color(0, 0, 1, 0.8));
+            gc.setLineWidth(2);
+            gc.strokeRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Texto indicador
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+            gc.fillText("LENTO", currentX + 8, startY + 30);
+            
+            // Símbolo de tortuga/caracol
+            gc.setFill(new Color(0.3, 0.3, 1, 1));
+            gc.fillOval(currentX + 15, startY + 35, 20, 15);
+            
+            currentX += effectWidth + spacing;
+        }
+        
+        // Efecto de puntos dobles (icono dorado)
+        if (hasPointsEffect) {
+            // Fondo semi-transparente
+            gc.setFill(new Color(1, 0.8, 0, 0.3));
+            gc.fillRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Borde dorado
+            gc.setStroke(new Color(1, 0.8, 0, 0.8));
+            gc.setLineWidth(2);
+            gc.strokeRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Texto indicador
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+            gc.fillText("x2", currentX + 18, startY + 30);
+            
+            // Símbolo de puntos
+            gc.setFill(new Color(1, 0.8, 0, 1));
+            gc.fillText("★", currentX + 20, startY + 45);
+            
+            currentX += effectWidth + spacing;
+        }
+        
+        // Efecto de salud (icono rosa/rojo)
+        if (hasHealthEffect) {
+            // Fondo semi-transparente
+            gc.setFill(new Color(1, 0.4, 0.7, 0.3));
+            gc.fillRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Borde rosa
+            gc.setStroke(new Color(1, 0.4, 0.7, 0.8));
+            gc.setLineWidth(2);
+            gc.strokeRoundRect(currentX, startY, effectWidth, effectHeight, 8, 8);
+            
+            // Texto indicador
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+            gc.fillText("VIDA", currentX + 12, startY + 30);
+            
+            // Símbolo de corazón/cruz
+            gc.setFill(new Color(1, 0.3, 0.3, 1));
+            gc.fillText("♥", currentX + 20, startY + 45);
+            
+            currentX += effectWidth + spacing;
+        }
+    }
+    
+    /**
+     * Obtiene el índice de la fórmula que se está mostrando actualmente
+     * @return El índice de la fórmula actual, o -1 si no se está mostrando ninguna
+     */
+    public int getCurrentFormulaIndex() {
+        return showingFormulaDetails ? currentFormulaIndex : -1;
+    }
+
+    // ...existing code...
 }
