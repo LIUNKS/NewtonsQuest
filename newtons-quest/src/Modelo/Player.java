@@ -17,7 +17,8 @@ public class Player {
     private double velocityX = 0;
     
     // Constantes de movimiento
-    private final double SPEED = 5.0;
+    private final double BASE_SPEED = 5.0;
+    private double currentSpeed = BASE_SPEED;
     
     // Estado del jugador
     private boolean isMovingLeft = false;
@@ -27,6 +28,17 @@ public class Player {
     private boolean isDead = false; // Estado para game over
     private long greenAppleEffectStartTime = 0; // Tiempo de inicio del efecto de manzana verde
     private final long GREEN_APPLE_EFFECT_DURATION = 1000; // Duración del efecto en milisegundos
+    
+    // Efectos de pociones
+    private boolean hasSlownessEffect = false;
+    private boolean hasPointsEffect = false;
+    private boolean hasHealthEffect = false;
+    private long slownessEffectStartTime = 0;
+    private long pointsEffectStartTime = 0;
+    private long healthEffectStartTime = 0;
+    private final long SLOWNESS_EFFECT_DURATION = 8000; // 8 segundos
+    private final long POINTS_EFFECT_DURATION = 10000; // 10 segundos
+    private final long HEALTH_EFFECT_DURATION = 1000; // 1 segundo (efecto instantáneo pero visual)
     
     // Dimensiones del jugador
     private final int WIDTH = 64;
@@ -174,12 +186,19 @@ public class Player {
             return;
         }
         
-        // Actualizar posición horizontal
+        // Actualizar posición horizontal con velocidad constante
+        currentSpeed = BASE_SPEED;
+        
+        // Aplicar efecto de lentitud si está activo
+        if (hasSlownessEffect) {
+            currentSpeed *= 0.6; // Reducir velocidad al 60%
+        }
+        
         if (isMovingLeft) {
-            velocityX = -SPEED;
+            velocityX = -currentSpeed;
             facingRight = false;
         } else if (isMovingRight) {
-            velocityX = SPEED;
+            velocityX = currentSpeed;
             facingRight = true;
         } else {
             velocityX = 0;
@@ -194,6 +213,21 @@ public class Player {
             if (currentTime - greenAppleEffectStartTime > GREEN_APPLE_EFFECT_DURATION) {
                 hasGreenApple = false;
             }
+        }
+        
+        // Verificar efectos de pociones
+        long currentTime = System.currentTimeMillis();
+        
+        if (hasSlownessEffect && currentTime - slownessEffectStartTime > SLOWNESS_EFFECT_DURATION) {
+            hasSlownessEffect = false;
+        }
+        
+        if (hasPointsEffect && currentTime - pointsEffectStartTime > POINTS_EFFECT_DURATION) {
+            hasPointsEffect = false;
+        }
+        
+        if (hasHealthEffect && currentTime - healthEffectStartTime > HEALTH_EFFECT_DURATION) {
+            hasHealthEffect = false;
         }
         
         // Actualizar animación
@@ -323,5 +357,36 @@ public class Player {
     public void setGreenAppleEffect() {
         hasGreenApple = true;
         greenAppleEffectStartTime = System.currentTimeMillis();
+    }
+    
+    // Métodos para efectos de pociones
+    public void applySlownessEffect() {
+        hasSlownessEffect = true;
+        slownessEffectStartTime = System.currentTimeMillis();
+    }
+    
+    public void applyPointsEffect() {
+        hasPointsEffect = true;
+        pointsEffectStartTime = System.currentTimeMillis();
+    }
+    
+    public boolean applyHealthEffect() {
+        // Solo aplicar el efecto visual, la lógica de vidas se maneja en el ScoreManager
+        hasHealthEffect = true;
+        healthEffectStartTime = System.currentTimeMillis();
+        return true; // Siempre aplicar el efecto visual
+    }
+    
+    // Getters para efectos de pociones
+    public boolean hasSlownessEffect() {
+        return hasSlownessEffect;
+    }
+    
+    public boolean hasPointsEffect() {
+        return hasPointsEffect;
+    }
+    
+    public boolean hasHealthEffect() {
+        return hasHealthEffect;
     }
 }
