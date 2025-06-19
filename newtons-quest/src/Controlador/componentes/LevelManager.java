@@ -95,8 +95,7 @@ public class LevelManager {
                 break; // Solo desbloquear una fórmula a la vez
             }
         }
-        
-        // Actualizar el nivel basado en las fórmulas desbloqueadas
+          // Actualizar el nivel basado en las fórmulas desbloqueadas
         int newLevel = 0;
         for (int i = 0; i < MAX_LEVEL; i++) {
             if (unlockedFormulas[i]) {
@@ -105,9 +104,9 @@ public class LevelManager {
         }
         
         // Si ha cambiado el nivel, actualizarlo
-        if (newLevel != level + 1) {
+        if (newLevel != level) {
             level = newLevel;
-            System.out.println("¡Nivel aumentado a " + (level + 1) + "!");
+            System.out.println("¡Nivel aumentado a " + level + "!");
         }
           // Verificar si se completaron todas las fórmulas
         if (formulaDesbloqueada && areAllFormulasUnlocked()) {
