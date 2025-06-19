@@ -33,14 +33,14 @@ public class GameController {
     // Componentes del juego
     private GraphicsContext gc;
     private Player player;
-    private AnimationTimer gameLoop;
-      // Managers especializados
+    private AnimationTimer gameLoop;      // Managers especializados
     private RenderManager renderManager;
     private InputManager inputManager;
     private AudioManager audioManager;
     private ResourceManager resourceManager;
     private LevelManager levelManager;
     private AppleManager appleManager;
+    private PotionManager potionManager; // Nuevo manager para pociones
     private ScoreManager scoreManager;
     private VisualEffectsManager visualEffectsManager;
     private RankingManager rankingManager; // Nuevo manager para el ranking
@@ -193,10 +193,13 @@ public class GameController {
             
             // Inicializar gestor de puntuación (5 vidas máximo)
             scoreManager = new ScoreManager(5);
-            System.out.println("ScoreManager inicializado");
-              // Inicializar gestor de manzanas
+            System.out.println("ScoreManager inicializado");              // Inicializar gestor de manzanas
             appleManager = new AppleManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 1500, 2.0, 5.0);
             System.out.println("AppleManager inicializado");
+            
+            // Inicializar gestor de pociones (aparecen menos frecuentemente que las manzanas)
+            potionManager = new PotionManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 5000, 1.5, 4.0);
+            System.out.println("PotionManager inicializado");
             
             // Inicializar gestor de efectos visuales
             if (gameCanvas != null && gameCanvas.getScene() != null) {
@@ -303,11 +306,16 @@ public class GameController {
             levelManager.setOnFormulaUnlocked(
                 audioManager::playUnlockSound      // onFormulaUnlocked
             );
-            
-            // Configurar callbacks del AppleManager
+              // Configurar callbacks del AppleManager
             appleManager.setCallbacks(
                 scoreManager::addScore,            // onScoreChange
                 this::loseLife                     // onLifeLost
+            );
+              // Configurar callbacks del PotionManager
+            potionManager.setCallbacks(
+                this::handlePotionScore,           // onScoreChange (con efecto de puntos dobles)
+                this::handlePotionEffect,          // onPotionEffect (mostrar mensaje)
+                scoreManager::gainLife             // onGainLife (ganar vida)
             );
             
             System.out.println("Todos los callbacks configurados correctamente");
@@ -330,9 +338,13 @@ public class GameController {
                 System.err.println("ERROR CRÍTICO: Player es null, no se puede iniciar el bucle del juego");
                 return;
             }
-            
-            if (appleManager == null) {
+              if (appleManager == null) {
                 System.err.println("ERROR CRÍTICO: AppleManager es null, no se puede iniciar el bucle del juego");
+                return;
+            }
+            
+            if (potionManager == null) {
+                System.err.println("ERROR CRÍTICO: PotionManager es null, no se puede iniciar el bucle del juego");
                 return;
             }
             
@@ -415,9 +427,12 @@ public class GameController {
                 player.setPosition(0, player.getY());
             } else if (player.getX() > GAME_WIDTH - player.getWidth()) {
                 player.setPosition(GAME_WIDTH - player.getWidth(), player.getY());
-            }
-              // Actualizar manzanas y colisiones
+            }              // Actualizar manzanas y colisiones
             appleManager.update(player);            
+            
+            // Actualizar pociones y colisiones
+            potionManager.update(player);
+            
             // Actualizar efecto de desbloqueo de fórmulas
             levelManager.updateUnlockEffect();
             
@@ -458,10 +473,14 @@ public class GameController {
             
             // Renderizar fondo
             renderManager.renderBackground();
-            
-            // Renderizar manzanas si están disponibles
+              // Renderizar manzanas si están disponibles
             if (appleManager != null) {
                 renderManager.renderApples(appleManager.getApples());
+            }
+            
+            // Renderizar pociones si están disponibles
+            if (potionManager != null) {
+                renderManager.renderPotions(potionManager.getPotions());
             }
             
             // Renderizar jugador si está disponible
@@ -474,14 +493,16 @@ public class GameController {
             boolean mostrarDesbloqueo = levelManager.isShowingUnlockEffect();
             boolean mostrarGameOver = gameOver;
               // Si vamos a mostrar una pantalla de pausa, detalles de fórmula o game over, no renderizar el HUD
-            if (!mostrarPausa && !mostrarFormula && !mostrarGameOver) {
-                // Solo usar interfaz minimalista
+            if (!mostrarPausa && !mostrarFormula && !mostrarGameOver) {                // Solo usar interfaz minimalista
                 renderManager.renderMinimalUI(
                     scoreManager.getScore(), 
                     scoreManager.getLives(), 
                     scoreManager.getMaxLives(), 
                     levelManager.getLevel(),
-                    mostrarDesbloqueo
+                    mostrarDesbloqueo,
+                    player.hasSlownessEffect(),
+                    player.hasPointsEffect(),
+                    player.hasHealthEffect()
                 );
             }
             
@@ -499,12 +520,11 @@ public class GameController {
             // Mostrar pantalla de pausa solo si corresponde (y NO si hay celebración activa)
             if (mostrarPausa) {
                 renderManager.renderPauseScreen();
-            }
-
-            // Mostrar pantalla de Game Over si el juego ha terminado
+            }            // Mostrar pantalla de Game Over si el juego ha terminado
             if (mostrarGameOver) {
                 renderManager.renderGameOverScreen(
                     scoreManager.getScore(),
+                    levelManager.getLevel(),  // Pasar el nivel actual
                     levelManager.getUnlockedFormulas(),
                     levelManager.getMaxLevel()
                 );
@@ -559,14 +579,35 @@ public class GameController {
         }
         
         System.out.println("Juego terminado");
-    }
-    
-    /**
+    }      /**
      * Maneja la pérdida de una vida
      */
     private void loseLife() {
         scoreManager.loseLife("Has perdido una vida");
-    }    /**
+    }
+    
+    /**
+     * Maneja la puntuación de las pociones con efecto de puntos dobles
+     */
+    private void handlePotionScore(int points) {
+        // Si el jugador tiene efecto de puntos dobles, duplicar los puntos
+        if (player != null && player.hasPointsEffect()) {
+            points *= 2;
+            System.out.println("¡Puntos dobles aplicados! Puntos totales: " + points);
+        }
+        scoreManager.addScore(points);
+    }
+      /**
+     * Maneja los efectos visuales de las pociones
+     */
+    private void handlePotionEffect(String message) {
+        // Los efectos visuales de las pociones se muestran en el HUD
+        // a través de los indicadores en renderPotionEffects()
+        System.out.println("Efecto de poción: " + message);
+        
+        // Opcional: Aquí se podría agregar un efecto visual temporal
+        // como un cambio de brillo o color si se desea
+    }/**
      * Muestra los detalles de una fórmula específica
      * @param formulaIndex Índice de la fórmula
      */
@@ -594,9 +635,8 @@ public class GameController {
                 System.out.println("La fórmula " + (formulaIndex + 1) + " no está desbloqueada todavía");
                 return;
             }
-            
-            // Si ya se están mostrando los detalles de esta fórmula, ocultarlos y reanudar el juego
-            if (renderManager.isShowingFormulaDetails() && formulaIndex == levelManager.getUnlockedFormulaIndex()) {
+              // Si ya se están mostrando los detalles de esta fórmula, ocultarlos y reanudar el juego
+            if (renderManager.isShowingFormulaDetails() && formulaIndex == renderManager.getCurrentFormulaIndex()) {
                 renderManager.hideFormulaDetails();
                 // Reanudar el juego si estaba pausado por mostrar la fórmula
                 if (isPaused) {
@@ -784,12 +824,18 @@ public class GameController {
             System.err.println("Error al ocultar ranking: " + e.getMessage());
             e.printStackTrace();
         }
-    }      /**
-     * Maneja la tecla ESCAPE con prioridades: detalles de fórmula > pausa
+    }    /**
+     * Maneja la tecla ESCAPE con prioridades: game over > detalles de fórmula > pausa
      */
     private void handleEscapeKey() {
         try {
-            // Prioridad 1: Si se están mostrando detalles de fórmula, cerrarlos
+            // Prioridad 1: Si el juego terminó (Game Over), volver al mapa
+            if (gameOver) {
+                returnToMap();
+                return;
+            }
+            
+            // Prioridad 2: Si se están mostrando detalles de fórmula, cerrarlos
             if (renderManager != null && renderManager.isShowingFormulaDetails()) {
                 renderManager.hideFormulaDetails();
                 System.out.println("Cerrando detalles de fórmula");
@@ -849,6 +895,50 @@ public class GameController {
         } catch (Exception e) {
             System.err.println("Error al manejar clic del mouse: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+      /**
+     * Regresa al mapa cuando el juego ha terminado (Game Over)
+     */
+    private void returnToMap() {
+        try {
+            System.out.println("Preparando para volver al mapa...");
+            
+            // Detener el bucle del juego
+            if (gameLoop != null) {
+                gameLoop.stop();
+                System.out.println("Bucle del juego detenido");
+            } else {
+                System.err.println("ADVERTENCIA: gameLoop es null al intentar detenerlo");
+            }
+            
+            // Detener la música
+            if (audioManager != null) {
+                audioManager.stopBackgroundMusic();
+                System.out.println("Música de fondo detenida");
+            } else {
+                System.err.println("ADVERTENCIA: audioManager es null al intentar detener la música");
+            }
+            
+            System.out.println("Volviendo al mapa...");
+            
+            // Obtener el stage actual y navegar al mapa
+            Stage currentStage = (Stage) gameCanvas.getScene().getWindow();
+            NavigationManager.navigateToMap(currentStage);
+            
+            System.out.println("Navegación al mapa completada");
+        } catch (Exception e) {
+            System.err.println("Error al regresar al mapa: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fallback: intentar navegar al menú principal
+            try {
+                Stage currentStage = (Stage) gameCanvas.getScene().getWindow();
+                NavigationManager.navigateToMainWithUser(currentStage);
+                System.out.println("Navegando al menú principal como fallback");
+            } catch (Exception fallbackError) {
+                System.err.println("Error en fallback: " + fallbackError.getMessage());
+            }
         }
     }
 }
