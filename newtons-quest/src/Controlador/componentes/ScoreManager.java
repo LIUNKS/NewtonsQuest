@@ -78,8 +78,23 @@ public class ScoreManager {
             
             return true;
         }
-        
-        return false;
+          return false;
+    }
+    
+    /**
+     * Añade una vida extra al jugador (si no ha alcanzado el máximo)
+     * @param reason Motivo por el que ganó la vida
+     * @return true si se pudo añadir la vida, false si ya tenía el máximo
+     */
+    public boolean gainLife(String reason) {
+        if (lives < MAX_LIVES) {
+            lives++;
+            System.out.println("Vida ganada: " + reason + ". Vidas actuales: " + lives);
+            return true;
+        } else {
+            System.out.println("No se puede ganar vida: ya tienes el máximo (" + MAX_LIVES + ")");
+            return false;
+        }
     }
     
     /**
