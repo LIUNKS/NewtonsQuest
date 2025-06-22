@@ -132,13 +132,10 @@ public class LoginController {
         errorLabel.setManaged(true);
         
         System.out.println("Mostrando error: " + message);
-    }
-
-    private void openRegisterScreen() throws IOException {
-        try {
-            // Obtener la ruta del archivo FXML
-            String registerFxmlPath = "src/Main/Register.fxml";
-            String registerCssPath = "src/Vista/register.css";
+    }    private void openRegisterScreen() throws IOException {
+        try {            // Obtener la ruta del archivo FXML
+            String registerFxmlPath = "src/Vista/Register.fxml";
+            String registerCssPath = "src/Vista/resources/Register.css";
 
             // Verificar si estamos en desarrollo o en producción
             File registerFxmlFile = new File(registerFxmlPath);
@@ -150,11 +147,9 @@ public class LoginController {
             if (registerFxmlFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 loader = new FXMLLoader(registerFxmlFile.toURI().toURL());
-                cssPath = registerCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Register.fxml"));
-                cssPath = getClass().getResource("/Vista/register.css").toExternalForm();
+                cssPath = registerCssFile.toURI().toURL().toExternalForm();            } else {                // Estamos en producción, usar getResource
+                loader = new FXMLLoader(getClass().getResource("/Vista/Register.fxml"));
+                cssPath = getClass().getResource("/Vista/resources/Register.css").toExternalForm();
             }
 
             // Cargar la pantalla de registro
@@ -182,11 +177,9 @@ public class LoginController {
         }
     }
 
-    private void openMainMenu() throws IOException {
-        try {
-            // Obtener la ruta del archivo FXML
-            String mainFxmlPath = "src/Main/Main.fxml";
-            String mainCssPath = "src/Vista/main.css";
+    private void openMainMenu() throws IOException {        try {            // Obtener la ruta del archivo FXML
+            String mainFxmlPath = "src/Vista/Main.fxml";
+            String mainCssPath = "src/Vista/resources/main.css";
 
             // Verificar si estamos en desarrollo o en producción
             File mainFxmlFile = new File(mainFxmlPath);
@@ -198,11 +191,9 @@ public class LoginController {
             if (mainFxmlFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 loader = new FXMLLoader(mainFxmlFile.toURI().toURL());
-                cssPath = mainCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Main.fxml"));
-                cssPath = getClass().getResource("/Vista/main.css").toExternalForm();
+                cssPath = mainCssFile.toURI().toURL().toExternalForm();            } else {                // Estamos en producción, usar getResource
+                loader = new FXMLLoader(getClass().getResource("/Vista/Main.fxml"));
+                cssPath = getClass().getResource("/Vista/resources/main.css").toExternalForm();
             }
 
             // Cargar el menú principal
