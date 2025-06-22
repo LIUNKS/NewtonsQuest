@@ -146,14 +146,19 @@ public class MapController {
     private void onVideoButtonClick(ActionEvent event) {
         // Este botón solo imprime un mensaje en la consola por el momento
         System.out.println("Botón Ver Video presionado - Funcionalidad no implementada aún");
-    }
-    
+    }    
     @FXML
     private void onQuizButtonClick(ActionEvent event) {
         // Este botón solo imprime un mensaje en la consola por el momento
         System.out.println("Botón Quiz presionado - Funcionalidad no implementada aún");
     }
-      // Método para volver al menú principal
+    
+    @FXML
+    private void onBackToMainMenuClick(ActionEvent event) {
+        returnToMainMenu();
+    }
+    
+    // Método para volver al menú principal
     private void returnToMainMenu() {
         try {
             System.out.println("Volviendo al menú principal desde el mapa...");
