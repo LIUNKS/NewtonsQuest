@@ -132,12 +132,11 @@ public class RulesDialog {
     
     private void applyCSSStyles(Scene rulesScene) {
         try {
-            File mainCssFile = new File("src/Vista/main.css");
+            File mainCssFile = new File("src/Vista/resources/main.css");
             if (mainCssFile.exists()) {
-                rulesScene.getStylesheets().add(mainCssFile.toURI().toURL().toExternalForm());
-            } else {
+                rulesScene.getStylesheets().add(mainCssFile.toURI().toURL().toExternalForm());            } else {
                 // Fallback para producción
-                String cssPath = getClass().getResource("/Vista/main.css").toExternalForm();
+                String cssPath = getClass().getResource("/Vista/resources/main.css").toExternalForm();
                 rulesScene.getStylesheets().add(cssPath);
             }
         } catch (Exception cssEx) {
