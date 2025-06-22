@@ -38,11 +38,9 @@ public final class GameConstants {
     // === COLORES TEMÁTICOS ===
     public static final String PRIMARY_COLOR = "#e94560";
     public static final String SECONDARY_COLOR = "#ff6b6b";
-    public static final String BACKGROUND_GRADIENT = "linear-gradient(to bottom, #0f0c29, #1a1a2e, #24243e)";
-    
-    // === PATHS DE RECURSOS ===
-    public static final String FXML_PATH = "src/Main/";
-    public static final String CSS_PATH = "src/Vista/";
+    public static final String BACKGROUND_GRADIENT = "linear-gradient(to bottom, #0f0c29, #1a1a2e, #24243e)";    // === PATHS DE RECURSOS ===
+    public static final String FXML_PATH = "src/Vista/";
+    public static final String CSS_PATH = "src/Vista/resources/";
     public static final String IMAGES_PATH = "src/recursos/imagenes/";
     public static final String MUSIC_PATH = "src/recursos/musica/";
     public static final String SOUNDS_PATH = "src/recursos/sonidos/";
