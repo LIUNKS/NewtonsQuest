@@ -42,7 +42,7 @@ public class RankingDialog {
         
         // Crear la escena
         Scene scene = new Scene(mainContent, 650, 500);
-        scene.getStylesheets().add(getClass().getResource("/Vista/main.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/Vista/resources/main.css").toExternalForm());
         
         dialogStage.setScene(scene);
         
