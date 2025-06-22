@@ -38,13 +38,11 @@
                </font>
             </Button>
          </children>
-      </VBox>
-      
-      <!-- Instrucciones -->
-      <Label layoutX="50.0" layoutY="650.0" text="Presiona ESC para volver al menú principal" textFill="#ffffff">
+      </VBox>      <!-- Botón para volver al menú principal -->
+      <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" onAction="#onBackToMainMenuClick" prefHeight="50.0" prefWidth="50.0" style="-fx-background-color: #e74c3c; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #c0392b; -fx-border-width: 2;" text="←" textFill="WHITE">
          <font>
-            <Font size="14.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
-      </Label>
+      </Button>
    </children>
 </AnchorPane>
