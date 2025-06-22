@@ -1,0 +1,37 @@
+/* Estilos para la pantalla del mapa */
+.map-background {
+    -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);
+    background-color: #1e3c72; /* Propiedad estándar para compatibilidad */
+    /* Intentamos varias rutas posibles para la imagen de fondo */
+    -fx-background-image: url("/recursos/imagenes/map_background.jpg");
+    background-image: url("/recursos/imagenes/map_background.jpg"); /* Propiedad estándar para compatibilidad */
+    -fx-background-size: cover;
+    background-size: cover; /* Propiedad estándar para compatibilidad */
+    -fx-background-position: center center;
+    background-position: center center; /* Propiedad estándar para compatibilidad */
+}
+
+.map-button {
+    -fx-background-color: #e94560;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-padding: 15px;
+    -fx-background-radius: 30px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 10, 0, 0, 3);
+    -fx-cursor: hand;
+}
+
+.map-button:hover {
+    -fx-background-color: #c82a4a;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 15, 0, 0, 5);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.map-button:pressed {
+    -fx-background-color: #a02135;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 5, 0, 0, 2);
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
