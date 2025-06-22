@@ -9,27 +9,25 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * Diálogo de configuración del juego con controles de volumen, brillo y otras opciones
+ * Diálogo de configuración del juego con controles de volumen y brillo
  */
 public class SettingsDialog {
     
     private Stage settingsStage;
     private Stage parentStage;
-    private GameSettings gameSettings;
-    
-    // Controles de configuración
+    private GameSettings gameSettings;    // Controles de configuración
     private Slider musicVolumeSlider;
-    private Slider effectVolumeSlider;
     private Slider brightnessSlider;
-    private CheckBox fullscreenCheckbox;
+    
+    // Variables para guardar valores originales
+    private double originalMusicVolume;
+    private double originalBrightness;
     
     // Callback para aplicar cambios de brillo
     private Runnable onBrightnessChanged;
@@ -39,8 +37,7 @@ public class SettingsDialog {
         this.gameSettings = GameSettings.getInstance();
         initializeDialog();
     }
-    
-    /**
+      /**
      * Constructor con callbacks para aplicar cambios
      */
     public SettingsDialog(Stage parentStage, Runnable onBrightnessChanged, Runnable onVolumeChanged) {
@@ -49,49 +46,48 @@ public class SettingsDialog {
         this.onBrightnessChanged = onBrightnessChanged;
         this.onVolumeChanged = onVolumeChanged;
         initializeDialog();
-    }
-      private void initializeDialog() {
+    }    private void initializeDialog() {
+        // Guardar valores originales para poder cancelar
+        originalMusicVolume = gameSettings.getMusicVolume();
+        originalBrightness = gameSettings.getBrightness();
+        
         settingsStage = new Stage();
         settingsStage.initModality(Modality.APPLICATION_MODAL);
-        settingsStage.initStyle(StageStyle.DECORATED);
-        settingsStage.setTitle(GameConstants.SETTINGS_TITLE);
-        settingsStage.setResizable(false);
+        settingsStage.initStyle(StageStyle.DECORATED);        settingsStage.setTitle(GameConstants.SETTINGS_TITLE);        settingsStage.setResizable(true);
+        settingsStage.setMinWidth(650);
+        settingsStage.setMinHeight(480);
+        
+        // Configurar el comportamiento al cerrar
+        settingsStage.setOnCloseRequest(e -> {
+            e.consume(); // Prevenir el cierre automático
+            cancelAndClose(); // Usar el método de cancelar
+        });
         
         // Contenedor principal
         StackPane root = new StackPane();
         StyleUtils.applyGameBackground(root);
         
-        // Contenedor principal con scroll
+        // Contenedor principal
         VBox mainContainer = createMainContainer();
         
         // Título principal
         Text title = createMainTitle();
-        
-        // Secciones de configuración
+          // Secciones de configuración
         VBox audioSection = createAudioSection();
         VBox visualSection = createVisualSection();
-        VBox generalSection = createGeneralSection();
         
         // Botones de acción
         HBox buttonContainer = createButtonContainer();
-        
-        // Añadir todo al contenedor principal
+          // Añadir todo al contenedor principal
         mainContainer.getChildren().addAll(
             title,
             audioSection,
-            new Separator(),
             visualSection,
-            new Separator(),
-            generalSection,
             buttonContainer
         );
         
-        // ScrollPane para el contenido
-        ScrollPane scrollPane = createScrollPane(mainContainer);
-        root.getChildren().add(scrollPane);
-        
-        // Configurar la escena
-        Scene scene = new Scene(root, 500, 600);
+        root.getChildren().add(mainContainer);        // Configurar la escena
+        Scene scene = new Scene(root, 650, 480);
         applyCSSStyles(scene);
         settingsStage.setScene(scene);
         
@@ -100,187 +96,173 @@ public class SettingsDialog {
     }
       public void showAndWait() {
         settingsStage.showAndWait();
-    }
-    
-    private VBox createMainContainer() {
+    }    private VBox createMainContainer() {
         VBox mainContainer = new VBox(20);
         mainContainer.setAlignment(Pos.TOP_CENTER);
-        mainContainer.setPadding(new Insets(30, 40, 30, 40));
+        mainContainer.setPadding(new Insets(30, 45, 25, 45));
         StyleUtils.applyTransparentContainer(mainContainer);
         return mainContainer;
-    }
-    
-    private Text createMainTitle() {
-        Text title = new Text("⚙️ CONFIGURACIÓN DEL JUEGO");
+    }    private Text createMainTitle() {
+        Text title = new Text("CONFIGURACIÓN");
         StyleUtils.applyMainTitleStyle(title);
         return title;
-    }
-    
-    private VBox createAudioSection() {
-        VBox audioSection = new VBox(15);
+    }private VBox createAudioSection() {
+        VBox audioSection = new VBox(18);
         audioSection.setAlignment(Pos.CENTER_LEFT);
+        audioSection.setStyle(
+            "-fx-background-color: rgba(255,255,255,0.05); " +
+            "-fx-background-radius: 10; " +
+            "-fx-padding: 20;"
+        );
         
         // Título de la sección
         Text audioTitle = new Text("🔊 AUDIO");
-        StyleUtils.applySecondaryTitleStyle(audioTitle);
-        
-        // Control de volumen de música
+        StyleUtils.applySecondaryTitleStyle(audioTitle);        // Control de volumen de música
         VBox musicVolumeBox = createSliderControl(
             "Volumen de Música",
-            0.0, 1.0, gameSettings.getMusicVolume(),
+            0.0, 100.0, gameSettings.getMusicVolume() * 100,
             (observable, oldValue, newValue) -> {
-                gameSettings.setMusicVolume(newValue.doubleValue());
+                gameSettings.setMusicVolume(newValue.doubleValue() / 100.0);
                 if (onVolumeChanged != null) {
                     onVolumeChanged.run();
                 }
             }
         );
-        musicVolumeSlider = (Slider) ((VBox) musicVolumeBox.getChildren().get(1)).getChildren().get(1);
+        musicVolumeSlider = (Slider) ((HBox) musicVolumeBox.getChildren().get(1)).getChildren().get(0);
         
-        // Control de volumen de efectos
-        VBox effectVolumeBox = createSliderControl(
-            "Volumen de Efectos",
-            0.0, 1.0, gameSettings.getEffectVolume(),
-            (observable, oldValue, newValue) -> {
-                gameSettings.setEffectVolume(newValue.doubleValue());
-                if (onVolumeChanged != null) {
-                    onVolumeChanged.run();
-                }
-            }
-        );
-        effectVolumeSlider = (Slider) ((VBox) effectVolumeBox.getChildren().get(1)).getChildren().get(1);
-        
-        audioSection.getChildren().addAll(audioTitle, musicVolumeBox, effectVolumeBox);
+        audioSection.getChildren().addAll(audioTitle, musicVolumeBox);
         return audioSection;
-    }
-    
-    private VBox createVisualSection() {
-        VBox visualSection = new VBox(15);
+    }    private VBox createVisualSection() {
+        VBox visualSection = new VBox(18);
         visualSection.setAlignment(Pos.CENTER_LEFT);
+        visualSection.setStyle(
+            "-fx-background-color: rgba(255,255,255,0.05); " +
+            "-fx-background-radius: 10; " +
+            "-fx-padding: 20;"
+        );
         
         // Título de la sección
         Text visualTitle = new Text("🎨 VISUALES");
         StyleUtils.applySecondaryTitleStyle(visualTitle);
-        
-        // Control de brillo
+          // Control de brillo
         VBox brightnessBox = createSliderControl(
             "Brillo de Pantalla",
-            0.1, 2.0, gameSettings.getBrightness(),
+            10.0, 200.0, gameSettings.getBrightness() * 100,
             (observable, oldValue, newValue) -> {
-                gameSettings.setBrightness(newValue.doubleValue());
+                gameSettings.setBrightness(newValue.doubleValue() / 100.0);
                 if (onBrightnessChanged != null) {
                     onBrightnessChanged.run();
                 }
             }
         );
-        brightnessSlider = (Slider) ((VBox) brightnessBox.getChildren().get(1)).getChildren().get(1);
+        brightnessSlider = (Slider) ((HBox) brightnessBox.getChildren().get(1)).getChildren().get(0);
         
         visualSection.getChildren().addAll(visualTitle, brightnessBox);
         return visualSection;
-    }
-    
-    private VBox createGeneralSection() {
-        VBox generalSection = new VBox(15);
-        generalSection.setAlignment(Pos.CENTER_LEFT);
-        
-        // Título de la sección
-        Text generalTitle = new Text("⚙️ GENERAL");
-        StyleUtils.applySecondaryTitleStyle(generalTitle);
-        
-        // Checkbox para pantalla completa
-        fullscreenCheckbox = new CheckBox("Pantalla Completa");
-        fullscreenCheckbox.setSelected(gameSettings.isFullscreen());
-        fullscreenCheckbox.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-        fullscreenCheckbox.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            gameSettings.setFullscreen(newValue);
-        });
-        
-        generalSection.getChildren().addAll(generalTitle, fullscreenCheckbox);
-        return generalSection;
-    }
-    
-    private VBox createSliderControl(String labelText, double min, double max, double currentValue,
+    }    private VBox createSliderControl(String labelText, double min, double max, double currentValue,
                                    javafx.beans.value.ChangeListener<Number> changeListener) {
-        VBox container = new VBox(8);
+        VBox container = new VBox(12);
         container.setAlignment(Pos.CENTER_LEFT);
         
         // Etiqueta
         Label label = new Label(labelText);
-        label.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+        label.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
         
         // Container para slider y valor
-        VBox sliderContainer = new VBox(5);
-        sliderContainer.setAlignment(Pos.CENTER_LEFT);
-        
-        // Slider
+        HBox sliderContainer = new HBox(20);
+        sliderContainer.setAlignment(Pos.CENTER_LEFT);        // Slider
         Slider slider = new Slider(min, max, currentValue);
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
-        slider.setMajorTickUnit((max - min) / 4);
-        slider.setPrefWidth(300);
+        slider.setShowTickLabels(false);
+        slider.setShowTickMarks(false);
+        slider.setPrefWidth(450);
+        slider.setPrefHeight(25);
         slider.setStyle(
-            "-fx-control-inner-background: rgba(255, 255, 255, 0.1);" +
-            "-fx-accent: " + GameConstants.PRIMARY_COLOR + ";"
+            "-fx-control-inner-background: rgba(255, 255, 255, 0.2);" +
+            "-fx-accent: " + GameConstants.PRIMARY_COLOR + ";" +
+            "-fx-background-radius: 12;"
         );
         
         // Etiqueta del valor actual
-        Label valueLabel = new Label(String.format("%.0f%%", currentValue * 100));
-        valueLabel.setStyle("-fx-text-fill: " + GameConstants.SECONDARY_COLOR + "; -fx-font-size: 12px;");
+        Label valueLabel = new Label();
+        valueLabel.setStyle(
+            "-fx-text-fill: " + GameConstants.SECONDARY_COLOR + "; " +
+            "-fx-font-size: 14px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-min-width: 60px; " +
+            "-fx-alignment: center; " +
+            "-fx-background-color: rgba(255,255,255,0.1); " +
+            "-fx-background-radius: 8; " +
+            "-fx-padding: 5 10 5 10;"
+        );
+        
+        // Función para actualizar la etiqueta del valor
+        Runnable updateValueLabel = () -> {
+            valueLabel.setText(String.format("%.0f%%", slider.getValue()));
+        };
+        
+        // Establecer valor inicial
+        updateValueLabel.run();
         
         // Actualizar etiqueta cuando cambie el slider
         slider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (max <= 2.0) { // Para brillo, mostrar como multiplicador
-                valueLabel.setText(String.format("%.1fx", newValue.doubleValue()));
-            } else {
-                valueLabel.setText(String.format("%.0f%%", newValue.doubleValue() * 100));
-            }
+            updateValueLabel.run();
             changeListener.changed(observable, oldValue, newValue);
         });
         
-        sliderContainer.getChildren().addAll(valueLabel, slider);
+        sliderContainer.getChildren().addAll(slider, valueLabel);
         container.getChildren().addAll(label, sliderContainer);
         
         return container;
-    }
-    
-    private HBox createButtonContainer() {
+    }    private HBox createButtonContainer() {
         HBox buttonContainer = new HBox(15);
         buttonContainer.setAlignment(Pos.CENTER);
-        buttonContainer.setPadding(new Insets(20, 0, 0, 0));
-        
-        // Botón para restaurar valores por defecto
-        Button resetButton = new Button("Restaurar Predeterminados");
-        StyleUtils.applySecondaryButtonStyle(resetButton);
-        resetButton.setOnAction(e -> resetToDefaults());
-        
-        // Botón guardar y cerrar
-        Button saveButton = new Button("Guardar y Cerrar");
-        StyleUtils.applyPrimaryButtonStyle(saveButton);
+        buttonContainer.setPadding(new Insets(20, 0, 0, 0));        // Botón para restaurar valores por defecto
+        Button resetButton = new Button("🔄 Restaurar");
+        resetButton.setStyle(
+            "-fx-background-color: #e74c3c;" +
+            "-fx-text-fill: white;" +
+            "-fx-padding: 10px 20px;" +
+            "-fx-background-radius: 20px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-font-size: 13px;" +
+            "-fx-border-color: #c0392b;" +
+            "-fx-border-width: 2px;" +
+            "-fx-border-radius: 20px;"
+        );
+        resetButton.setPrefWidth(150);
+        resetButton.setOnAction(e -> resetToDefaults());        // Botón guardar
+        Button saveButton = new Button("💾 Guardar");
+        saveButton.setStyle(
+            "-fx-background-color: #27ae60;" +
+            "-fx-text-fill: white;" +
+            "-fx-padding: 10px 20px;" +
+            "-fx-background-radius: 20px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-font-size: 13px;" +
+            "-fx-border-color: #229954;" +
+            "-fx-border-width: 2px;" +
+            "-fx-border-radius: 20px;"
+        );
+        saveButton.setPrefWidth(160);
         saveButton.setOnAction(e -> saveAndClose());
-        
-        // Botón cancelar
-        Button cancelButton = new Button("Cancelar");
+          // Botón cancelar
+        Button cancelButton = new Button("❌ Cancelar");
         cancelButton.setStyle(
             "-fx-background-color: #6c757d;" +
             "-fx-text-fill: white;" +
             "-fx-padding: 10px 20px;" +
             "-fx-background-radius: 20px;" +
-            "-fx-font-weight: bold;"
+            "-fx-font-weight: bold;" +
+            "-fx-font-size: 13px;" +
+            "-fx-border-color: #5a6268;" +
+            "-fx-border-width: 2px;" +
+            "-fx-border-radius: 20px;"
         );
-        cancelButton.setOnAction(e -> settingsStage.close());
+        cancelButton.setPrefWidth(150);
+        cancelButton.setOnAction(e -> cancelAndClose());
         
         buttonContainer.getChildren().addAll(resetButton, cancelButton, saveButton);
         return buttonContainer;
-    }
-    
-    private ScrollPane createScrollPane(VBox content) {
-        ScrollPane scrollPane = new ScrollPane(content);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPrefSize(500, 600);
-        scrollPane.setStyle(StyleUtils.getTransparentScrollPaneStyle());
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        return scrollPane;
     }
     
     private void applyCSSStyles(Scene scene) {
@@ -295,26 +277,33 @@ public class SettingsDialog {
         } catch (Exception cssEx) {
             System.err.println("No se pudo cargar CSS para el diálogo de configuración: " + cssEx.getMessage());
         }
-    }
-    
-    private void centerWindow() {
+    }    private void centerWindow() {
         if (parentStage != null) {
-            settingsStage.setX(parentStage.getX() + (parentStage.getWidth() - 500) / 2);
-            settingsStage.setY(parentStage.getY() + (parentStage.getHeight() - 600) / 2);
+            settingsStage.setX(parentStage.getX() + (parentStage.getWidth() - 650) / 2);
+            settingsStage.setY(parentStage.getY() + (parentStage.getHeight() - 480) / 2);
         }
+    }private void resetToDefaults() {
+        // Restaurar sliders a valores por defecto (escala 0-100)
+        musicVolumeSlider.setValue(50); // 50% = 0.5 en escala original
+        brightnessSlider.setValue(100); // 100% = 1.0 en escala original
+        
+        // Los listeners de los sliders ya aplicarán los cambios a gameSettings
+        // y ejecutarán los callbacks automáticamente
+        
+        System.out.println("Configuraciones restauradas a valores por defecto");
+    }
+      private void saveAndClose() {
+        gameSettings.saveSettings();
+        settingsStage.close();
+        System.out.println("Configuraciones guardadas correctamente");
     }
     
-    private void resetToDefaults() {
-        // Restaurar sliders a valores por defecto
-        musicVolumeSlider.setValue(0.5);
-        effectVolumeSlider.setValue(0.7);
-        brightnessSlider.setValue(1.0);
-        fullscreenCheckbox.setSelected(false);
+    private void cancelAndClose() {
+        // Restaurar valores originales
+        gameSettings.setMusicVolume(originalMusicVolume);
+        gameSettings.setBrightness(originalBrightness);
         
-        // Aplicar cambios inmediatamente
-        gameSettings.resetToDefaults();
-        
-        // Ejecutar callbacks si están disponibles
+        // Aplicar los valores originales
         if (onVolumeChanged != null) {
             onVolumeChanged.run();
         }
@@ -322,12 +311,7 @@ public class SettingsDialog {
             onBrightnessChanged.run();
         }
         
-        System.out.println("Configuraciones restauradas a valores por defecto");
-    }
-    
-    private void saveAndClose() {
-        gameSettings.saveSettings();
         settingsStage.close();
-        System.out.println("Configuraciones guardadas correctamente");
+        System.out.println("Configuraciones canceladas - valores restaurados");
     }
 }
