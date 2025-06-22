@@ -92,15 +92,13 @@ public class MapController {
             ErrorHandler.handleResourceError("imagen de fondo del mapa", e);
         }
     }
-    
-    @FXML
+      @FXML
     private void onJugarButtonClick(ActionEvent event) {
         try {
             System.out.println("Iniciando juego desde el mapa...");
-            
-            // Cargar la pantalla del juego
-            String gameFxmlPath = "src/Main/Game.fxml";
-            String gameCssPath = "src/Vista/game.css";
+              // Cargar la pantalla del juego
+            String gameFxmlPath = "src/Vista/Game.fxml";
+            String gameCssPath = "src/Vista/resources/game.css";
             
             // Verificar si estamos en desarrollo o en producción
             File gameFxmlFile = new File(gameFxmlPath);
@@ -112,11 +110,9 @@ public class MapController {
             if (gameFxmlFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 loader = new FXMLLoader(gameFxmlFile.toURI().toURL());
-                cssPath = gameCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Game.fxml"));
-                cssPath = getClass().getResource("/Vista/game.css").toExternalForm();
+                cssPath = gameCssFile.toURI().toURL().toExternalForm();            } else {                // Estamos en producción, usar getResource
+                loader = new FXMLLoader(getClass().getResource("/Vista/Game.fxml"));
+                cssPath = getClass().getResource("/Vista/resources/game.css").toExternalForm();
             }
             
             // Cargar la pantalla del juego
