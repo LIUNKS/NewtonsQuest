@@ -13,21 +13,14 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.sql.SQLException;
-import java.util.Optional;
-
 /**
- * Diálogo para mostrar y editar el perfil del usuario
+ * Diálogo para mostrar el perfil del usuario
  */
 public class UserProfileDialog {
     
     private Stage dialogStage;
     private String currentUsername;
     private int currentUserId;
-    
-    // Campos editables
-    private TextField nombreCompletoField;
-    private TextField correoField;
     
     public UserProfileDialog(Stage parentStage, String username, int userId) {
         this.currentUsername = username;
@@ -39,15 +32,15 @@ public class UserProfileDialog {
         dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(parentStage);
-        dialogStage.initStyle(StageStyle.DECORATED);
-        dialogStage.setTitle("Perfil de Usuario - " + currentUsername);
-        dialogStage.setResizable(false);
+        dialogStage.initStyle(StageStyle.DECORATED);        dialogStage.setTitle("Perfil de Usuario - " + currentUsername);
+        dialogStage.setResizable(true);
+        dialogStage.setMinWidth(520);
+        dialogStage.setMinHeight(650);
         
         // Crear el contenido del diálogo
         VBox mainContent = createMainContent();
-        
-        // Crear la escena
-        Scene scene = new Scene(mainContent, 500, 600);
+          // Crear la escena con dimensiones más grandes
+        Scene scene = new Scene(mainContent, 520, 700);
         scene.getStylesheets().add(getClass().getResource("/Vista/resources/main.css").toExternalForm());
         
         dialogStage.setScene(scene);
@@ -58,34 +51,30 @@ public class UserProfileDialog {
             dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - dialogStage.getHeight()) / 2);
         });
     }
-    
-    private VBox createMainContent() {
-        VBox mainContent = new VBox(20);
-        mainContent.setPadding(new Insets(25));
+      private VBox createMainContent() {
+        VBox mainContent = new VBox(15);
+        mainContent.setPadding(new Insets(20));
         mainContent.setStyle("-fx-background-color: linear-gradient(to bottom, #1a1a2e, #16213e);");
-        
-        // Título
+          // Título
         Label titleLabel = new Label("👤 PERFIL DE USUARIO");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         titleLabel.setTextFill(Color.GOLD);
         titleLabel.setAlignment(Pos.CENTER);
-        
-        // Contenedor para la información del usuario
+          // Contenedor para la información del usuario
         VBox userInfoContainer = createUserInfoSection();
         
         // Contenedor para estadísticas del juego
         VBox statsContainer = createStatsSection();
         
-        // Botones de acción
-        HBox buttonsContainer = createButtonsSection();
+        // Botón de cerrar
+        HBox buttonsContainer = createCloseButtonSection();
         
         mainContent.getChildren().addAll(titleLabel, userInfoContainer, statsContainer, buttonsContainer);
         
         return mainContent;
     }
-    
-    private VBox createUserInfoSection() {
-        VBox container = new VBox(15);
+      private VBox createUserInfoSection() {
+        VBox container = new VBox(12);
         container.setStyle(
             "-fx-background-color: rgba(255,255,255,0.1); " +
             "-fx-background-radius: 10; " +
@@ -93,7 +82,7 @@ public class UserProfileDialog {
             "-fx-border-radius: 10; " +
             "-fx-border-width: 2;"
         );
-        container.setPadding(new Insets(20));
+        container.setPadding(new Insets(15));
         
         // Título de la sección
         Label sectionTitle = new Label("📋 Información Personal");
@@ -102,17 +91,14 @@ public class UserProfileDialog {
         
         // Obtener datos del usuario desde la base de datos
         String[] userData = getUserData();
-        
-        // Campo de nombre de usuario (no editable)
+          // Campo de nombre de usuario (no editable)
         VBox usernameBox = createReadOnlyField("Nombre de Usuario:", currentUsername, "👤");
         
-        // Campo de nombre completo (editable)
-        VBox nombreBox = createEditableField("Nombre Completo:", userData[0], "📝");
-        nombreCompletoField = (TextField) ((HBox) nombreBox.getChildren().get(1)).getChildren().get(1);
+        // Campo de nombre completo (no editable)
+        VBox nombreBox = createReadOnlyField("Nombre Completo:", userData[0], "📝");
         
-        // Campo de correo (editable)
-        VBox correoBox = createEditableField("Correo Electrónico:", userData[1], "📧");
-        correoField = (TextField) ((HBox) correoBox.getChildren().get(1)).getChildren().get(1);
+        // Campo de correo (no editable)
+        VBox correoBox = createReadOnlyField("Correo Electrónico:", userData[1], "📧");
         
         // Campo de fecha de registro (no editable)
         VBox fechaBox = createReadOnlyField("Fecha de Registro:", userData[2], "📅");
@@ -121,9 +107,8 @@ public class UserProfileDialog {
         
         return container;
     }
-    
-    private VBox createStatsSection() {
-        VBox container = new VBox(15);
+      private VBox createStatsSection() {
+        VBox container = new VBox(12);
         container.setStyle(
             "-fx-background-color: rgba(255,255,255,0.1); " +
             "-fx-background-radius: 10; " +
@@ -131,7 +116,7 @@ public class UserProfileDialog {
             "-fx-border-radius: 10; " +
             "-fx-border-width: 2;"
         );
-        container.setPadding(new Insets(20));
+        container.setPadding(new Insets(15));
         
         // Título de la sección
         Label sectionTitle = new Label("📊 Estadísticas del Juego");
@@ -157,12 +142,11 @@ public class UserProfileDialog {
         
         return container;
     }
-    
-    private VBox createReadOnlyField(String labelText, String value, String icon) {
-        VBox fieldBox = new VBox(5);
+      private VBox createReadOnlyField(String labelText, String value, String icon) {
+        VBox fieldBox = new VBox(3);
         
         Label label = new Label(labelText);
-        label.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        label.setFont(Font.font("Arial", FontWeight.BOLD, 13));
         label.setTextFill(Color.WHITE);
         
         HBox valueBox = new HBox(10);
@@ -183,56 +167,13 @@ public class UserProfileDialog {
         return fieldBox;
     }
     
-    private VBox createEditableField(String labelText, String value, String icon) {
-        VBox fieldBox = new VBox(5);
-        
-        Label label = new Label(labelText);
-        label.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        label.setTextFill(Color.WHITE);
-        
-        HBox valueBox = new HBox(10);
-        valueBox.setAlignment(Pos.CENTER_LEFT);
-        
-        Label iconLabel = new Label(icon);
-        iconLabel.setFont(Font.font("Arial", 16));
-        
-        TextField textField = new TextField(value);
-        textField.setFont(Font.font("Arial", 14));
-        textField.setPrefWidth(300);
-        textField.setStyle(
-            "-fx-background-color: rgba(255,255,255,0.9); " +
-            "-fx-text-fill: black; " +
-            "-fx-background-radius: 5; " +
-            "-fx-border-color: #3498db; " +
-            "-fx-border-radius: 5;"
-        );
-        
-        valueBox.getChildren().addAll(iconLabel, textField);
-        fieldBox.getChildren().addAll(label, valueBox);
-        
-        return fieldBox;
-    }
-    
-    private HBox createButtonsSection() {
-        HBox buttonsBox = new HBox(20);
+    private HBox createCloseButtonSection() {
+        HBox buttonsBox = new HBox();
         buttonsBox.setAlignment(Pos.CENTER);
         
-        // Botón Guardar
-        Button saveButton = new Button("💾 Guardar Cambios");
-        saveButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        saveButton.setPrefWidth(150);
-        saveButton.setStyle(
-            "-fx-background-color: #27ae60; " +
-            "-fx-text-fill: white; " +
-            "-fx-background-radius: 10; " +
-            "-fx-border-radius: 10; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2);"
-        );
-        saveButton.setOnAction(e -> saveChanges());
-        
-        // Botón Cerrar
+        // Solo botón Cerrar
         Button closeButton = new Button("❌ Cerrar");
-        closeButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        closeButton.setFont(Font.font("Arial", FontWeight.BOLD, 13));
         closeButton.setPrefWidth(120);
         closeButton.setStyle(
             "-fx-background-color: #e74c3c; " +
@@ -243,10 +184,10 @@ public class UserProfileDialog {
         );
         closeButton.setOnAction(e -> dialogStage.close());
         
-        buttonsBox.getChildren().addAll(saveButton, closeButton);
+        buttonsBox.getChildren().add(closeButton);
         
         return buttonsBox;
-    }    private String[] getUserData() {
+    }private String[] getUserData() {
         try {
             // Obtener datos del usuario desde la base de datos
             String nombreCompleto = UsuarioDAO.obtenerNombreCompleto(currentUserId);
@@ -303,51 +244,7 @@ public class UserProfileDialog {
         } catch (Exception e) {
             System.err.println("Error al obtener estadísticas del usuario: " + e.getMessage());
             return new String[]{"0", "No clasificado", "0/5", "Nunca"};
-        }
-    }
-    
-    private void saveChanges() {
-        try {
-            String nuevoNombreCompleto = nombreCompletoField.getText().trim();
-            String nuevoCorreo = correoField.getText().trim();
-            
-            // Validaciones básicas
-            if (nuevoNombreCompleto.isEmpty()) {
-                showAlert("Error", "El nombre completo no puede estar vacío.");
-                return;
-            }
-            
-            if (!nuevoCorreo.isEmpty() && !isValidEmail(nuevoCorreo)) {
-                showAlert("Error", "Por favor, ingrese un correo electrónico válido.");
-                return;
-            }
-            
-            // Guardar cambios en la base de datos
-            boolean success = UsuarioDAO.actualizarPerfilUsuario(currentUserId, nuevoNombreCompleto, nuevoCorreo);
-            
-            if (success) {
-                showAlert("Éxito", "Los cambios han sido guardados exitosamente.");
-            } else {
-                showAlert("Error", "No se pudieron guardar los cambios. Inténtelo de nuevo.");
-            }
-            
-        } catch (Exception e) {
-            System.err.println("Error al guardar cambios: " + e.getMessage());
-            showAlert("Error", "Ocurrió un error al guardar los cambios: " + e.getMessage());
-        }
-    }
-    
-    private boolean isValidEmail(String email) {
-        return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
-    }
-    
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
+        }    }
     
     public void showAndWait() {
         dialogStage.showAndWait();
