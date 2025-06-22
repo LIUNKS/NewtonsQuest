@@ -117,13 +117,10 @@ public class RegisterController {
         errorLabel.setManaged(true);
         
         System.out.println("Mostrando error en registro: " + message);
-    }
-
-    private void goBackToLogin() throws IOException {
-        try {
-            // Obtener la ruta del archivo FXML
-            String loginFxmlPath = "src/Main/Login.fxml";
-            String loginCssPath = "src/Vista/login.css";
+    }    private void goBackToLogin() throws IOException {
+        try {            // Obtener la ruta del archivo FXML
+            String loginFxmlPath = "src/Vista/Login.fxml";
+            String loginCssPath = "src/Vista/resources/login.css";
 
             // Verificar si estamos en desarrollo o en producción
             File loginFxmlFile = new File(loginFxmlPath);
@@ -135,11 +132,9 @@ public class RegisterController {
             if (loginFxmlFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 loader = new FXMLLoader(loginFxmlFile.toURI().toURL());
-                cssPath = loginCssFile.toURI().toURL().toExternalForm();
-            } else {
-                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Main/Login.fxml"));
-                cssPath = getClass().getResource("/Vista/login.css").toExternalForm();
+                cssPath = loginCssFile.toURI().toURL().toExternalForm();            } else {                // Estamos en producción, usar getResource
+                loader = new FXMLLoader(getClass().getResource("/Vista/Login.fxml"));
+                cssPath = getClass().getResource("/Vista/resources/login.css").toExternalForm();
             }
 
             // Cargar la pantalla de login
