@@ -48,7 +48,7 @@ public class UserProfileDialog {
         
         // Crear la escena
         Scene scene = new Scene(mainContent, 500, 600);
-        scene.getStylesheets().add(getClass().getResource("/Vista/main.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/Vista/resources/main.css").toExternalForm());
         
         dialogStage.setScene(scene);
         
