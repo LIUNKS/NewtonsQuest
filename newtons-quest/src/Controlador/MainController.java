@@ -1,5 +1,7 @@
 package Controlador;
 
+import Controlador.componentes.VideoManager;
+import Controlador.componentes.VideoPlayer;
 import Controlador.dialogs.RulesDialog;
 import Controlador.dialogs.SettingsDialog;
 import Controlador.dialogs.UserProfileDialog;
@@ -23,6 +25,7 @@ public class MainController {
     @FXML private Button logoutButton; // Botón para cerrar sesión
     @FXML private Button userProfileButton; // Botón de perfil de usuario
     @FXML private Button rankingButton; // Botón de ranking
+    @FXML private Button biographyButton; // Botón de biografía
     @FXML private Label welcomeLabel;
     
     private String username;    private int userId;    public void initialize() {
@@ -37,6 +40,7 @@ public class MainController {
         // Configurar los nuevos botones de interfaz
         userProfileButton.setOnAction(event -> showUserProfile());
         rankingButton.setOnAction(event -> showRanking());
+        biographyButton.setOnAction(event -> showBiography());
         
         // Verificar si hay una sesión activa y configurar el usuario
         SessionManager sessionManager = SessionManager.getInstance();
@@ -133,6 +137,47 @@ public class MainController {
             rankingDialog.showAndWait();
         } catch (Exception e) {
             ErrorHandler.handleDialogError("ranking", e, (Stage) rankingButton.getScene().getWindow());
+        }
+    }
+    
+    /**
+     * Muestra el video de biografía de Newton desde el menú principal
+     */
+    @FXML
+    private void showBiography() {
+        try {
+            System.out.println("Reproduciendo video de biografía de Newton...");
+            
+            VideoManager videoManager = VideoManager.getInstance();
+            String biographyVideoPath = videoManager.getBiographyVideoPath();
+            
+            // Verificar que el archivo de video existe
+            if (videoManager.videoFileExists(biographyVideoPath)) {
+                VideoPlayer videoPlayer = new VideoPlayer();
+                Stage parentStage = (Stage) biographyButton.getScene().getWindow();
+                
+                videoPlayer.playVideo(biographyVideoPath, 
+                                    "Biografía de Isaac Newton", 
+                                    parentStage);
+                
+                ErrorHandler.logInfo("Video de biografía iniciado correctamente");
+            } else {
+                // Mostrar error si el video no existe
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.ERROR);
+                alert.setTitle("Video no encontrado");
+                alert.setHeaderText(null);
+                alert.setContentText("El video de biografía no se encuentra disponible.\n" +
+                                   "Archivo: " + GameConstants.VIDEO_BIOGRAFIA);
+                alert.showAndWait();
+                
+                ErrorHandler.logWarning("Video de biografía no encontrado: " + biographyVideoPath);
+            }
+            
+        } catch (Exception e) {
+            ErrorHandler.handleResourceError("video de biografía", e);
+            System.err.println("Error al reproducir video de biografía: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
