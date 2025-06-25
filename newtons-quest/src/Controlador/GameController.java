@@ -44,6 +44,7 @@ public class GameController {
     private ScoreManager scoreManager;
     private VisualEffectsManager visualEffectsManager;
     private RankingManager rankingManager; // Nuevo manager para el ranking
+    private VideoManager videoManager; // Nuevo manager para videos
       // Estado del juego
     private boolean isPaused = false;
     private boolean isPausedForCelebration = false; // Nueva variable para pausa de celebración
@@ -211,6 +212,9 @@ public class GameController {
             // Inicializar gestor de ranking
             rankingManager = RankingManager.getInstance();
             
+            // Inicializar gestor de videos
+            videoManager = VideoManager.getInstance();
+            
             // Configurar usuario actual desde LoginController
             String currentUsername = Controlador.LoginController.getCurrentUsername();
             if (currentUsername != null && !currentUsername.isEmpty()) {
@@ -303,9 +307,13 @@ public class GameController {
             );
             
             // Configurar callbacks del LevelManager
-            levelManager.setOnFormulaUnlocked(
-                audioManager::playUnlockSound      // onFormulaUnlocked
-            );
+            levelManager.setOnFormulaUnlocked(() -> {
+                audioManager.playUnlockSound(); // onFormulaUnlocked
+                // Actualizar acceso a videos cuando se desbloquee una fórmula
+                videoManager.updateVideoAccess(levelManager.getUnlockedFormulas());
+                System.out.println("Acceso a videos actualizado - Fórmulas desbloqueadas: " + 
+                                 countUnlockedFormulas(levelManager.getUnlockedFormulas()) + "/5");
+            });
               // Configurar callbacks del AppleManager
             appleManager.setCallbacks(
                 scoreManager::addScore,            // onScoreChange
@@ -566,15 +574,51 @@ public class GameController {
             player.setDead(true);
         }
         
-        // Verificar si el jugador completó todas las fórmulas y guardar en ranking
-        if (levelManager != null && scoreManager != null && rankingManager != null) {
-            boolean allFormulasCompleted = rankingManager.checkAndSaveCompletedGame(
-                levelManager.getUnlockedFormulas(), 
-                scoreManager.getScore()
-            );
+        // Guardar progreso del usuario (siempre, no solo cuando completa todas las fórmulas)
+        if (levelManager != null && scoreManager != null) {
+            // Contar fórmulas desbloqueadas
+            boolean[] unlockedFormulas = levelManager.getUnlockedFormulas();
+            int formulasCount = 0;
+            for (boolean unlocked : unlockedFormulas) {
+                if (unlocked) formulasCount++;
+            }
             
-            if (allFormulasCompleted) {
-                System.out.println("¡Jugador completó todas las fórmulas! Datos guardados en ranking.");
+            // Guardar progreso en la tabla usuarios
+            try {
+                int currentUserId = Controlador.utils.SessionManager.getInstance().getCurrentUserId();
+                if (currentUserId != -1) {
+                    boolean progressSaved = Modelo.UsuarioDAO.actualizarProgresoUsuario(
+                        currentUserId, 
+                        scoreManager.getScore(), 
+                        formulasCount
+                    );
+                    
+                    if (progressSaved) {
+                        System.out.println("Progreso guardado exitosamente: " + scoreManager.getScore() + " puntos, " + formulasCount + " fórmulas");
+                        
+                        // Actualizar VideoManager con el nuevo progreso
+                        if (videoManager != null) {
+                            videoManager.updateUnlockedVideos(unlockedFormulas);
+                        }
+                    } else {
+                        System.err.println("Error al guardar el progreso del usuario");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error al guardar progreso: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            // Además, verificar si completó todas las fórmulas para el ranking global
+            if (rankingManager != null) {
+                boolean allFormulasCompleted = rankingManager.checkAndSaveCompletedGame(
+                    unlockedFormulas, 
+                    scoreManager.getScore()
+                );
+                
+                if (allFormulasCompleted) {
+                    System.out.println("¡Jugador completó todas las fórmulas! También guardado en ranking global.");
+                }
             }
         }
         
@@ -587,15 +631,12 @@ public class GameController {
     }
     
     /**
-     * Maneja la puntuación de las pociones con efecto de puntos dobles
+     * Maneja la puntuación de las pociones (ya con efectos aplicados en PotionManager)
      */
     private void handlePotionScore(int points) {
-        // Si el jugador tiene efecto de puntos dobles, duplicar los puntos
-        if (player != null && player.hasPointsEffect()) {
-            points *= 2;
-            System.out.println("¡Puntos dobles aplicados! Puntos totales: " + points);
-        }
+        // Los puntos ya vienen procesados desde PotionManager, no duplicar aquí
         scoreManager.addScore(points);
+        System.out.println("Puntos de poción añadidos: " + points);
     }
       /**
      * Maneja los efectos visuales de las pociones
@@ -940,5 +981,20 @@ public class GameController {
                 System.err.println("Error en fallback: " + fallbackError.getMessage());
             }
         }
+    }
+    
+    /**
+     * Cuenta el número de fórmulas desbloqueadas
+     * @param unlockedFormulas Array de fórmulas desbloqueadas
+     * @return Número de fórmulas desbloqueadas
+     */
+    private int countUnlockedFormulas(boolean[] unlockedFormulas) {
+        int count = 0;
+        if (unlockedFormulas != null) {
+            for (boolean unlocked : unlockedFormulas) {
+                if (unlocked) count++;
+            }
+        }
+        return count;
     }
 }
