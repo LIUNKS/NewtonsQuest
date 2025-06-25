@@ -1,7 +1,12 @@
 package Controlador;
 
+import Controlador.componentes.LevelManager;
+import Controlador.componentes.RankingManager;
+import Controlador.componentes.VideoManager;
+import Controlador.dialogs.VideoSelectionDialog;
 import Controlador.navigation.NavigationManager;
 import Controlador.utils.ErrorHandler;
+import Controlador.utils.SessionManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,9 +33,17 @@ public class MapController {
     @FXML private Button btnQuiz;
     @FXML private AnchorPane mapBackground; // Añadimos referencia al AnchorPane
     
+    // Managers para acceso a información del juego
+    private VideoManager videoManager;
+    private RankingManager rankingManager;
+    
     public void initialize() {
         try {
             System.out.println("Inicializando MapController");
+            
+            // Inicializar managers
+            videoManager = VideoManager.getInstance();
+            rankingManager = RankingManager.getInstance();
             
             // Cargar la imagen de fondo
             loadBackgroundImage();
@@ -144,8 +157,22 @@ public class MapController {
     
     @FXML
     private void onVideoButtonClick(ActionEvent event) {
-        // Este botón solo imprime un mensaje en la consola por el momento
-        System.out.println("Botón Ver Video presionado - Funcionalidad no implementada aún");
+        try {
+            System.out.println("Mostrando diálogo de selección de videos...");
+            
+            // Obtener las fórmulas desbloqueadas del usuario actual
+            boolean[] unlockedFormulas = getUserUnlockedFormulas();
+            
+            // Crear y mostrar el diálogo de selección de videos
+            VideoSelectionDialog videoDialog = new VideoSelectionDialog();
+            Stage currentStage = (Stage) btnVideo.getScene().getWindow();
+            videoDialog.show(currentStage, unlockedFormulas);
+            
+        } catch (Exception e) {
+            System.err.println("Error al mostrar videos: " + e.getMessage());
+            e.printStackTrace();
+            ErrorHandler.handleResourceError("sistema de videos", e);
+        }
     }    
     @FXML
     private void onQuizButtonClick(ActionEvent event) {
@@ -175,5 +202,62 @@ public class MapController {
             System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Obtiene las fórmulas desbloqueadas del usuario actual
+     * Se basa en el mejor puntaje del usuario para determinar qué fórmulas tiene disponibles
+     * @return Array de booleanos indicando qué fórmulas están desbloqueadas
+     */
+    private boolean[] getUserUnlockedFormulas() {
+        boolean[] unlockedFormulas = new boolean[5];
+        
+        try {
+            // Obtener el ID del usuario actual de la sesión
+            SessionManager sessionManager = SessionManager.getInstance();
+            
+            if (sessionManager.isLoggedIn()) {
+                int currentUserId = sessionManager.getCurrentUserId();
+                
+                // Obtener el número de fórmulas completadas desde la tabla usuarios
+                int formulasCompletadas = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                
+                // Desbloquear fórmulas basándose en el progreso guardado
+                for (int i = 0; i < 5; i++) {
+                    unlockedFormulas[i] = (i < formulasCompletadas);
+                }
+                
+                System.out.println("Usuario " + currentUserId + " tiene " + formulasCompletadas + 
+                                 " fórmulas completadas - Videos desbloqueados: " + countUnlocked(unlockedFormulas) + "/5");
+            } else {
+                System.out.println("No hay usuario en sesión, todas las fórmulas bloqueadas");
+                // Si no hay usuario en sesión, todas las fórmulas están bloqueadas
+                for (int i = 0; i < 5; i++) {
+                    unlockedFormulas[i] = false;
+                }
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error al obtener fórmulas desbloqueadas: " + e.getMessage());
+            // En caso de error, asumir que no hay fórmulas desbloqueadas
+            for (int i = 0; i < 5; i++) {
+                unlockedFormulas[i] = false;
+            }
+        }
+        
+        return unlockedFormulas;
+    }
+    
+    /**
+     * Cuenta cuántas fórmulas están desbloqueadas
+     * @param unlockedFormulas Array de fórmulas desbloqueadas
+     * @return Número de fórmulas desbloqueadas
+     */
+    private int countUnlocked(boolean[] unlockedFormulas) {
+        int count = 0;
+        for (boolean unlocked : unlockedFormulas) {
+            if (unlocked) count++;
+        }
+        return count;
     }
 }
