@@ -208,7 +208,7 @@ public class UserProfileDialog {
     
     private String[] getUserStats() {
         try {
-            // Obtener estadísticas del usuario
+            // Obtener estadísticas del usuario desde la tabla usuarios
             Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
             
             String mejorPuntaje = "0";
@@ -216,35 +216,37 @@ public class UserProfileDialog {
             String formulasCompletadas = "0/5";
             String ultimaPartida = "Nunca";
             
-            // Verificar si el usuario está en el ranking
+            // Obtener estadísticas básicas desde la tabla usuarios
+            try {
+                int puntaje = Modelo.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
+                mejorPuntaje = String.valueOf(puntaje);
+                
+                int formulas = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                formulasCompletadas = formulas + "/5";
+                if (formulas >= 5) {
+                    formulasCompletadas += " ✅";
+                }
+                
+                ultimaPartida = Modelo.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
+                
+            } catch (Exception e) {
+                System.err.println("Error al obtener estadísticas básicas del usuario: " + e.getMessage());
+            }
+            
+            // Verificar posición en el ranking global (solo si completó las 5 fórmulas)
             int posicion = rankingManager.getCurrentUserPosition();
             if (posicion > 0) {
                 posicionRanking = "#" + posicion;
-            }
-            
-            // Obtener mejor puntaje desde RankingDAO si existe
-            try {
-                int puntaje = Modelo.RankingDAO.obtenerMejorPuntaje(currentUserId);
-                if (puntaje > 0) {
-                    mejorPuntaje = String.valueOf(puntaje);
-                    formulasCompletadas = "5/5 ✅";
-                    
-                    // Obtener fecha de última completación
-                    java.sql.Timestamp fechaCompletacion = Modelo.RankingDAO.obtenerFechaCompletacion(currentUserId);
-                    if (fechaCompletacion != null) {
-                        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                        ultimaPartida = formatter.format(fechaCompletacion);
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Error al obtener estadísticas del ranking: " + e.getMessage());
+            } else {
+                posicionRanking = "Sin clasificar";
             }
             
             return new String[]{mejorPuntaje, posicionRanking, formulasCompletadas, ultimaPartida};
         } catch (Exception e) {
             System.err.println("Error al obtener estadísticas del usuario: " + e.getMessage());
             return new String[]{"0", "No clasificado", "0/5", "Nunca"};
-        }    }
+        }
+    }
     
     public void showAndWait() {
         dialogStage.showAndWait();
