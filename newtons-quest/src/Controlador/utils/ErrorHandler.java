@@ -198,4 +198,13 @@ public class ErrorHandler {
         System.out.println(formattedMessage);
         LOGGER.log(Level.WARNING, formattedMessage);
     }
+    
+    /**
+     * Registra errores
+     */
+    public static void logError(String message) {
+        String formattedMessage = String.format("[ERROR] %s", message);
+        System.err.println(formattedMessage);
+        LOGGER.log(Level.SEVERE, formattedMessage);
+    }
 }
