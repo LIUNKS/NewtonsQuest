@@ -249,18 +249,31 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) return -1;
-              String sql = "SELECT COUNT(*) + 1 as posicion " +
-                        "FROM ranking r1 " +
-                        "WHERE r1.mejor_puntaje > (" +
-                        "    SELECT r2.mejor_puntaje " +
-                        "    FROM ranking r2 " +
-                        "    WHERE r2.usuario_id = ?" +
-                        ")";
             
-            stmt = conn.prepareStatement(sql);
+            // Primero verificar si el usuario existe en el ranking
+            String checkSql = "SELECT mejor_puntaje FROM ranking WHERE usuario_id = ?";
+            stmt = conn.prepareStatement(checkSql);
             stmt.setInt(1, userId);
-            
             rs = stmt.executeQuery();
+            
+            if (!rs.next()) {
+                // El usuario no está en el ranking
+                return -1;
+            }
+            
+            int userScore = rs.getInt("mejor_puntaje");
+            rs.close();
+            stmt.close();
+            
+            // Ahora calcular la posición contando cuántos usuarios tienen mejor puntaje
+            String positionSql = "SELECT COUNT(*) + 1 as posicion " +
+                               "FROM ranking " +
+                               "WHERE mejor_puntaje > ?";
+            
+            stmt = conn.prepareStatement(positionSql);
+            stmt.setInt(1, userScore);
+            rs = stmt.executeQuery();
+            
             if (rs.next()) {
                 return rs.getInt("posicion");
             }
