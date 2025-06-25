@@ -356,6 +356,146 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
         }
     }
     
+    /**
+     * Actualiza el progreso del usuario (mejor puntaje y fórmulas completadas)
+     * @param userId ID del usuario
+     * @param mejorPuntaje Mejor puntaje obtenido
+     * @param formulasCompletadas Número de fórmulas completadas (0-5)
+     * @return true si se actualizó exitosamente
+     */
+    public static boolean actualizarProgresoUsuario(int userId, int mejorPuntaje, int formulasCompletadas) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return false;
+            
+            // Primero verificar el puntaje actual para no sobreescribir con uno menor
+            int puntajeActual = obtenerMejorPuntajeUsuario(userId);
+            int puntajeFinal = Math.max(puntajeActual, mejorPuntaje);
+            
+            // También verificar fórmulas actuales para no retroceder
+            int formulasActuales = obtenerFormulasCompletadasUsuario(userId);
+            int formulasFinal = Math.max(formulasActuales, formulasCompletadas);
+            
+            String sql = "UPDATE usuarios SET mejor_puntaje = ?, formulas_completadas = ?, ultima_partida = NOW() WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, puntajeFinal);
+            stmt.setInt(2, formulasFinal);
+            stmt.setInt(3, userId);
+            
+            int filasAfectadas = stmt.executeUpdate();
+            
+            if (filasAfectadas > 0) {
+                System.out.println("Progreso actualizado para usuario " + userId + ": Puntaje=" + puntajeFinal + ", Fórmulas=" + formulasFinal);
+                return true;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar progreso del usuario: " + e.getMessage());
+            return false;
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, null);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Obtiene el mejor puntaje de un usuario
+     */
+    public static int obtenerMejorPuntajeUsuario(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return 0;
+            
+            String sql = "SELECT mejor_puntaje FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("mejor_puntaje");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener mejor puntaje del usuario: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Obtiene el número de fórmulas completadas por un usuario
+     */
+    public static int obtenerFormulasCompletadasUsuario(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return 0;
+            
+            String sql = "SELECT formulas_completadas FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("formulas_completadas");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener fórmulas completadas del usuario: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Obtiene la fecha de la última partida de un usuario
+     */
+    public static String obtenerUltimaPartidaUsuario(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) return "Nunca";
+            
+            String sql = "SELECT ultima_partida FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                java.sql.Timestamp timestamp = rs.getTimestamp("ultima_partida");
+                if (timestamp != null) {
+                    java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                    return formatter.format(timestamp);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener última partida del usuario: " + e.getMessage());
+        } finally {
+            ConexionDB.cerrarRecursos(conn, stmt, rs);
+        }
+        
+        return "Nunca";
+    }
+
     // Método para hashear contraseñas usando SHA-256
     private static String hashPassword(String password) {
         try {
