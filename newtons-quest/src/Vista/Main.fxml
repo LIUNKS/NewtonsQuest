@@ -125,6 +125,18 @@
                     <Tooltip text="Ver ranking de jugadores" />
                 </tooltip>
             </Button>
+            
+            <Button fx:id="biographyButton" 
+                    text="📖" 
+                    styleClass="interface-button-compact"
+                    onAction="#showBiography"
+                    prefWidth="45" 
+                    prefHeight="45"
+                    style="-fx-font-size: 18px;">
+                <tooltip>
+                    <Tooltip text="Ver biografía de Newton" />
+                </tooltip>
+            </Button>
         </VBox>
     </VBox>
 </StackPane>
