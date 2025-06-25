@@ -203,15 +203,8 @@ public class PotionManager {
                             break;
                     }
                     
-                    // Dar puntos por recoger la poción
-                    if (effectApplied && onScoreChange != null) {
-                        int points = POTION_PICKUP_POINTS;
-                        // Si tiene efecto de puntos dobles, aplicar el multiplicador
-                        if (player.hasPointsEffect() && potion.getType() != Potion.PotionType.PUNTOS) {
-                            points *= 2;
-                        }
-                        onScoreChange.accept(points);
-                    }
+                    // Las pociones NO dan puntos por ser recogidas
+                    // Solo aplican sus efectos correspondientes
                     
                     // Desactivar la poción para que se elimine
                     potion.deactivate();
