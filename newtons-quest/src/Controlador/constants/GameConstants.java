@@ -93,4 +93,27 @@ public final class GameConstants {
     public static final int MIN_USERNAME_LENGTH = 3;
     public static final int MAX_USERNAME_LENGTH = 20;
     public static final int MIN_PASSWORD_LENGTH = 6;
+    
+    // === VIDEOS ===
+    public static final String VIDEOS_PATH = "src/recursos/videos/";
+    public static final String VIDEO_BIOGRAFIA = "video_biografia.mp4";
+    public static final String[] VIDEO_FORMULA_FILES = {
+        "video_formula_1.mp4",
+        "video_formula_2.mp4", 
+        "video_formula_3.mp4",
+        "video_formula_4.mp4",
+        "video_formula_5.mp4"
+    };
+    
+    public static final String[] VIDEO_FORMULA_TITLES = {
+        "Fórmula 1: Fuerza de Gravedad (F = m × g)",
+        "Fórmula 2: Velocidad Media (v = d / t)",
+        "Fórmula 3: Energía Potencial (U = m × g × h)",
+        "Fórmula 4: Energía Cinética (K = ½ × m × v²)",
+        "Fórmula 5: Aceleración (a = (vf - vi) / t)"
+    };
+    
+    // === DIMENSIONES DE VENTANA DE VIDEO ===
+    public static final int VIDEO_WINDOW_WIDTH = 800;
+    public static final int VIDEO_WINDOW_HEIGHT = 600;
 }
