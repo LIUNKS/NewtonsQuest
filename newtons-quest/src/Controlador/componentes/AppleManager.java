@@ -30,7 +30,7 @@ public class AppleManager {
     private final int FLOOR_Y;
     
     // Puntuaciones
-    private final int RED_APPLE_POINTS = 100;
+    private final int RED_APPLE_POINTS = 10;
     private final int GREEN_APPLE_POINTS = -5;
     private final int MISSED_APPLE_POINTS = -3;
     
@@ -162,9 +162,16 @@ public class AppleManager {
                     if (apple.isRed()) {
                         // Manzana roja recogida: puntos positivos
                         if (onScoreChange != null) {
-                            onScoreChange.accept(RED_APPLE_POINTS);
+                            int points = RED_APPLE_POINTS;
+                            // Aplicar efecto de puntos dobles si está activo
+                            if (player.hasPointsEffect()) {
+                                points *= 2;
+                                System.out.println("¡Manzana roja recogida con puntos dobles! Puntos: +" + points);
+                            } else {
+                                System.out.println("¡Manzana roja recogida! Puntos: +" + points);
+                            }
+                            onScoreChange.accept(points);
                         }
-                        System.out.println("¡Manzana roja recogida! Puntos: +" + RED_APPLE_POINTS);
                     } else {
                         // Manzana verde recogida: puntos negativos y perder vida
                         if (onScoreChange != null) {
