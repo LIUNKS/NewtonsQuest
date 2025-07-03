@@ -218,6 +218,9 @@ public class UserProfileDialog {
             
             // Obtener estadísticas básicas desde la tabla usuarios
             try {
+                // Primero intentar sincronizar datos del ranking si existen
+                Modelo.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
+                
                 int puntaje = Modelo.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
                 mejorPuntaje = String.valueOf(puntaje);
                 
