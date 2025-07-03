@@ -26,6 +26,62 @@ public class NavigationManager {
     }
     
     /**
+     * Navega a la pantalla del mapa y actualiza el estado del botón del quiz
+     * Este método se usa cuando el usuario regresa del juego para actualizar el progreso
+     */
+    public static void navigateToMapWithRefresh(Stage currentStage) throws IOException {
+        // Cargar el FXML y obtener el controlador
+        String fxmlPath = GameConstants.FXML_PATH + GameConstants.MAP_FXML;
+        String cssPath = GameConstants.CSS_PATH + GameConstants.MAP_CSS;
+        
+        // Verificar si los archivos existen
+        File fxmlFile = new File(fxmlPath);
+        File cssFile = new File(cssPath);
+        
+        FXMLLoader loader;
+        String cssUrl;
+        
+        try {
+            if (fxmlFile.exists() && cssFile.exists()) {
+                // Intentar cargar desde archivo (desarrollo)
+                loader = new FXMLLoader(fxmlFile.toURI().toURL());
+                cssUrl = cssFile.toURI().toURL().toExternalForm();
+            } else {
+                // Fallback para producción
+                String resourcePath = fxmlPath.replace("src/", "/");
+                String cssResourcePath = cssPath.replace("src/", "/");
+                
+                loader = new FXMLLoader(NavigationManager.class.getResource(resourcePath));
+                cssUrl = NavigationManager.class.getResource(cssResourcePath).toExternalForm();
+            }
+            
+            // Cargar la vista
+            Parent root = loader.load();
+            
+            // Obtener el controlador del mapa
+            Object controller = loader.getController();
+            if (controller instanceof Controlador.MapController) {
+                Controlador.MapController mapController = (Controlador.MapController) controller;
+                // Actualizar el estado del mapa una vez que se ha cargado
+                mapController.refreshMapState();
+            }
+            
+            // Crear nueva escena
+            Scene scene = new Scene(root, GameConstants.MAIN_WINDOW_WIDTH, GameConstants.MAIN_WINDOW_HEIGHT);
+            
+            // Aplicar CSS
+            scene.getStylesheets().add(cssUrl);
+            
+            // Aplicar la escena al stage
+            currentStage.setScene(scene);
+            currentStage.setTitle(GameConstants.MAP_TITLE);
+            
+        } catch (Exception e) {
+            throw new IOException("Error al cargar la pantalla del mapa con actualización: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
      * Navega a la pantalla de login
      */
     public static void navigateToLogin(Stage currentStage) throws IOException {
@@ -179,5 +235,25 @@ public class NavigationManager {
         
         loader.load();
         return loader.getController();
+    }
+    
+    /**
+     * Navega a la pantalla del quiz
+     */
+    public static void navigateToQuiz(Stage currentStage) throws IOException {
+        loadScene(currentStage, GameConstants.FXML_PATH + GameConstants.QUIZ_FXML, 
+                 GameConstants.CSS_PATH + GameConstants.QUIZ_CSS, 
+                 GameConstants.QUIZ_TITLE, 
+                 GameConstants.MAIN_WINDOW_WIDTH, GameConstants.MAIN_WINDOW_HEIGHT);
+    }
+    
+    /**
+     * Navega a la pantalla de resultados del quiz
+     */
+    public static void navigateToQuizResult(Stage currentStage) throws IOException {
+        loadScene(currentStage, GameConstants.FXML_PATH + GameConstants.QUIZ_RESULT_FXML, 
+                 GameConstants.CSS_PATH + GameConstants.QUIZ_CSS, 
+                 GameConstants.QUIZ_RESULT_TITLE, 
+                 GameConstants.MAIN_WINDOW_WIDTH, GameConstants.MAIN_WINDOW_HEIGHT);
     }
 }
