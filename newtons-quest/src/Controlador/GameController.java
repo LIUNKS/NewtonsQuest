@@ -963,11 +963,11 @@ public class GameController {
             
             System.out.println("Volviendo al mapa...");
             
-            // Obtener el stage actual y navegar al mapa
+            // Obtener el stage actual y navegar al mapa con actualización del estado
             Stage currentStage = (Stage) gameCanvas.getScene().getWindow();
-            NavigationManager.navigateToMap(currentStage);
+            NavigationManager.navigateToMapWithRefresh(currentStage);
             
-            System.out.println("Navegación al mapa completada");
+            System.out.println("Navegación al mapa completada con actualización del estado");
         } catch (Exception e) {
             System.err.println("Error al regresar al mapa: " + e.getMessage());
             e.printStackTrace();
