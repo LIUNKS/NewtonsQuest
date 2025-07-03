@@ -48,6 +48,12 @@ public class MapController {
             // Cargar la imagen de fondo
             loadBackgroundImage();
             
+            // Configurar el estado inicial del botón del quiz
+            updateQuizButtonState();
+            
+            // Debug temporal para verificar datos del usuario
+            debugUserData();
+            
             // Configurar eventos de teclado para la escena
             btnJugar.sceneProperty().addListener((obs, oldScene, newScene) -> {
                 if (newScene != null) {
@@ -61,6 +67,34 @@ public class MapController {
             
         } catch (Exception e) {
             System.err.println("Error al inicializar MapController: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Actualiza el estado visual del botón del quiz según el progreso del usuario
+     */
+    private void updateQuizButtonState() {
+        try {
+            boolean allFormulasUnlocked = areAllFormulasUnlocked();
+            int unlockedCount = countUnlockedFormulas();
+            
+            if (allFormulasUnlocked) {
+                // Todas las fórmulas desbloqueadas - botón habilitado
+                btnQuiz.setDisable(false);
+                btnQuiz.setText("Quiz");
+                btnQuiz.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
+                System.out.println("Botón del quiz habilitado - Todas las fórmulas desbloqueadas");
+            } else {
+                // No todas las fórmulas desbloqueadas - botón deshabilitado visualmente
+                btnQuiz.setDisable(false); // Mantenemos habilitado para mostrar el mensaje
+                btnQuiz.setText("Quiz (" + unlockedCount + "/5)");
+                btnQuiz.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: #2c3e50; -fx-font-weight: bold;");
+                System.out.println("Botón del quiz marcado como bloqueado - Fórmulas: " + unlockedCount + "/5");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error al actualizar estado del botón del quiz: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -176,8 +210,52 @@ public class MapController {
     }    
     @FXML
     private void onQuizButtonClick(ActionEvent event) {
-        // Este botón solo imprime un mensaje en la consola por el momento
-        System.out.println("Botón Quiz presionado - Funcionalidad no implementada aún");
+        try {
+            System.out.println("Verificando acceso al quiz...");
+            
+            // Verificar si el usuario ha desbloqueado todas las fórmulas
+            if (!areAllFormulasUnlocked()) {
+                System.out.println("Acceso al quiz denegado - No todas las fórmulas están desbloqueadas");
+                
+                // Mostrar mensaje informativo al usuario
+                Stage currentStage = (Stage) btnQuiz.getScene().getWindow();
+                int unlockedCount = countUnlockedFormulas();
+                
+                String mensaje = "Para acceder al quiz y poner a prueba tus conocimientos sobre las leyes de Newton, " +
+                               "primero debes desbloquear todas las fórmulas físicas jugando.\n\n" +
+                               "📊 PROGRESO ACTUAL: " + unlockedCount + "/5 fórmulas desbloqueadas\n\n" +
+                               getProgressDetails() + "\n" +
+                               "🎮 CÓMO CONTINUAR:\n" +
+                               "• Juega y recoge manzanas para ganar puntos\n" +
+                               "• Evita las manzanas rojas y usa las pociones sabiamente\n" +
+                               "• Cada umbral de puntaje desbloquea una nueva fórmula\n\n" +
+                               "🏆 Una vez que hayas desbloqueado las 5 fórmulas, podrás acceder al quiz " +
+                               "y demostrar que eres un verdadero experto en física como Newton.";
+                
+                ErrorHandler.showInfoDialog(
+                    "🔒 Quiz Bloqueado",
+                    "¡Completa tu aprendizaje primero!",
+                    mensaje,
+                    currentStage
+                );
+                return;
+            }
+            
+            System.out.println("Acceso al quiz permitido - Todas las fórmulas desbloqueadas");
+            System.out.println("Iniciando quiz desde el mapa...");
+            
+            Stage stage = (Stage) btnQuiz.getScene().getWindow();
+            NavigationManager.navigateToQuiz(stage);
+            
+            System.out.println("Quiz iniciado correctamente");
+            
+        } catch (IOException e) {
+            System.err.println("Error al cargar la pantalla del quiz: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Error inesperado al iniciar el quiz: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     @FXML
@@ -202,6 +280,73 @@ public class MapController {
             System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Obtiene información detallada sobre el progreso de fórmulas del usuario
+     * @return String con información detallada del progreso
+     */
+    private String getProgressDetails() {
+        boolean[] unlockedFormulas = getUserUnlockedFormulas();
+        StringBuilder details = new StringBuilder();
+        
+        // Nombres de las fórmulas físicas
+        String[] formulaNames = {
+            "F = m × g (Fuerza de gravedad)",
+            "v = d / t (Velocidad media)",
+            "U = m × g × h (Energía potencial)",
+            "K = ½ × m × v² (Energía cinética)",
+            "a = (vf - vi) / t (Aceleración)"
+        };
+        
+        // Umbrales de puntaje para cada fórmula
+        int[] thresholds = {100, 250, 450, 700, 1000};
+        
+        details.append("📋 ESTADO DE LAS FÓRMULAS:\n\n");
+        
+        for (int i = 0; i < formulaNames.length; i++) {
+            if (unlockedFormulas[i]) {
+                details.append("✅ ").append(formulaNames[i]).append(" - DESBLOQUEADA\n");
+            } else {
+                details.append("🔒 ").append(formulaNames[i]).append(" - Requiere ").append(thresholds[i]).append(" puntos\n");
+            }
+        }
+        
+        return details.toString();
+    }
+    
+    /**
+     * Verifica si todas las fórmulas están desbloqueadas para el usuario actual
+     * @return true si todas las fórmulas están desbloqueadas, false en caso contrario
+     */
+    private boolean areAllFormulasUnlocked() {
+        boolean[] unlockedFormulas = getUserUnlockedFormulas();
+        
+        // Verificar que todas las 5 fórmulas estén desbloqueadas
+        for (boolean unlocked : unlockedFormulas) {
+            if (!unlocked) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Cuenta el número de fórmulas desbloqueadas por el usuario actual
+     * @return número de fórmulas desbloqueadas (0-5)
+     */
+    private int countUnlockedFormulas() {
+        boolean[] unlockedFormulas = getUserUnlockedFormulas();
+        int count = 0;
+        
+        for (boolean unlocked : unlockedFormulas) {
+            if (unlocked) {
+                count++;
+            }
+        }
+        
+        return count;
     }
     
     /**
@@ -259,5 +404,60 @@ public class MapController {
             if (unlocked) count++;
         }
         return count;
+    }
+    
+    /**
+     * Método público para actualizar el estado del mapa cuando el usuario regrese del juego
+     * Esto permite que el botón del quiz se actualice si se desbloquearon más fórmulas
+     */
+    public void refreshMapState() {
+        updateQuizButtonState();
+        System.out.println("Estado del mapa actualizado");
+    }
+    
+    /**
+     * Método temporal de debug para verificar los datos del usuario
+     */
+    private void debugUserData() {
+        try {
+            SessionManager sessionManager = SessionManager.getInstance();
+            if (sessionManager.isLoggedIn()) {
+                int currentUserId = sessionManager.getCurrentUserId();
+                String username = sessionManager.getCurrentUsername();
+                
+                // Sincronizar datos del ranking con la tabla usuarios si es necesario
+                Modelo.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
+                
+                System.out.println("=== DEBUG DATOS USUARIO ===");
+                System.out.println("Usuario ID: " + currentUserId);
+                System.out.println("Username: " + username);
+                
+                // Verificar datos en tabla usuarios
+                int puntajeUsuarios = Modelo.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
+                int formulasUsuarios = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                String ultimaPartida = Modelo.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
+                
+                System.out.println("--- Tabla USUARIOS ---");
+                System.out.println("Mejor puntaje: " + puntajeUsuarios);
+                System.out.println("Fórmulas completadas: " + formulasUsuarios);
+                System.out.println("Última partida: " + ultimaPartida);
+                
+                // Verificar datos en tabla ranking
+                System.out.println("--- Tabla RANKING ---");
+                RankingManager rankingManager = RankingManager.getInstance();
+                int posicion = rankingManager.getCurrentUserPosition();
+                System.out.println("Posición en ranking: " + posicion);
+                
+                // Botón temporal para sincronizar datos
+                System.out.println("--- SINCRONIZACIÓN ---");
+                int sincronizados = Modelo.UsuarioDAO.sincronizarTodosLosDatosRanking();
+                System.out.println("Usuarios sincronizados: " + sincronizados);
+                
+                System.out.println("=== FIN DEBUG ===");
+            }
+        } catch (Exception e) {
+            System.err.println("Error en debug: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
