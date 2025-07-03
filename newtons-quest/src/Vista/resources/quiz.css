@@ -1,0 +1,367 @@
+/* Estilos para el Quiz de Newton's Apple Quest */
+
+/* Fondo del quiz */
+.quiz-background {
+    -fx-background-color: linear-gradient(to bottom, #0f0c29, #24243e, #302b63);
+}
+
+.quiz-result-background {
+    -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298, #134e5e, #71b280);
+}
+
+/* Barra de progreso */
+.quiz-progress {
+    -fx-accent: #4caf50;
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+    -fx-background-radius: 10;
+}
+
+.quiz-progress .bar {
+    -fx-background-color: linear-gradient(to right, #4caf50, #8bc34a);
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+}
+
+/* Opciones de respuesta */
+.quiz-option {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-padding: 12 20 12 20;
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-min-height: 50px;
+    -fx-wrap-text: true;
+    -fx-text-alignment: left;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.quiz-option:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+}
+
+.quiz-option:selected {
+    -fx-background-color: rgba(76, 175, 80, 0.3);
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+}
+
+.quiz-option-correct {
+    -fx-background-color: rgba(76, 175, 80, 0.4) !important;
+    -fx-border-color: #4caf50 !important;
+    -fx-border-width: 3 !important;
+    -fx-text-fill: #4caf50 !important;
+    -fx-font-weight: bold;
+}
+
+/* Botones del quiz */
+.quiz-button-hint {
+    -fx-background-color: linear-gradient(to bottom, #ff9800, #f57c00);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 25;
+    -fx-border-radius: 25;
+    -fx-border-color: #e65100;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 3);
+}
+
+.quiz-button-hint:hover {
+    -fx-background-color: linear-gradient(to bottom, #ffb74d, #ff9800);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.quiz-button-hint:pressed {
+    -fx-background-color: linear-gradient(to bottom, #f57c00, #e65100);
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+.quiz-button-hint:disabled {
+    -fx-background-color: #757575;
+    -fx-text-fill: #bdbdbd;
+    -fx-border-color: #616161;
+    -fx-effect: none;
+}
+
+.quiz-button-answer {
+    -fx-background-color: linear-gradient(to bottom, #4caf50, #388e3c);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 25;
+    -fx-border-radius: 25;
+    -fx-border-color: #2e7d32;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 3);
+}
+
+.quiz-button-answer:hover {
+    -fx-background-color: linear-gradient(to bottom, #66bb6a, #4caf50);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.quiz-button-answer:pressed {
+    -fx-background-color: linear-gradient(to bottom, #388e3c, #2e7d32);
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+.quiz-button-answer:disabled {
+    -fx-background-color: #757575;
+    -fx-text-fill: #bdbdbd;
+    -fx-border-color: #616161;
+    -fx-effect: none;
+}
+
+/* Botones de la pantalla de resultados */
+.quiz-button-repeat {
+    -fx-background-color: linear-gradient(to bottom, #2196f3, #1976d2);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 25;
+    -fx-border-radius: 25;
+    -fx-border-color: #1565c0;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 3);
+}
+
+.quiz-button-repeat:hover {
+    -fx-background-color: linear-gradient(to bottom, #42a5f5, #2196f3);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.quiz-button-repeat:pressed {
+    -fx-background-color: linear-gradient(to bottom, #1976d2, #1565c0);
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+.quiz-button-back {
+    -fx-background-color: linear-gradient(to bottom, #9c27b0, #7b1fa2);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 25;
+    -fx-border-radius: 25;
+    -fx-border-color: #6a1b9a;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 3);
+}
+
+.quiz-button-back:hover {
+    -fx-background-color: linear-gradient(to bottom, #ab47bc, #9c27b0);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.quiz-button-back:pressed {
+    -fx-background-color: linear-gradient(to bottom, #7b1fa2, #6a1b9a);
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+/* Animaciones */
+.quiz-option {
+    -fx-transition: all 0.3s ease;
+}
+
+.quiz-button-hint,
+.quiz-button-answer,
+.quiz-button-repeat,
+.quiz-button-back {
+    -fx-transition: all 0.2s ease;
+}
+
+/* Efectos de hover para etiquetas */
+.quiz-progress {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0, 0, 2);
+}
+
+/* Estilo para las áreas de información */
+.quiz-info-box {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+/* Estilo para los mensajes de pista y explicación */
+.quiz-hint-box {
+    -fx-background-color: rgba(255, 235, 59, 0.2);
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-border-color: #ffeb3b;
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+}
+
+.quiz-explanation-box {
+    -fx-background-color: rgba(76, 175, 80, 0.2);
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+}
+
+/* Estilos para el ScrollPane del quiz */
+.quiz-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-fit-to-width: true;
+}
+
+.quiz-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.quiz-scroll .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.quiz-scroll .scroll-bar:vertical {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 8;
+    -fx-pref-width: 10;
+    -fx-opacity: 0.7;
+}
+
+.quiz-scroll .scroll-bar:vertical .track {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 8;
+}
+
+.quiz-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+    -fx-background-radius: 8;
+}
+
+.quiz-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.7);
+}
+
+.quiz-scroll .scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+}
+
+.quiz-scroll .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-opacity: 0;
+}
+
+.quiz-scroll .corner {
+    -fx-background-color: transparent;
+}
+
+/* Mejoras para las opciones de respuesta */
+.quiz-option {
+    -fx-transition: all 0.3s ease;
+}
+
+.quiz-button-hint,
+.quiz-button-answer,
+.quiz-button-repeat,
+.quiz-button-back {
+    -fx-transition: all 0.2s ease;
+}
+
+/* Mejoras para el contenedor principal del quiz */
+.quiz-main-container {
+    -fx-spacing: 15px;
+    -fx-background-color: transparent;
+    -fx-alignment: TOP_CENTER;
+}
+
+/* Estilos para el área de información del quiz */
+.quiz-info-area {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-spacing: 15;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+/* Estilos para las áreas de contenido del quiz */
+.quiz-content-area {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 15;
+    -fx-padding: 20;
+    -fx-spacing: 15;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-border-radius: 15;
+    -fx-border-width: 1;
+}
+
+/* Mejoras para el título del quiz */
+.quiz-title {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2);
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+/* Mejoras para botones de acción */
+.quiz-action-buttons {
+    -fx-alignment: CENTER;
+    -fx-spacing: 15;
+    -fx-padding: 10 0 0 0;
+}
+
+/* Estilos para la pantalla de resultados del quiz */
+.quiz-result-title {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2);
+    -fx-text-fill: #ffffff;
+}
+
+.quiz-result-status-approved {
+    -fx-text-fill: #4caf50;
+    -fx-effect: dropshadow(gaussian, rgba(76, 175, 80, 0.5), 5, 0, 0, 2);
+}
+
+.quiz-result-status-failed {
+    -fx-text-fill: #ff6b6b;
+    -fx-effect: dropshadow(gaussian, rgba(255, 107, 107, 0.5), 5, 0, 0, 2);
+}
+
+.quiz-result-stats-container {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-radius: 20;
+    -fx-padding: 25;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);
+}
+
+.quiz-result-info-box {
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-background-radius: 15;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 3, 0, 0, 1);
+}
+
+.quiz-certificate-box {
+    -fx-background-color: rgba(255,215,0,0.2);
+    -fx-background-radius: 15;
+    -fx-padding: 20;
+    -fx-border-color: #ffd700;
+    -fx-border-width: 2;
+    -fx-border-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(255, 215, 0, 0.3), 8, 0, 0, 2);
+}
+
+.quiz-motivation-box {
+    -fx-background-color: rgba(255,152,0,0.2);
+    -fx-background-radius: 15;
+    -fx-padding: 20;
+    -fx-border-color: #ff9800;
+    -fx-border-width: 2;
+    -fx-border-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(255, 152, 0, 0.3), 8, 0, 0, 2);
+}
