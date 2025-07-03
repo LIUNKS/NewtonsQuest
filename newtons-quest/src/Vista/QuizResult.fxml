@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="resultBackground" prefHeight="700.0" prefWidth="900.0" styleClass="quiz-result-background" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controlador.QuizResultController">
+   <children>
+      <!-- Contenedor principal -->
+      <VBox alignment="CENTER" spacing="20.0" AnchorPane.topAnchor="50.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0">
+         <children>
+            <!-- Título Principal -->
+            <Label fx:id="lblTitulo" text="Quiz Completado" textFill="#ffffff" style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);">
+               <font>
+                  <Font name="System Bold" size="28.0" />
+               </font>
+            </Label>
+            
+            <!-- Estado del Quiz -->
+            <Label fx:id="lblEstado" text="No Aprobado" textFill="#ff6b6b" style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);">
+               <font>
+                  <Font name="System Bold" size="26.0" />
+               </font>
+            </Label>
+            
+            <!-- Estadísticas -->
+            <VBox alignment="CENTER" spacing="10.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 15; -fx-padding: 20;">
+               <children>
+                  <Label fx:id="lblPorcentaje" text="Puntuación: 33.3%" textFill="#ffffff">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblCalificacion" text="Calificación: F" textFill="#ffffff">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblRespuestas" text="Respuestas correctas: 5 de 15" textFill="#ffffff">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lblTiempo" text="Tiempo empleado: 02:27" textFill="#ffffff">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+            
+            <!-- Mensaje de certificado (para aprobados) -->
+            <VBox fx:id="vboxCertificado" alignment="CENTER" spacing="8.0" visible="false" style="-fx-background-color: rgba(255,215,0,0.2); -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #ffd700; -fx-border-width: 2; -fx-border-radius: 15;">
+               <children>
+                  <Label text="🏆 ¡Felicidades!" textFill="#ffd700">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <Label text="Has obtenido más del 85% de respuestas correctas." textFill="#ffd700">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                  </Label>
+                  <Label text="¡Eres elegible para recibir un certificado!" textFill="#ffd700">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+            
+            <!-- Mensaje de motivación (para no aprobados) -->
+            <VBox fx:id="vboxMotivacion" alignment="CENTER" spacing="8.0" visible="true" style="-fx-background-color: rgba(255,152,0,0.2); -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #ff9800; -fx-border-width: 2; -fx-border-radius: 15;">
+               <children>
+                  <Label text="💪 ¡Sigue intentando!" textFill="#ff9800">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Label text="Cada intento te ayuda a aprender más sobre física." textFill="#ff9800">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                  </Label>
+                  <Label text="Puedes repetir el quiz las veces que quieras." textFill="#ff9800">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+            
+            <!-- Botones de acción -->
+            <HBox alignment="CENTER" spacing="20.0" style="-fx-padding: 20 0 0 0;">
+               <children>
+                  <Button fx:id="btnRepetir" mnemonicParsing="false" onAction="#onRepetirButtonClick" prefHeight="50.0" prefWidth="200.0" text="Repetir Quiz" style="-fx-background-color: linear-gradient(to bottom, #2196f3, #1976d2); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="btnVolver" mnemonicParsing="false" onAction="#onVolverButtonClick" prefHeight="50.0" prefWidth="200.0" text="Volver al Mapa" style="-fx-background-color: linear-gradient(to bottom, #9c27b0, #7b1fa2); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
