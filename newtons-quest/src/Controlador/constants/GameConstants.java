@@ -44,17 +44,21 @@ public final class GameConstants {
     public static final String IMAGES_PATH = "src/recursos/imagenes/";
     public static final String MUSIC_PATH = "src/recursos/musica/";
     public static final String SOUNDS_PATH = "src/recursos/sonidos/";
+    public static final String VIDEOS_PATH = "src/recursos/videos/";
     
     // === ARCHIVOS ESPECÍFICOS ===
     public static final String LOGIN_FXML = "Login.fxml";
     public static final String MAIN_FXML = "Main.fxml";
     public static final String MAP_FXML = "Map.fxml";
     public static final String GAME_FXML = "Game.fxml";
+    public static final String QUIZ_FXML = "Quiz.fxml";
+    public static final String QUIZ_RESULT_FXML = "QuizResult.fxml";
     
     public static final String LOGIN_CSS = "login.css";
     public static final String MAIN_CSS = "main.css";
     public static final String MAP_CSS = "map.css";
     public static final String GAME_CSS = "game.css";
+    public static final String QUIZ_CSS = "quiz.css";
     
     // === TÍTULOS DE VENTANA ===
     public static final String APP_NAME = "Newton's Apple Quest";
@@ -62,6 +66,8 @@ public final class GameConstants {
     public static final String MAIN_TITLE = APP_NAME + " - Menú Principal";
     public static final String MAP_TITLE = APP_NAME + " - Mapa de Aventuras";
     public static final String GAME_TITLE = APP_NAME + " - Juego";
+    public static final String QUIZ_TITLE = APP_NAME + " - Quiz";
+    public static final String QUIZ_RESULT_TITLE = APP_NAME + " - Resultados del Quiz";
     public static final String RULES_TITLE = APP_NAME + " - Reglas del Juego";
     public static final String SETTINGS_TITLE = APP_NAME + " - Configuración";
     
@@ -94,8 +100,13 @@ public final class GameConstants {
     public static final int MAX_USERNAME_LENGTH = 20;
     public static final int MIN_PASSWORD_LENGTH = 6;
     
+    // === QUIZ ===
+    public static final int QUIZ_TOTAL_QUESTIONS = 15;
+    public static final double QUIZ_PASS_PERCENTAGE = 85.0;
+    public static final String QUIZ_PASS_MESSAGE = "¡Felicidades! Has aprobado el quiz.";
+    public static final String QUIZ_FAIL_MESSAGE = "¡Sigue intentando! Puedes repetir el quiz.";
+    
     // === VIDEOS ===
-    public static final String VIDEOS_PATH = "src/recursos/videos/";
     public static final String VIDEO_BIOGRAFIA = "video_biografia.mp4";
     public static final String[] VIDEO_FORMULA_FILES = {
         "video_formula_1.mp4",
