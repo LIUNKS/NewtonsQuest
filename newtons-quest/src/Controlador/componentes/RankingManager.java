@@ -1,6 +1,6 @@
 package Controlador.componentes;
 
-import Modelo.RankingDAO;
+import Modelo.dao.RankingDAO;
 import Modelo.RankingEntry;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ public class RankingManager {
     public void setCurrentUser(int userId, String username) {
         this.currentUserId = userId;
         this.currentUsername = username;
-        System.out.println("Usuario actual establecido en RankingManager: " + username + " (ID: " + userId + ")");
+        // Usuario configurado silenciosamente
     }
     
     /**
@@ -58,7 +58,7 @@ public class RankingManager {
      */
     public boolean checkAndSaveCompletedGame(boolean[] formulasUnlocked, int score) {
         if (currentUserId == -1) {
-            System.out.println("No hay usuario actual establecido");
+            // No hay usuario actual establecido
             return false;
         }
         
@@ -70,7 +70,7 @@ public class RankingManager {
             }
         }
         
-        System.out.println("Usuario " + currentUsername + " completó " + formulasCompletadas + " fórmulas con " + score + " puntos");
+        // Usuario completó las fórmulas
         
         // Verificar si completó todas las fórmulas
         if (formulasCompletadas >= 5) {
