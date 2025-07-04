@@ -54,10 +54,10 @@ public class GameSettings {
                     brightness = Double.parseDouble(properties.getProperty("brightness", "1.0"));
                     fullscreen = Boolean.parseBoolean(properties.getProperty("fullscreen", "false"));
                     
-                    System.out.println("Configuraciones cargadas desde " + SETTINGS_FILE);
+                    // Configuraciones cargadas exitosamente
                 }
             } else {
-                System.out.println("Archivo de configuración no encontrado. Usando valores por defecto.");
+                // Usar valores por defecto si no existe el archivo
                 saveSettings(); // Crear archivo con valores por defecto
             }
         } catch (Exception e) {
@@ -78,7 +78,7 @@ public class GameSettings {
             
             try (FileOutputStream fos = new FileOutputStream(SETTINGS_FILE)) {
                 properties.store(fos, "Newton's Apple Quest - Configuraciones del juego");
-                System.out.println("Configuraciones guardadas en " + SETTINGS_FILE);
+                // Configuraciones guardadas exitosamente
             }
         } catch (Exception e) {
             System.err.println("Error al guardar configuraciones: " + e.getMessage());
@@ -127,6 +127,6 @@ public class GameSettings {
         brightness = 1.0;
         fullscreen = false;
         saveSettings();
-        System.out.println("Configuraciones restauradas a valores por defecto");
+        // Configuraciones restauradas a valores por defecto
     }
 }
