@@ -1,6 +1,6 @@
 package Controlador;
 
-import Modelo.UsuarioDAO;
+import Modelo.dao.UsuarioDAO;
 import java.io.File;
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -116,7 +116,7 @@ public class RegisterController {
         errorLabel.setVisible(true);
         errorLabel.setManaged(true);
         
-        System.out.println("Mostrando error en registro: " + message);
+        // Mostrando mensaje de error en el registro
     }    private void goBackToLogin() throws IOException {
         try {            // Obtener la ruta del archivo FXML
             String loginFxmlPath = "src/Vista/Login.fxml";
