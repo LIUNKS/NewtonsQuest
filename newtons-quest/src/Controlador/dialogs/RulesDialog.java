@@ -104,12 +104,13 @@ public class RulesDialog {
         VBox pointsSection = RulesSectionFactory.createPointsSection();
         VBox objectsSection = RulesSectionFactory.createObjectsSection();
         VBox progressSection = RulesSectionFactory.createProgressSection();
+        VBox specialMechanicsSection = RulesSectionFactory.createSpecialMechanicsSection();
         VBox tipsSection = RulesSectionFactory.createTipsSection();
         
         // Añadir todas las secciones al contenedor
         contentContainer.getChildren().addAll(
             objectiveSection, controlsSection, pointsSection,
-            objectsSection, progressSection, tipsSection
+            objectsSection, progressSection, specialMechanicsSection, tipsSection
         );
         
         return contentContainer;
@@ -166,10 +167,12 @@ public class RulesDialog {
     }
     
     private void showFallbackRules() {
-        System.out.println("=== REGLAS DE NEWTON'S APPLE QUEST ===");
-        System.out.println("Objetivo: Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)");
-        System.out.println("Controles: Flechas para mover, ESC para pausar");
-        System.out.println("Vidas: Pierdes vida con manzanas verdes o rojas perdidas");
-        System.out.println("Fórmulas: Desbloquea fórmulas de Newton con puntos");
+        // Mostrando reglas completas de Newton's Apple Quest en consola para debug
+        // Objetivo: Atrapa manzanas rojas (+10 pts) y evita las verdes (-5 pts)
+        // Controles: Flechas para mover, ESC para pausar, números 1-5 para fórmulas
+        // Vidas: Pierdes vida con manzanas verdes o rojas perdidas
+        // Pociones: Azul (puntos dobles), Roja (vida), Verde (lentitud) - todas dan +50 pts
+        // Fórmulas: Desbloquea fórmulas de Newton con puntos específicos
+        // Progresión: 50, 150, 300, 500, 750 puntos para cada fórmula
     }
 }
