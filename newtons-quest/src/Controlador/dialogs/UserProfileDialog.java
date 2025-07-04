@@ -1,6 +1,6 @@
 package Controlador.dialogs;
 
-import Modelo.UsuarioDAO;
+import Modelo.dao.UsuarioDAO;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,7 +14,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * Diálogo para mostrar el perfil del usuario
+ * Diálogo para mostrar y editar el perfil del usuario.
+ * Permite al usuario ver y modificar su información personal,
+ * así como visualizar sus estadísticas de juego.
  */
 public class UserProfileDialog {
     
@@ -22,12 +24,22 @@ public class UserProfileDialog {
     private String currentUsername;
     private int currentUserId;
     
+    /**
+     * Constructor del diálogo de perfil de usuario.
+     * @param parentStage Ventana padre del diálogo
+     * @param username Nombre de usuario
+     * @param userId ID del usuario
+     */
     public UserProfileDialog(Stage parentStage, String username, int userId) {
         this.currentUsername = username;
         this.currentUserId = userId;
         createDialog(parentStage);
     }
     
+    /**
+     * Crea y configura el diálogo de perfil de usuario.
+     * @param parentStage Ventana padre
+     */
     private void createDialog(Stage parentStage) {
         dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -219,18 +231,18 @@ public class UserProfileDialog {
             // Obtener estadísticas básicas desde la tabla usuarios
             try {
                 // Primero intentar sincronizar datos del ranking si existen
-                Modelo.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
+                Modelo.dao.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
                 
-                int puntaje = Modelo.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
+                int puntaje = Modelo.dao.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
                 mejorPuntaje = String.valueOf(puntaje);
                 
-                int formulas = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                int formulas = Modelo.dao.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
                 formulasCompletadas = formulas + "/5";
                 if (formulas >= 5) {
                     formulasCompletadas += " ✅";
                 }
                 
-                ultimaPartida = Modelo.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
+                ultimaPartida = Modelo.dao.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
                 
             } catch (Exception e) {
                 System.err.println("Error al obtener estadísticas básicas del usuario: " + e.getMessage());
