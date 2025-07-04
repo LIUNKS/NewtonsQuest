@@ -1,5 +1,8 @@
-package Modelo;
+package Modelo.dao;
 
+import Modelo.ConexionDB;
+import Modelo.QuizQuestion;
+import Modelo.QuizResult;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -336,5 +339,36 @@ public class QuizDAO {
         }
         
         return false;
+    }
+    
+    /**
+     * Obtiene el último resultado de quiz de un usuario
+     * @param userId ID del usuario
+     * @return Último resultado del usuario o null si no tiene resultados
+     */
+    public static QuizResult obtenerUltimoResultadoQuiz(int userId) {
+        String sql = "SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1";
+        
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return new QuizResult(
+                    rs.getInt("user_id"),
+                    rs.getInt("total_questions"),
+                    rs.getInt("correct_answers"),
+                    rs.getLong("time_spent")
+                );
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al obtener último resultado del quiz: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
     }
 }
