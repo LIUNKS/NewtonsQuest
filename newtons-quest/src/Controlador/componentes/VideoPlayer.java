@@ -86,7 +86,7 @@ public class VideoPlayer {
             videoStage.show();
             mediaPlayer.play();
             
-            ErrorHandler.logInfo("Video iniciado: " + title);
+            // Video iniciado
             
         } catch (Exception e) {
             ErrorHandler.logError("Error al reproducir video: " + e.getMessage());
@@ -149,7 +149,7 @@ public class VideoPlayer {
     private void setupMediaPlayerEvents() {
         if (mediaPlayer != null) {
             mediaPlayer.setOnEndOfMedia(() -> {
-                System.out.println("Video terminado");
+                // Video terminado
                 mediaPlayer.stop();
             });
             
@@ -184,7 +184,7 @@ public class VideoPlayer {
                 videoStage = null;
             }
             
-            ErrorHandler.logInfo("Reproductor de video cerrado");
+            // Reproductor de video cerrado
             
         } catch (Exception e) {
             ErrorHandler.logError("Error al cerrar el reproductor: " + e.getMessage());
