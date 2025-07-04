@@ -22,7 +22,7 @@ public class AudioManager {
      * Constructor del AudioManager
      */
     public AudioManager() {
-        System.out.println("AudioManager inicializado");
+        // AudioManager inicializado
     }
     
     /**
@@ -36,19 +36,19 @@ public class AudioManager {
             if (musicFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 media = new Media(musicFile.toURI().toString());
-                System.out.println("Música cargada desde archivo: " + MUSIC_PATH);
+                // Música cargada desde archivo local
             } else {
                 // Estamos en producción, usar getResource
                 String resourcePath = getClass().getResource("/recursos/musica/musica_juego.mp3").toString();
                 media = new Media(resourcePath);
-                System.out.println("Música cargada desde recursos");
+                // Música cargada desde recursos
             }
               musicPlayer = new MediaPlayer(media);
             musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Reproducir en bucle
             musicPlayer.setVolume(GameSettings.getInstance().getMusicVolume());
             musicPlayer.play();
             
-            System.out.println("Música de fondo iniciada");
+            // Música de fondo iniciada
         } catch (Exception e) {
             System.err.println("Error al reproducir la música: " + e.getMessage());
             e.printStackTrace();
@@ -66,12 +66,12 @@ public class AudioManager {
             if (soundFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 media = new Media(soundFile.toURI().toString());
-                System.out.println("Sonido cargado desde archivo: " + UNLOCK_SOUND_PATH);
+                // Sonido cargado desde archivo local
             } else {
                 // Estamos en producción, usar getResource
                 String resourcePath = getClass().getResource("/recursos/sonidos/unlock.mp3").toString();
                 media = new Media(resourcePath);
-                System.out.println("Sonido cargado desde recursos");
+                // Sonido cargado desde recursos
             }
             
             // Si ya hay un efecto reproduciéndose, detenerlo
@@ -82,7 +82,7 @@ public class AudioManager {
             effectPlayer.setVolume(GameSettings.getInstance().getEffectVolume());
             effectPlayer.play();
             
-            System.out.println("Sonido de desbloqueo reproducido");
+            // Sonido de desbloqueo reproducido
         } catch (Exception e) {
             System.err.println("Error al reproducir sonido de desbloqueo: " + e.getMessage());
             e.printStackTrace();
@@ -95,7 +95,7 @@ public class AudioManager {
     public void stopBackgroundMusic() {
         if (musicPlayer != null) {
             musicPlayer.stop();
-            System.out.println("Música de fondo detenida");
+            // Música de fondo detenida
         }
     }
     
@@ -105,7 +105,7 @@ public class AudioManager {
     public void pauseBackgroundMusic() {
         if (musicPlayer != null) {
             musicPlayer.pause();
-            System.out.println("Música de fondo pausada");
+            // Música de fondo pausada
         }
     }
     
@@ -115,7 +115,7 @@ public class AudioManager {
     public void resumeBackgroundMusic() {
         if (musicPlayer != null) {
             musicPlayer.play();
-            System.out.println("Música de fondo reanudada");
+            // Música de fondo reanudada
         }
     }
       /**
