@@ -177,7 +177,6 @@ public class ErrorHandler {
      */
     public static void logDebug(String message) {
         String formattedMessage = String.format("[DEBUG] %s", message);
-        System.out.println(formattedMessage);
         LOGGER.log(Level.INFO, formattedMessage);
     }
     
@@ -186,7 +185,6 @@ public class ErrorHandler {
      */
     public static void logInfo(String message) {
         String formattedMessage = String.format("[INFO] %s", message);
-        System.out.println(formattedMessage);
         LOGGER.log(Level.INFO, formattedMessage);
     }
     
@@ -195,7 +193,6 @@ public class ErrorHandler {
      */
     public static void logWarning(String message) {
         String formattedMessage = String.format("[WARNING] %s", message);
-        System.out.println(formattedMessage);
         LOGGER.log(Level.WARNING, formattedMessage);
     }
     
@@ -204,7 +201,6 @@ public class ErrorHandler {
      */
     public static void logError(String message) {
         String formattedMessage = String.format("[ERROR] %s", message);
-        System.err.println(formattedMessage);
         LOGGER.log(Level.SEVERE, formattedMessage);
     }
 }
