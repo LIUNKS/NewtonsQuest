@@ -73,13 +73,10 @@ public class Potion {
             File file = new File(path);
             if (file.exists()) {
                 sprite = new Image(new FileInputStream(file));
-                System.out.println("Sprite de poción " + type.name() + " cargado correctamente");
             } else {
-                System.err.println("No se encontró el archivo: " + path);
                 createFallbackSprite();
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error al cargar el sprite de poción: " + e.getMessage());
             createFallbackSprite();
         }
     }
