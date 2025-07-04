@@ -46,7 +46,7 @@ public class VideoManager {
             for (int i = 0; i < MAX_VIDEOS; i++) {
                 unlockedVideos[i] = unlockedFormulas[i];
             }
-            System.out.println("Acceso a videos actualizado: " + getUnlockedVideoCount() + "/" + MAX_VIDEOS + " videos disponibles");
+            // Acceso a videos actualizado
         }
     }
     
@@ -65,17 +65,16 @@ public class VideoManager {
         try {
             int currentUserId = SessionManager.getInstance().getCurrentUserId();
             if (currentUserId != -1) {
-                int formulasCompletadas = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                int formulasCompletadas = Modelo.dao.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
                 
                 // Desbloquear videos basándose en el número de fórmulas completadas
                 for (int i = 0; i < MAX_VIDEOS; i++) {
                     unlockedVideos[i] = (i < formulasCompletadas);
                 }
                 
-                System.out.println("Progreso del usuario cargado: " + formulasCompletadas + " fórmulas completadas, " + 
-                                 getUnlockedVideoCount() + " videos desbloqueados");
+                // Progreso del usuario cargado
             } else {
-                System.err.println("No hay usuario logueado para cargar progreso");
+                // No hay usuario logueado para cargar progreso
             }
         } catch (Exception e) {
             System.err.println("Error al cargar progreso del usuario: " + e.getMessage());
