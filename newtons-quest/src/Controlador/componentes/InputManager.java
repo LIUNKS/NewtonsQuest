@@ -6,8 +6,9 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 
 /**
- * Clase encargada de gestionar la entrada del usuario.
- * Separa la lógica de manejo de eventos de teclado del controlador principal.
+ * Clase encargada de gestionar la entrada del usuario en el juego.
+ * Maneja eventos de teclado y mouse, proporcionando una interfaz limpia
+ * para controlar el jugador y ejecutar acciones del juego.
  */
 public class InputManager {
     
@@ -16,28 +17,29 @@ public class InputManager {
     
     // Estado de las teclas
     private boolean leftKeyPressed = false;
-    private boolean rightKeyPressed = false;    // Callbacks para acciones
+    private boolean rightKeyPressed = false;
+    
+    // Callbacks para acciones del juego
     private Runnable onPauseToggle;
     private Runnable onReturnToMenu;    
-    private Runnable onUIToggle;    private Runnable onShowSettings;
+    private Runnable onUIToggle;    
+    private Runnable onShowSettings;
     private java.util.function.Consumer<Integer> onFormulaDetails;
     private Runnable onHideFormulaDetails;
-    private Runnable onShowRanking; // Nuevo callback para mostrar ranking
-    private Runnable onHideRanking; // Nuevo callback para ocultar ranking
+    private Runnable onShowRanking; // Callback para mostrar ranking
+    private Runnable onHideRanking; // Callback para ocultar ranking
     private Runnable onContinueAfterCompletion; // Callback para continuar después del mensaje de completación
     private java.util.function.BiConsumer<Double, Double> onMouseClick; // Callback para clics del mouse
     
     /**
-     * Constructor del InputManager
-     * @param gameCanvas Canvas del juego para configurar eventos
+     * Constructor del InputManager.
+     * @param gameCanvas Canvas del juego donde se capturan los eventos
      */
     public InputManager(Canvas gameCanvas) {
         this.gameCanvas = gameCanvas;
         // Verificar si el canvas es nulo
         if (this.gameCanvas == null) {
             System.err.println("ADVERTENCIA: Se ha inicializado InputManager con un canvas nulo");
-        } else {
-            System.out.println("InputManager inicializado con canvas válido");
         }
     }
     
@@ -51,7 +53,7 @@ public class InputManager {
                 System.err.println("ADVERTENCIA: Intentando establecer un jugador nulo en InputManager");
             } else {
                 this.player = player;
-                System.out.println("Jugador configurado en InputManager: " + player);
+                // Jugador configurado exitosamente
             }
         } catch (Exception e) {
             System.err.println("Error al configurar el jugador en InputManager: " + e.getMessage());
@@ -71,7 +73,7 @@ public class InputManager {
             this.onReturnToMenu = onReturnToMenu;
             this.onUIToggle = onUIToggle;
             this.onFormulaDetails = onFormulaDetails;
-            System.out.println("Callbacks configurados en InputManager (versión 1)");
+            // Callbacks configurados en InputManager
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -94,7 +96,7 @@ public class InputManager {
             this.onUIToggle = onUIToggle;
             this.onFormulaDetails = onFormulaDetails;
             this.onHideFormulaDetails = onHideFormulaDetails;
-            System.out.println("Callbacks configurados en InputManager (versión 2)");
+            // Callbacks configurados en InputManager
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -120,7 +122,7 @@ public class InputManager {
             this.onShowSettings = onShowSettings;
             this.onFormulaDetails = onFormulaDetails;
             this.onHideFormulaDetails = onHideFormulaDetails;
-            System.out.println("Callbacks configurados en InputManager (versión 3 con configuración)");
+            // Callbacks configurados en InputManager
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -153,7 +155,7 @@ public class InputManager {
             this.onHideRanking = onHideRanking;
             this.onContinueAfterCompletion = onContinueAfterCompletion;
             this.onMouseClick = onMouseClick;
-            System.out.println("Callbacks configurados en InputManager (versión 6 con mouse)");
+            // Callbacks configurados en InputManager
         } catch (Exception e) {
             System.err.println("Error al configurar callbacks en InputManager: " + e.getMessage());
             e.printStackTrace();
@@ -168,17 +170,17 @@ public class InputManager {
                 return;
             }
             
-            System.out.println("Configurando manejadores de teclas...");
-            System.out.println("Canvas: OK");
+            // Configurando manejadores de teclas
+            // Canvas configurado correctamente
             
             try {
                 // Agregar un listener directo al canvas para probar si recibe eventos
                 gameCanvas.setOnKeyPressed(event -> {
                     if (event != null) {
-                        System.out.println("Tecla presionada directamente en el canvas: " + event.getCode());
+                        // Tecla presionada en canvas
                     }
                 });
-                System.out.println("Listener de teclas configurado en el canvas");
+                // Listener de teclas configurado
             } catch (Exception e) {
                 System.err.println("Error al configurar listener de teclas en el canvas: " + e.getMessage());
                 e.printStackTrace();
@@ -187,12 +189,12 @@ public class InputManager {
             try {
                 // Obtener la escena
                 gameCanvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
-                    System.out.println("Escena cambiada: " + (newScene != null ? "Nueva escena disponible" : "Escena nula"));
+                    // Escena cambiada
                     
                     if (newScene != null) {
                         // Solicitar el foco para el canvas cuando se carga la escena
                         gameCanvas.requestFocus();
-                        System.out.println("Foco solicitado para el canvas");
+                        // Foco solicitado para el canvas
                         
                         // Configurar los eventos de teclado para la escena
                         setupSceneKeyHandlers(newScene);
@@ -200,30 +202,30 @@ public class InputManager {
                         try {
                             gameCanvas.setOnMouseClicked(event -> {
                                 gameCanvas.requestFocus();
-                                System.out.println("Foco solicitado para el canvas por clic de ratón");
+                                // Foco solicitado para el canvas
                                 
                                 // Notificar sobre el clic para manejo de botones
                                 if (onMouseClick != null) {
                                     onMouseClick.accept(event.getX(), event.getY());
                                 }
                             });
-                            System.out.println("Listener de ratón configurado en el canvas");
+                            // Listener de ratón configurado
                         } catch (Exception e) {
                             System.err.println("Error al configurar listener de ratón: " + e.getMessage());
                             e.printStackTrace();
                         }
                         
-                        System.out.println("Eventos de teclado configurados correctamente");
+                        // Eventos de teclado configurados
                     } else {
                         System.err.println("ADVERTENCIA: La nueva escena es nula, no se pueden configurar los eventos");
                     }
                 });
-                System.out.println("Listener de cambio de escena configurado");
+                // Listener de cambio de escena configurado
                 
                 // Si la escena ya está disponible, configurar los eventos ahora mismo
                 Scene currentScene = gameCanvas.getScene();
                 if (currentScene != null) {
-                    System.out.println("Escena ya disponible, configurando eventos inmediatamente");
+                    // Escena ya disponible, configurando eventos inmediatamente
                     setupSceneKeyHandlers(currentScene);
                 }
             } catch (Exception e) {
@@ -246,55 +248,55 @@ public class InputManager {
         }
         
         try {
-            System.out.println("Configurando manejadores de teclas para la escena");
+            // Configurando manejadores de teclas para la escena
             
             scene.setOnKeyPressed(event -> {
                 if (event == null) return;
                 
                 KeyCode code = event.getCode();
-                System.out.println("Tecla presionada: " + code);
+                // Tecla presionada
                 
                 if (code == KeyCode.LEFT || code == KeyCode.A) {
                     leftKeyPressed = true;
                     if (player != null) {
                         player.moveLeft(true);
-                        System.out.println("Moviendo a la izquierda");
+                        // Moviendo a la izquierda
                     } else {
-                        System.out.println("No se puede mover a la izquierda: player es null");
+                        // No se puede mover a la izquierda: player es null
                     }
                 } else if (code == KeyCode.RIGHT || code == KeyCode.D) {
                     rightKeyPressed = true;
                     if (player != null) {
                         player.moveRight(true);
-                        System.out.println("Moviendo a la derecha");
+                        // Moviendo a la derecha
                     } else {
-                        System.out.println("No se puede mover a la derecha: player es null");
+                        // No se puede mover a la derecha: player es null
                     }                } else if (code == KeyCode.ESCAPE) {
                     // Delegar el manejo de ESCAPE al GameController
                     if (onPauseToggle != null) {
                         onPauseToggle.run();
-                        System.out.println("Procesando tecla ESCAPE");
+                        // Procesando tecla ESCAPE
                     } else {
-                        System.out.println("No hay callback configurado para ESCAPE");
+                        // No hay callback configurado para ESCAPE
                     }
                 } else if (code == KeyCode.BACK_SPACE) {
                     if (onReturnToMenu != null) {
                         onReturnToMenu.run();
-                        System.out.println("Volviendo al menú principal");
+                        // Volviendo al menú principal
                     } else {
-                        System.out.println("No hay callback configurado para onReturnToMenu");
+                        // No hay callback configurado para onReturnToMenu
                     }                } else if (code == KeyCode.M) {
                     if (onUIToggle != null) {
                         onUIToggle.run();
-                        System.out.println("Alternando interfaz de usuario");
+                        // Alternando interfaz de usuario
                     } else {
-                        System.out.println("No hay callback configurado para onUIToggle");
+                        // No hay callback configurado para onUIToggle
                     }                } else if (code == KeyCode.S) {
                     if (onShowSettings != null) {
                         onShowSettings.run();
-                        System.out.println("Abriendo configuración");
+                        // Abriendo configuración
                     } else {
-                        System.out.println("No hay callback configurado para onShowSettings");
+                        // No hay callback configurado para onShowSettings
                     }                } else if (code == KeyCode.R) {
                     if (onShowRanking != null) {
                         onShowRanking.run();
