@@ -54,7 +54,7 @@ public class PotionManager {
         this.MIN_POTION_SPEED = minPotionSpeed;
         this.MAX_POTION_SPEED = maxPotionSpeed;
         
-        System.out.println("PotionManager inicializado");
+        // PotionManager inicializado
     }
       /**
      * Establece los callbacks para eventos relacionados con pociones
@@ -82,7 +82,7 @@ public class PotionManager {
             lastPotionSpawnTime = System.currentTimeMillis();
         }
         
-        System.out.println("PotionManager " + (paused ? "pausado" : "reanudado"));
+        // PotionManager pausado/reanudado
     }
     
     /**
@@ -133,7 +133,7 @@ public class PotionManager {
             Potion potion = new Potion(x, y, type, speed);
             potions.add(potion);
             
-            System.out.println("Generada poción " + type.name() + " en (" + x + ", " + y + ") con velocidad " + speed);
+            // Poción generada
         } catch (Exception e) {
             System.err.println("Error al generar poción: " + e.getMessage());
             e.printStackTrace();
@@ -170,7 +170,7 @@ public class PotionManager {
                             if (onPotionEffect != null) {
                                 onPotionEffect.accept("¡Poción de lentitud activada!");
                             }
-                            System.out.println("¡Poción de lentitud recogida!");
+                            // Poción de lentitud recogida
                             effectApplied = true;
                             break;
                             
@@ -179,7 +179,7 @@ public class PotionManager {
                             if (onPotionEffect != null) {
                                 onPotionEffect.accept("¡Puntos dobles por 10 segundos!");
                             }
-                            System.out.println("¡Poción de puntos recogida!");
+                            // Poción de puntos recogida
                             effectApplied = true;
                             break;
                               case SALUD:
@@ -191,13 +191,13 @@ public class PotionManager {
                                 if (onPotionEffect != null) {
                                     onPotionEffect.accept("¡Vida extra obtenida!");
                                 }
-                                System.out.println("¡Poción de salud recogida - vida extra otorgada!");
+                                // Poción de salud recogida - vida extra otorgada
                                 effectApplied = true;
                             } else {
                                 if (onPotionEffect != null) {
                                     onPotionEffect.accept("Ya tienes todas las vidas");
                                 }
-                                System.out.println("Poción de salud recogida pero no se pudo aplicar - ya tienes todas las vidas");
+                                // Poción de salud recogida pero no se pudo aplicar
                                 effectApplied = true; // Aún así se recoge la poción
                             }
                             break;
@@ -215,7 +215,7 @@ public class PotionManager {
                     // Las pociones simplemente desaparecen al tocar el suelo (no hay penalización)
                     potion.deactivate();
                     potionsToRemove.add(potion);
-                    System.out.println("Poción " + potion.getType().name() + " llegó al suelo y desapareció");
+                    // Poción llegó al suelo y desapareció
                 }
             }
             
