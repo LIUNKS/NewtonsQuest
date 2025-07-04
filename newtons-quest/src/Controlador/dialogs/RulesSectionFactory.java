@@ -97,9 +97,16 @@ public class RulesSectionFactory {
             "   • Efecto visual especial en Newton\n" +
             "   • ¡Reducen puntos y vidas!\n\n" +
             
+            "🧪 POCIONES MÁGICAS (aparecen ocasionalmente):\n" +
+            "   • 🔵 POCIÓN DE PUNTOS: Puntos dobles temporalmente\n" +
+            "   • ❤️ POCIÓN DE SALUD: Recupera 1 vida\n" +
+            "   • 🐌 POCIÓN DE LENTITUD: Ralentiza las manzanas\n" +
+            "   • Otorgan +50 puntos al recogerlas\n\n" +
+            
             "❤️ SISTEMA DE VIDAS:\n" +
             String.format("   • Inicias con %d vidas\n", GameConstants.INITIAL_LIVES) +
-            "   • Game Over cuando se acaben todas"
+            "   • Game Over cuando se acaben todas\n" +
+            "   • Las pociones de salud te permiten recuperar vidas"
         );
     }
       /**
@@ -125,11 +132,43 @@ public class RulesSectionFactory {
     public static VBox createTipsSection() {
         return createRulesSection(
             "💡 CONSEJOS ESTRATÉGICOS", "#e67e22",
+            "🎯 ESTRATEGIA BÁSICA:\n" +
             "• Mantente en movimiento constante\n" +
             "• Prioriza siempre las manzanas rojas\n" +
-            "• Evita las verdes a toda costa\n" +
-            "• Aprende las fórmulas presionando números\n" +
-            "• La velocidad aumenta progresivamente"
+            "• Evita las verdes a toda costa\n\n" +
+            
+            "🧪 POCIONES ESTRATÉGICAS:\n" +
+            "• Las pociones son raras pero muy valiosas\n" +
+            "• Poción de salud: úsala cuando tengas pocas vidas\n" +
+            "• Poción de lentitud: aproveche para recoger más manzanas rojas\n" +
+            "• Poción de puntos: perfecto para desbloquear fórmulas rápido\n\n" +
+            
+            "📚 APRENDIZAJE:\n" +
+            "• Aprende las fórmulas presionando números 1-5\n" +
+            "• La velocidad aumenta progresivamente\n" +
+            "• Completa todas las fórmulas para la victoria total"
+        );
+    }
+      /**
+     * Crea la sección de mecánicas especiales del juego
+     */
+    public static VBox createSpecialMechanicsSection() {
+        return createRulesSection(
+            "⚡ MECÁNICAS ESPECIALES", "#8e44ad",
+            "🎮 EFECTOS TEMPORALES:\n" +
+            "• Las pociones crean efectos visuales únicos\n" +
+            "• Los efectos negativos de manzanas verdes son temporales\n" +
+            "• El juego se vuelve más desafiante con el tiempo\n\n" +
+            
+            "🏆 SISTEMA DE PROGRESIÓN:\n" +
+            "• Tu mejor puntuación se guarda automáticamente\n" +
+            "• Compite en el ranking global de jugadores\n" +
+            "• Desbloquea contenido educativo sobre física\n\n" +
+            
+            "🎵 EXPERIENCIA INMERSIVA:\n" +
+            "• Música de fondo temática de época\n" +
+            "• Efectos de sonido para cada acción\n" +
+            "• Configuración personalizable de audio y brillo"
         );
     }
 }
