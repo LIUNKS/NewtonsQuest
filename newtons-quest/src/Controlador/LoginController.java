@@ -1,6 +1,6 @@
 package Controlador;
 
-import Modelo.UsuarioDAO;
+import Modelo.dao.UsuarioDAO;
 import Modelo.ConexionDB;
 import Controlador.componentes.RankingManager;
 import Controlador.utils.SessionManager;
@@ -101,7 +101,7 @@ public class LoginController {
         int userId = UsuarioDAO.obtenerIdUsuario(username);
         if (userId != -1) {
             RankingManager.getInstance().setCurrentUser(userId, username);
-            System.out.println("Usuario configurado en RankingManager: " + username + " (ID: " + userId + ")");
+            // Usuario configurado en RankingManager
         } else {
             System.err.println("Error: No se pudo obtener el ID del usuario " + username);
         }
@@ -131,7 +131,7 @@ public class LoginController {
         errorLabel.setVisible(true);
         errorLabel.setManaged(true);
         
-        System.out.println("Mostrando error: " + message);
+        // Mostrando mensaje de error
     }    private void openRegisterScreen() throws IOException {
         try {            // Obtener la ruta del archivo FXML
             String registerFxmlPath = "src/Vista/Register.fxml";
