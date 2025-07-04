@@ -34,7 +34,7 @@ public class VisualEffectsManager {
             gameScene.getRoot().setEffect(colorAdjust);
         }
         
-        System.out.println("VisualEffectsManager inicializado");
+        // VisualEffectsManager inicializado
     }
     
     /**
@@ -48,7 +48,7 @@ public class VisualEffectsManager {
             fxBrightness = Math.max(-0.9, Math.min(1.0, fxBrightness));
             
             colorAdjust.setBrightness(fxBrightness);
-            System.out.println("Brillo actualizado a: " + brightness + "x (JavaFX: " + fxBrightness + ")");
+            // Brillo actualizado
         }
     }
     
@@ -89,6 +89,6 @@ public class VisualEffectsManager {
             colorAdjust.setHue(0.0);
         }
         gameSettings.setBrightness(1.0);
-        System.out.println("Efectos visuales restaurados a valores por defecto");
+        // Efectos visuales restaurados a valores por defecto
     }
 }
