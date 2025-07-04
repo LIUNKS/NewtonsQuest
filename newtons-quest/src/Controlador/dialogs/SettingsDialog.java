@@ -290,12 +290,12 @@ public class SettingsDialog {
         // Los listeners de los sliders ya aplicarán los cambios a gameSettings
         // y ejecutarán los callbacks automáticamente
         
-        System.out.println("Configuraciones restauradas a valores por defecto");
+        // Configuraciones restauradas a valores por defecto
     }
       private void saveAndClose() {
         gameSettings.saveSettings();
         settingsStage.close();
-        System.out.println("Configuraciones guardadas correctamente");
+        // Configuraciones guardadas correctamente
     }
     
     private void cancelAndClose() {
@@ -312,6 +312,6 @@ public class SettingsDialog {
         }
         
         settingsStage.close();
-        System.out.println("Configuraciones canceladas - valores restaurados");
+        // Configuraciones canceladas - valores restaurados
     }
 }
