@@ -45,18 +45,13 @@ public class QuizResultController {
     private QuizResult resultado;
     
     /**
-     * Inicializa el controlador
+     * Inicializa el controlador.
+     * Configura la interfaz y los efectos visuales.
      */
     public void initialize() {
         try {
-            System.out.println("Inicializando QuizResultController");
-            
-            // Cargar fondo
             loadBackgroundImage();
-            
-            // Configurar efectos de hover para los botones
             configurarEfectosBotones();
-            
         } catch (Exception e) {
             System.err.println("Error al inicializar QuizResultController: " + e.getMessage());
             e.printStackTrace();
@@ -166,7 +161,7 @@ public class QuizResultController {
             // Cambiar el color del título para aprobados
             lblTitulo.setStyle("-fx-text-fill: #ffffff; -fx-effect: dropshadow(gaussian, rgba(76, 175, 80, 0.3), 10, 0, 0, 2);");
             
-            System.out.println("Usuario aprobó el quiz con " + resultado.getFormattedPercentage());
+            // Usuario aprobó el quiz
         } else {
             // Mostrar mensaje de motivación
             vboxCertificado.setVisible(false);
@@ -175,7 +170,7 @@ public class QuizResultController {
             // Cambiar el color del título para no aprobados
             lblTitulo.setStyle("-fx-text-fill: #ffffff; -fx-effect: dropshadow(gaussian, rgba(255, 107, 107, 0.3), 10, 0, 0, 2);");
             
-            System.out.println("Usuario no aprobó el quiz con " + resultado.getFormattedPercentage());
+            // Usuario no aprobó el quiz
         }
         
         // Personalizar mensajes según el porcentaje
@@ -267,11 +262,8 @@ public class QuizResultController {
             stage.setScene(scene);
             stage.setTitle("Newton's Apple Quest - Quiz");
             
-            System.out.println("Reiniciando quiz...");
-            
         } catch (Exception e) {
-            System.err.println("Error al repetir quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
     }
     
@@ -283,12 +275,8 @@ public class QuizResultController {
         try {
             Stage stage = (Stage) btnVolver.getScene().getWindow();
             NavigationManager.navigateToMap(stage);
-            
-            System.out.println("Volviendo al mapa desde resultados del quiz...");
-            
         } catch (IOException e) {
-            System.err.println("Error al volver al mapa: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
     }
 }
