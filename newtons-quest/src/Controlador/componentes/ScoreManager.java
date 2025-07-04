@@ -21,7 +21,7 @@ public class ScoreManager {
     public ScoreManager(int maxLives) {
         this.MAX_LIVES = maxLives;
         this.lives = maxLives;
-        System.out.println("ScoreManager inicializado con " + maxLives + " vidas");
+        // ScoreManager inicializado
     }
     
     /**
@@ -46,7 +46,7 @@ public class ScoreManager {
             score = 0;
         }
         
-        System.out.println("Puntuación actualizada: " + score + " (+" + points + ")");
+        // Puntuación actualizada
         
         // Notificar el cambio de puntuación
         if (onScoreChange != null) {
@@ -62,11 +62,11 @@ public class ScoreManager {
     public boolean loseLife(String reason) {
         if (lives > 0) {
             lives--;
-            System.out.println("Vida perdida: " + reason + ". Vidas restantes: " + lives);
+            // Vida perdida
             
             // Si no quedan vidas, fin del juego
             if (lives <= 0) {
-                System.out.println("¡GAME OVER! No quedan vidas.");
+                // GAME OVER - no quedan vidas
                 
                 // Notificar fin del juego
                 if (onGameOver != null) {
@@ -89,10 +89,10 @@ public class ScoreManager {
     public boolean gainLife(String reason) {
         if (lives < MAX_LIVES) {
             lives++;
-            System.out.println("Vida ganada: " + reason + ". Vidas actuales: " + lives);
+            // Vida ganada
             return true;
         } else {
-            System.out.println("No se puede ganar vida: ya tienes el máximo (" + MAX_LIVES + ")");
+            // No se puede ganar vida - ya tiene el máximo
             return false;
         }
     }
@@ -103,7 +103,7 @@ public class ScoreManager {
     public void reset() {
         score = 0;
         lives = MAX_LIVES;
-        System.out.println("Puntuación y vidas restablecidas");
+        // Puntuación y vidas restablecidas
     }
     
     // Getters
