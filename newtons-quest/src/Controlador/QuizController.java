@@ -2,7 +2,7 @@ package Controlador;
 
 import Controlador.navigation.NavigationManager;
 import Controlador.utils.SessionManager;
-import Modelo.QuizDAO;
+import Modelo.dao.QuizDAO;
 import Modelo.QuizQuestion;
 import Modelo.QuizResult;
 import java.io.File;
@@ -77,25 +77,19 @@ public class QuizController {
      */
     public void initialize() {
         try {
-            System.out.println("Inicializando QuizController");
+            // Inicializando QuizController
             
             // Verificar que los botones estén correctamente inicializados
             if (btnPista == null) {
                 System.err.println("ERROR: btnPista es null");
-            } else {
-                System.out.println("btnPista inicializado correctamente");
             }
             
             if (btnResponder == null) {
                 System.err.println("ERROR: btnResponder es null");
-            } else {
-                System.out.println("btnResponder inicializado correctamente");
             }
             
             if (btnVolver == null) {
                 System.err.println("ERROR: btnVolver es null");
-            } else {
-                System.out.println("btnVolver inicializado correctamente");
             }
             
             // Cargar fondo
@@ -246,7 +240,6 @@ public class QuizController {
      */
     @FXML
     public void onPistaButtonClick(ActionEvent event) {
-        System.out.println("Botón pista presionado");
         if (!pistaUtilizada && preguntaActual < preguntas.size()) {
             QuizQuestion pregunta = preguntas.get(preguntaActual);
             
@@ -260,8 +253,6 @@ public class QuizController {
             // Deshabilitar el botón de pista
             btnPista.setDisable(true);
             pistaUtilizada = true;
-            
-            System.out.println("Pista mostrada para pregunta " + (preguntaActual + 1));
         }
     }
     
@@ -270,7 +261,6 @@ public class QuizController {
      */
     @FXML
     public void onResponderButtonClick(ActionEvent event) {
-        System.out.println("Botón responder presionado");
         if (!preguntaRespondida && preguntaActual < preguntas.size()) {
             // Obtener la opción seleccionada
             RadioButton seleccionada = (RadioButton) toggleGroup.getSelectedToggle();
@@ -289,10 +279,8 @@ public class QuizController {
                 
                 if (esCorrecta) {
                     respuestasCorrectas++;
-                    System.out.println("Respuesta correcta para pregunta " + (preguntaActual + 1));
                 } else {
                     respuestasIncorrectas++;
-                    System.out.println("Respuesta incorrecta para pregunta " + (preguntaActual + 1));
                 }
                 
                 // Mostrar explicación
@@ -394,9 +382,7 @@ public class QuizController {
         // Guardar resultado si hay usuario logueado
         if (userId != -1) {
             boolean guardado = QuizDAO.guardarResultadoQuiz(resultado);
-            if (guardado) {
-                System.out.println("Resultado del quiz guardado correctamente");
-            } else {
+            if (!guardado) {
                 System.err.println("Error al guardar resultado del quiz");
             }
         }
@@ -459,8 +445,6 @@ public class QuizController {
     @FXML
     public void onVolverButtonClick(ActionEvent event) {
         try {
-            System.out.println("Botón volver presionado");
-            
             // Detener el timer si está corriendo
             if (timer != null) {
                 timer.cancel();
