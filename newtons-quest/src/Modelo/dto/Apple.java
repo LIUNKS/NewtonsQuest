@@ -58,13 +58,10 @@ public class Apple {
             File file = new File(path);
             if (file.exists()) {
                 sprite = new Image(new FileInputStream(file));
-                System.out.println("Sprite de manzana " + (isRed ? "roja" : "verde") + " cargado correctamente");
             } else {
-                System.err.println("No se encontró el archivo: " + path);
                 createFallbackSprite();
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error al cargar el sprite de manzana: " + e.getMessage());
             createFallbackSprite();
         }
     }
