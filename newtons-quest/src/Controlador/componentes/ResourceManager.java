@@ -24,7 +24,7 @@ public class ResourceManager {
      * Constructor del ResourceManager
      */
     public ResourceManager() {
-        System.out.println("ResourceManager inicializado");
+        // ResourceManager inicializado
     }
     
     /**
@@ -45,11 +45,11 @@ public class ResourceManager {
             if (backgroundFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 backgroundImage = new Image(new FileInputStream(backgroundFile));
-                System.out.println("Imagen de fondo cargada correctamente");
+                // Imagen de fondo cargada correctamente
             } else {
                 // Estamos en producción, usar getResource
                 backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/fondo_juego.jpg"));
-                System.out.println("Imagen de fondo cargada desde recursos");
+                // Imagen de fondo cargada desde recursos
             }
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
@@ -71,12 +71,12 @@ public class ResourceManager {
                 // Estamos en desarrollo, usar ruta de archivo
                 heartImage = new Image(new FileInputStream(heartFile));
                 emptyHeartImage = new Image(new FileInputStream(emptyHeartFile));
-                System.out.println("Imágenes de corazones cargadas correctamente");
+                // Imágenes de corazones cargadas correctamente
             } else {
                 // Estamos en producción, usar getResource
                 heartImage = new Image(getClass().getResourceAsStream("/recursos/sprites/corazon/corazon_lleno.png"));
                 emptyHeartImage = new Image(getClass().getResourceAsStream("/recursos/sprites/corazon/corazon_vacio.png"));
-                System.out.println("Imágenes de corazones cargadas desde recursos");
+                // Imágenes de corazones cargadas desde recursos
             }
         } catch (Exception e) {
             System.err.println("Error al cargar imágenes de corazones: " + e.getMessage());
