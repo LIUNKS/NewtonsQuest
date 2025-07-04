@@ -39,7 +39,7 @@ public class MapController {
     
     public void initialize() {
         try {
-            System.out.println("Inicializando MapController");
+            // MapController inicializado
             
             // Inicializar managers
             videoManager = VideoManager.getInstance();
@@ -51,8 +51,8 @@ public class MapController {
             // Configurar el estado inicial del botón del quiz
             updateQuizButtonState();
             
-            // Debug temporal para verificar datos del usuario
-            debugUserData();
+            // Configurar datos del usuario actual (debug deshabilitado)
+            // debugUserData();
             
             // Configurar eventos de teclado para la escena
             btnJugar.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -84,13 +84,13 @@ public class MapController {
                 btnQuiz.setDisable(false);
                 btnQuiz.setText("Quiz");
                 btnQuiz.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-                System.out.println("Botón del quiz habilitado - Todas las fórmulas desbloqueadas");
+                // Botón del quiz habilitado - Todas las fórmulas desbloqueadas
             } else {
                 // No todas las fórmulas desbloqueadas - botón deshabilitado visualmente
                 btnQuiz.setDisable(false); // Mantenemos habilitado para mostrar el mensaje
                 btnQuiz.setText("Quiz (" + unlockedCount + "/5)");
                 btnQuiz.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: #2c3e50; -fx-font-weight: bold;");
-                System.out.println("Botón del quiz marcado como bloqueado - Fórmulas: " + unlockedCount + "/5");
+                // Botón del quiz marcado como bloqueado
             }
             
         } catch (Exception e) {
@@ -113,11 +113,11 @@ public class MapController {
             if (imageFile.exists()) {
                 // Estamos en desarrollo, usar ruta de archivo
                 backgroundImage = new Image(new FileInputStream(imageFile));
-                ErrorHandler.logInfo("Imagen de fondo del mapa cargada desde: " + imagePath);
+                // Imagen de fondo del mapa cargada
             } else {
                 // Estamos en producción, usar getResource
                 backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/map_background.jpg"));
-                ErrorHandler.logInfo("Imagen de fondo del mapa cargada desde recursos");
+                // Imagen de fondo del mapa cargada desde recursos
             }
             
             // Crear el objeto BackgroundImage
@@ -142,7 +142,7 @@ public class MapController {
       @FXML
     private void onJugarButtonClick(ActionEvent event) {
         try {
-            System.out.println("Iniciando juego desde el mapa...");
+            // Iniciando juego desde el mapa
               // Cargar la pantalla del juego
             String gameFxmlPath = "src/Vista/Game.fxml";
             String gameCssPath = "src/Vista/resources/game.css";
@@ -178,7 +178,7 @@ public class MapController {
             stage.setScene(scene);
             stage.setTitle("Newton's Apple Quest - Juego");
             
-            System.out.println("Juego iniciado correctamente");
+            // Juego iniciado correctamente
             
         } catch (IOException e) {
             System.err.println("Error al cargar la pantalla del juego: " + e.getMessage());
@@ -192,7 +192,7 @@ public class MapController {
     @FXML
     private void onVideoButtonClick(ActionEvent event) {
         try {
-            System.out.println("Mostrando diálogo de selección de videos...");
+            // Mostrando diálogo de selección de videos
             
             // Obtener las fórmulas desbloqueadas del usuario actual
             boolean[] unlockedFormulas = getUserUnlockedFormulas();
@@ -211,11 +211,11 @@ public class MapController {
     @FXML
     private void onQuizButtonClick(ActionEvent event) {
         try {
-            System.out.println("Verificando acceso al quiz...");
+            // Verificando acceso al quiz
             
             // Verificar si el usuario ha desbloqueado todas las fórmulas
             if (!areAllFormulasUnlocked()) {
-                System.out.println("Acceso al quiz denegado - No todas las fórmulas están desbloqueadas");
+                // Acceso al quiz denegado
                 
                 // Mostrar mensaje informativo al usuario
                 Stage currentStage = (Stage) btnQuiz.getScene().getWindow();
@@ -241,13 +241,13 @@ public class MapController {
                 return;
             }
             
-            System.out.println("Acceso al quiz permitido - Todas las fórmulas desbloqueadas");
-            System.out.println("Iniciando quiz desde el mapa...");
+            // Acceso al quiz permitido - Todas las fórmulas desbloqueadas
+            // Iniciando quiz desde el mapa
             
             Stage stage = (Stage) btnQuiz.getScene().getWindow();
             NavigationManager.navigateToQuiz(stage);
             
-            System.out.println("Quiz iniciado correctamente");
+            // Quiz iniciado correctamente
             
         } catch (IOException e) {
             System.err.println("Error al cargar la pantalla del quiz: " + e.getMessage());
@@ -266,12 +266,12 @@ public class MapController {
     // Método para volver al menú principal
     private void returnToMainMenu() {
         try {
-            System.out.println("Volviendo al menú principal desde el mapa...");
+            // Volviendo al menú principal desde el mapa
             
             Stage stage = (Stage) btnJugar.getScene().getWindow();
             NavigationManager.navigateToMainWithUser(stage);
             
-            System.out.println("Vuelto al menú principal correctamente");
+            // Vuelto al menú principal correctamente
             
         } catch (IOException e) {
             System.err.println("Error al cargar el menú principal: " + e.getMessage());
@@ -365,17 +365,16 @@ public class MapController {
                 int currentUserId = sessionManager.getCurrentUserId();
                 
                 // Obtener el número de fórmulas completadas desde la tabla usuarios
-                int formulasCompletadas = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                int formulasCompletadas = Modelo.dao.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
                 
                 // Desbloquear fórmulas basándose en el progreso guardado
                 for (int i = 0; i < 5; i++) {
                     unlockedFormulas[i] = (i < formulasCompletadas);
                 }
                 
-                System.out.println("Usuario " + currentUserId + " tiene " + formulasCompletadas + 
-                                 " fórmulas completadas - Videos desbloqueados: " + countUnlocked(unlockedFormulas) + "/5");
+                // Fórmulas completadas cargadas del usuario
             } else {
-                System.out.println("No hay usuario en sesión, todas las fórmulas bloqueadas");
+                // No hay usuario en sesión, todas las fórmulas bloqueadas
                 // Si no hay usuario en sesión, todas las fórmulas están bloqueadas
                 for (int i = 0; i < 5; i++) {
                     unlockedFormulas[i] = false;
@@ -412,52 +411,13 @@ public class MapController {
      */
     public void refreshMapState() {
         updateQuizButtonState();
-        System.out.println("Estado del mapa actualizado");
+        // Estado del mapa actualizado
     }
     
     /**
-     * Método temporal de debug para verificar los datos del usuario
+     * Método temporal de debug para verificar los datos del usuario (deshabilitado)
      */
     private void debugUserData() {
-        try {
-            SessionManager sessionManager = SessionManager.getInstance();
-            if (sessionManager.isLoggedIn()) {
-                int currentUserId = sessionManager.getCurrentUserId();
-                String username = sessionManager.getCurrentUsername();
-                
-                // Sincronizar datos del ranking con la tabla usuarios si es necesario
-                Modelo.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
-                
-                System.out.println("=== DEBUG DATOS USUARIO ===");
-                System.out.println("Usuario ID: " + currentUserId);
-                System.out.println("Username: " + username);
-                
-                // Verificar datos en tabla usuarios
-                int puntajeUsuarios = Modelo.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
-                int formulasUsuarios = Modelo.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
-                String ultimaPartida = Modelo.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
-                
-                System.out.println("--- Tabla USUARIOS ---");
-                System.out.println("Mejor puntaje: " + puntajeUsuarios);
-                System.out.println("Fórmulas completadas: " + formulasUsuarios);
-                System.out.println("Última partida: " + ultimaPartida);
-                
-                // Verificar datos en tabla ranking
-                System.out.println("--- Tabla RANKING ---");
-                RankingManager rankingManager = RankingManager.getInstance();
-                int posicion = rankingManager.getCurrentUserPosition();
-                System.out.println("Posición en ranking: " + posicion);
-                
-                // Botón temporal para sincronizar datos
-                System.out.println("--- SINCRONIZACIÓN ---");
-                int sincronizados = Modelo.UsuarioDAO.sincronizarTodosLosDatosRanking();
-                System.out.println("Usuarios sincronizados: " + sincronizados);
-                
-                System.out.println("=== FIN DEBUG ===");
-            }
-        } catch (Exception e) {
-            System.err.println("Error en debug: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Método de debug deshabilitado para mantener la consola limpia
     }
 }
