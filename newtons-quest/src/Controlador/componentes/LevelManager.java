@@ -1,8 +1,9 @@
 package Controlador.componentes;
 
 /**
- * Clase encargada de gestionar el sistema de niveles y fórmulas.
- * Separa la lógica de progresión del juego del controlador principal.
+ * Clase para gestionar los niveles y el progreso del juego.
+ * Controla el desbloqueo de fórmulas de Newton basado en la puntuación
+ * y maneja la progresión del nivel de dificultad.
  */
 public class LevelManager {
     
@@ -54,7 +55,7 @@ public class LevelManager {
         for (int i = 0; i < MAX_LEVEL; i++) {
             unlockedFormulas[i] = false;
         }
-        System.out.println("LevelManager inicializado");
+        // LevelManager inicializado
     }
     
     /**
@@ -106,11 +107,11 @@ public class LevelManager {
         // Si ha cambiado el nivel, actualizarlo
         if (newLevel != level) {
             level = newLevel;
-            System.out.println("¡Nivel aumentado a " + level + "!");
+            // Nivel aumentado
         }
           // Verificar si se completaron todas las fórmulas
         if (formulaDesbloqueada && areAllFormulasUnlocked()) {
-            System.out.println("¡Todas las fórmulas han sido desbloqueadas!");
+            // Todas las fórmulas han sido desbloqueadas
             if (onAllFormulasCompleted != null) {
                 onAllFormulasCompleted.run();
             }
@@ -129,11 +130,11 @@ public class LevelManager {
         unlockedFormulaIndex = formulaIndex;
         unlockEffectStartTime = System.currentTimeMillis();
         
-        System.out.println("¡Fórmula desbloqueada: " + FORMULAS_SHORT[formulaIndex] + "!");
+        // Fórmula desbloqueada
         
         // Verificar si se han desbloqueado todas las fórmulas
         if (areAllFormulasUnlocked() && onAllFormulasCompleted != null) {
-            System.out.println("¡TODAS LAS FÓRMULAS DESBLOQUEADAS! Ejecutando celebración...");
+            // TODAS LAS FÓRMULAS DESBLOQUEADAS! Ejecutando celebración...
             onAllFormulasCompleted.run();
         }
     }
@@ -158,7 +159,7 @@ public class LevelManager {
      */
     public boolean showFormulaDetails(int formulaIndex) {
         if (formulaIndex >= 0 && formulaIndex < MAX_LEVEL && unlockedFormulas[formulaIndex]) {
-            System.out.println("Mostrando detalles de la fórmula: " + FORMULAS_SHORT[formulaIndex]);
+            // Mostrando detalles de la fórmula
             System.out.println("Descripción: " + FORMULAS_DESCRIPTIONS[formulaIndex]);
             return true;
         }
