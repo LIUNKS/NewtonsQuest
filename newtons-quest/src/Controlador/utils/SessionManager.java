@@ -1,6 +1,6 @@
 package Controlador.utils;
 
-import Modelo.UsuarioDAO;
+import Modelo.dao.UsuarioDAO;
 
 /**
  * Clase para manejar la sesión del usuario actual en la aplicación.
@@ -33,14 +33,14 @@ public class SessionManager {
     public void login(String username) {
         this.currentUsername = username;
         this.currentUserId = UsuarioDAO.obtenerIdUsuario(username);
-        System.out.println("Sesión iniciada para usuario: " + username + " (ID: " + currentUserId + ")");
+        // Sesión iniciada silenciosamente
     }
     
     /**
      * Cierra la sesión actual
      */
     public void logout() {
-        System.out.println("Cerrando sesión para usuario: " + currentUsername);
+        // Cerrando sesión para el usuario
         this.currentUsername = null;
         this.currentUserId = -1;
     }
