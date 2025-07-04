@@ -137,6 +137,19 @@
                     <Tooltip text="Ver biografía de Newton" />
                 </tooltip>
             </Button>
+            
+            <!-- Botón para descargar certificado (siempre visible) -->
+            <Button fx:id="certificateButton" 
+                    text="🎓" 
+                    styleClass="interface-button-compact"
+                    onAction="#downloadCertificate"
+                    prefWidth="45" 
+                    prefHeight="45"
+                    style="-fx-font-size: 18px;">
+                <tooltip>
+                    <Tooltip fx:id="certificateTooltip" text="Certificado de excelencia" />
+                </tooltip>
+            </Button>
         </VBox>
     </VBox>
 </StackPane>
