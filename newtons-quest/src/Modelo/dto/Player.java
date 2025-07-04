@@ -9,6 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
+    // Datos del usuario
+    private int id;
+    private String username;
+    private String fullName;
+    private String email;
+    
     // Posición del jugador
     private double x;
     private double y;
@@ -71,6 +77,13 @@ public class Player {
         loadSprites();
     }
     
+    // Constructor sin parámetros para uso en DAO
+    public Player() {
+        this.x = 0;
+        this.y = 0;
+        // No cargamos sprites ya que este constructor es solo para datos
+    }
+    
     // Cargar los sprites
     private void loadSprites() {
         try {
@@ -102,46 +115,43 @@ public class Player {
             // Sprites para caminar hacia la izquierda (los mismos sprites pero se dibujarán invertidos)
             walkLeftSprites = new ArrayList<>(walkRightSprites);
             
-            // Sprites especiales - usar newton_6.png para manzana verde y newton_7.png para game over
-            greenAppleSprite = loadImageSafely(spritePaths[5]); // newton_6.png para manzana verde
-            deadSprite = loadImageSafely(spritePaths[6]); // newton_7.png para game over
-            
-            System.out.println("Sprites cargados correctamente");
-            
+            greenAppleSprite = loadImageSafely(spritePaths[5]);
+            deadSprite = loadImageSafely(spritePaths[6]);
         } catch (Exception e) {
-            System.err.println("Error al cargar los sprites: " + e.getMessage());
-            e.printStackTrace();
-            
-            // Crear sprites de respaldo en caso de error
             createFallbackSprites();
         }
     }
     
-    // Método para cargar una imagen de forma segura
+    /**
+     * Carga una imagen de forma segura.
+     * @param path Ruta de la imagen
+     * @return Imagen cargada o null si hay error
+     */
     private Image loadImageSafely(String path) {
         try {
             File file = new File(path);
             if (file.exists()) {
                 return new Image(new FileInputStream(file));
             } else {
-                System.err.println("No se encontró el archivo: " + path);
                 return createFallbackImage();
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error al cargar la imagen " + path + ": " + e.getMessage());
             return createFallbackImage();
         }
     }
     
-    // Crear una imagen de respaldo en caso de error
+    /**
+     * Crea una imagen de respaldo en caso de error.
+     * @return Imagen de respaldo simple
+     */
     private Image createFallbackImage() {
-        // Crear una imagen de respaldo (un rectángulo rojo)
         return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR42u3OMQEAAAgDILV/51nBzwMJSDrZNhEBAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECDwXeAAAeIuAVuYZj0AAAAASUVORK5CYII=");
     }
     
-    // Crear sprites de respaldo en caso de error
+    /**
+     * Crea sprites de respaldo en caso de error de carga.
+     */
     private void createFallbackSprites() {
-        System.out.println("Creando sprites de respaldo");
         
         // Crear una imagen de respaldo
         Image fallbackImage = createFallbackImage();
@@ -242,22 +252,20 @@ public class Player {
             frameCounter = 0;
         }
     }
-    
-    // Dibujar el jugador
+    /**
+     * Renderiza el jugador en la pantalla.
+     * @param gc Contexto gráfico para el dibujo
+     */
     public void render(GraphicsContext gc) {
         if (gc == null) {
-            System.err.println("ERROR: GraphicsContext es null en Player.render()");
             return;
         }
         
         Image currentSprite;
         
-        // Seleccionar el sprite adecuado según el estado del jugador
         if (isDead) {
-            // Si el jugador está muerto, mostrar el sprite de muerto
             currentSprite = deadSprite;
         } else if (hasGreenApple) {
-            // Si el jugador ha recogido una manzana verde, mostrar el sprite específico
             currentSprite = greenAppleSprite;
         } else if (isMovingLeft) {
             currentSprite = walkLeftSprites.get(currentFrame);
@@ -268,7 +276,6 @@ public class Player {
         }
         
         if (currentSprite == null) {
-            System.err.println("ERROR: currentSprite es null en Player.render()");
             return;
         }
         
@@ -388,5 +395,38 @@ public class Player {
     
     public boolean hasHealthEffect() {
         return hasHealthEffect;
+    }
+    
+    // Getters y setters para datos de usuario
+    public int getId() {
+        return id;
+    }
+    
+    public void setId(int id) {
+        this.id = id;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
+    public String getFullName() {
+        return fullName != null && !fullName.isEmpty() ? fullName : username;
+    }
+    
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
