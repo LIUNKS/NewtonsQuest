@@ -1,6 +1,6 @@
 package Controlador.componentes;
 
-import Modelo.QuizDAO;
+import Modelo.dao.QuizDAO;
 import Modelo.QuizQuestion;
 import Modelo.QuizResult;
 import Controlador.utils.SessionManager;
