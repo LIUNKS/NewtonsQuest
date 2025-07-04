@@ -1,0 +1,21 @@
+.eligible-certificate-button {
+    -fx-background-color: rgba(75, 181, 67, 0.4);
+    -fx-border-color: rgba(75, 181, 67, 0.8);
+    -fx-effect: dropshadow(gaussian, rgba(75, 181, 67, 0.5), 8, 0, 0, 0);
+}
+
+.eligible-certificate-button:hover {
+    -fx-background-color: rgba(75, 181, 67, 0.6);
+    -fx-border-color: rgba(75, 181, 67, 1.0);
+}
+
+.ineligible-certificate-button {
+    -fx-background-color: rgba(150, 150, 150, 0.2);
+    -fx-border-color: rgba(150, 150, 150, 0.5);
+    -fx-effect: none;
+}
+
+.ineligible-certificate-button:hover {
+    -fx-background-color: rgba(150, 150, 150, 0.3);
+    -fx-border-color: rgba(150, 150, 150, 0.6);
+}
