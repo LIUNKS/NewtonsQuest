@@ -1,5 +1,7 @@
-package Modelo;
+package Modelo.dao;
 
+import Modelo.ConexionDB;
+import Modelo.RankingEntry;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,7 +23,7 @@ public class RankingDAO {
      */
     public static boolean guardarPuntajeCompleto(int userId, int score, int formulasCompleted) {
         if (formulasCompleted < 5) {
-            System.out.println("El usuario no ha completado todas las fórmulas aún");
+            // El usuario no ha completado todas las fórmulas aún
             return false;
         }
         
@@ -31,7 +33,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
+                // Error: No se pudo establecer la conexión
                 return false;
             }
               // Verificar si el usuario ya tiene un registro
@@ -41,7 +43,7 @@ public class RankingDAO {
                 if (score > puntajeActual) {
                     return actualizarPuntaje(userId, score);
                 } else {
-                    System.out.println("El puntaje actual (" + puntajeActual + ") es mayor o igual al nuevo (" + score + ")");
+                    // El puntaje actual es mayor o igual al nuevo
                     return true; // No es error, simplemente no se actualiza
                 }
             } else {                // Insertar nuevo registro
@@ -54,20 +56,19 @@ public class RankingDAO {
                 int filasAfectadas = stmt.executeUpdate();
                 
                 if (filasAfectadas > 0) {
-                    System.out.println("¡Nuevo jugador añadido al ranking! Usuario: " + userId + ", Puntaje: " + score);
+                    // Nuevo jugador añadido al ranking
                     return true;
                 }
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al guardar puntaje en ranking: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al guardar puntaje en ranking
         } finally {
             try {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -95,14 +96,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al verificar usuario en ranking: " + e.getMessage());
+            // Error silencioso al verificar usuario en ranking
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -129,14 +130,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener mejor puntaje: " + e.getMessage());
+            // Error silencioso al obtener mejor puntaje
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -161,7 +162,7 @@ public class RankingDAO {
             int filasAfectadas = stmt.executeUpdate();
             
             if (filasAfectadas > 0) {
-                System.out.println("¡Puntaje actualizado! Usuario: " + userId + ", Nuevo puntaje: " + nuevoPuntaje);
+                // Puntaje actualizado silenciosamente
                 return true;
             }
             
@@ -218,7 +219,7 @@ public class RankingDAO {
                 ranking.add(entry);
             }
             
-            System.out.println("Ranking obtenido con " + ranking.size() + " jugadores");
+            // Ranking obtenido silenciosamente
             
         } catch (SQLException e) {
             System.err.println("Error al obtener ranking: " + e.getMessage());
