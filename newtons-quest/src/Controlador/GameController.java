@@ -18,8 +18,28 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.stage.Stage;
 
 /**
- * Controlador principal del juego.
- * Ahora actúa como coordinador entre los diferentes componentes especializados.
+ * Controlador principal del juego Newton's Apple Quest.
+ * 
+ * Esta clase maneja toda la lógica del juego, incluyendo:
+ * - Inicialización de componentes (managers de recursos, audio, input, render, etc.)
+ * - Bucle principal del juego (actualización y renderizado)
+ * - Manejo de eventos del usuario (teclado, mouse)
+ * - Gestión de estados del juego (pausado, jugando, game over)
+ * - Coordinación entre diferentes sistemas del juego
+ * 
+ * El juego utiliza un patrón de arquitectura basado en componentes donde cada
+ * manager se encarga de una funcionalidad específica:
+ * - ResourceManager: Carga y gestión de recursos (imágenes, sonidos)
+ * - AudioManager: Reproducción de música y efectos de sonido
+ * - InputManager: Manejo de entrada del usuario
+ * - RenderManager: Renderizado de gráficos en pantalla
+ * - LevelManager: Gestión de niveles y progresión
+ * - ScoreManager: Sistema de puntuación y vidas
+ * - AppleManager/PotionManager: Gestión de objetos coleccionables
+ * 
+ * @author Equipo de desarrollo Newton's Quest
+ * @version 1.0
+ * @since 2025
  */
 public class GameController {
     
@@ -53,118 +73,62 @@ public class GameController {
     private boolean showingSettings = false; // Nueva variable para controlar el estado de configuración
     
     /**
-     * Inicializa el controlador y todos los componentes del juego
-     */    public void initialize() {
+     * Inicializa el controlador y todos los componentes del juego.
+     * Este método configura todos los managers, el jugador, y los callbacks necesarios.
+     */
+    public void initialize() {
         try {
-            System.out.println("========== INICIALIZANDO GAMECONTROLLER ==========");
-            
-            // Verificar si el canvas existe
             if (gameCanvas == null) {
-                System.err.println("ADVERTENCIA: gameCanvas es null en initialize(). Se creará uno alternativo durante la inicialización de componentes.");
-                // No hacemos return aquí, seguimos adelante y crearemos el canvas en initializeComponents
+                // Se creará un canvas alternativo durante la inicialización de componentes
             } else {
-                // Obtener el contexto gráfico del canvas
                 gc = gameCanvas.getGraphicsContext2D();
-                System.out.println("Contexto gráfico obtenido: " + (gc != null ? "OK" : "NULL"));
-                
-                // Hacer que el canvas pueda recibir el foco
                 gameCanvas.setFocusTraversable(true);
-                System.out.println("Canvas configurado como focusTraversable");
             }
             
-            // Inicializar todos los componentes
-            System.out.println("Iniciando inicialización de componentes...");
             initializeComponents();
-            System.out.println("Componentes inicializados: " + 
-                              "inputManager=" + (inputManager != null ? "OK" : "NULL") + ", " +
-                              "renderManager=" + (renderManager != null ? "OK" : "NULL") + ", " +
-                              "levelManager=" + (levelManager != null ? "OK" : "NULL"));
             
-            // Verificar si los componentes esenciales están inicializados
-            if (inputManager == null) {
-                System.err.println("ERROR CRÍTICO: InputManager no se pudo inicializar. No se puede continuar.");
-                return;
+            if (inputManager == null || renderManager == null) {
+                return; // No se puede continuar sin componentes esenciales
             }
             
-            if (renderManager == null) {
-                System.err.println("ERROR CRÍTICO: RenderManager no se pudo inicializar. No se puede continuar.");
-                return;
-            }
-            
-            // Inicializar el jugador en el centro de la pantalla
             player = new Player(GAME_WIDTH / 2 - 32, FLOOR_Y - 96);
-            System.out.println("Jugador inicializado en (" + player.getX() + ", " + player.getY() + ")");
-            
-            // Configurar el input manager con el jugador
-            System.out.println("Configurando jugador en inputManager...");
             inputManager.setPlayer(player);
-            
-            // Configurar los callbacks entre componentes
-            System.out.println("Configurando callbacks...");
             setupComponentCallbacks();
-            
-            // Iniciar el bucle del juego
-            System.out.println("Iniciando bucle de juego...");
             startGameLoop();
-            
-            // Solicitar el foco para el canvas
-            System.out.println("Solicitando foco para el canvas...");
             inputManager.requestCanvasFocus();
-            
-            System.out.println("GameController inicializado correctamente");
-            System.out.println("=================================================");
         } catch (Exception e) {
-            System.err.println("Error al inicializar GameController: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso - el juego podría continuar funcionando
         }
     }
     
     /**
-     * Inicializa todos los componentes del juego
-     */    private void initializeComponents() {
+     * Inicializa todos los componentes del juego.
+     * Configura los managers de recursos, audio, input, render, niveles, etc.
+     */
+    private void initializeComponents() {
         try {
-            System.out.println("Iniciando inicialización de componentes...");
-            
-            // Inicializar gestores de recursos
             resourceManager = new ResourceManager();
             resourceManager.loadAllResources();
-            System.out.println("ResourceManager inicializado");
             
-            // Inicializar gestores de audio
             audioManager = new AudioManager();
             audioManager.playBackgroundMusic();
-            System.out.println("AudioManager inicializado");
             
-            // Verificar si el canvas es null y crear uno alternativo si es necesario
             if (gameCanvas == null) {
-                System.err.println("ADVERTENCIA: gameCanvas es null, creando uno alternativo");
                 gameCanvas = new Canvas(GAME_WIDTH, GAME_HEIGHT);
-                // Hacer que el canvas pueda recibir el foco
                 gameCanvas.setFocusTraversable(true);
-                // Obtener el contexto gráfico del canvas
                 gc = gameCanvas.getGraphicsContext2D();
-                System.out.println("Canvas alternativo creado y configurado");
             }
             
-            // Asegurarse de que el contexto gráfico no sea nulo
             if (gc == null && gameCanvas != null) {
                 gc = gameCanvas.getGraphicsContext2D();
-                System.out.println("Contexto gráfico inicializado");
             }
             
-            // Inicializar gestor de entrada (IMPORTANTE: inicializar antes de usarlo)
-            System.out.println("Iniciando InputManager con canvas: " + (gameCanvas != null ? "OK" : "NULL"));
             inputManager = new InputManager(gameCanvas);
-            System.out.println("InputManager creado");
             
-            // Solo configurar manejadores de teclas si el canvas no es nulo
             if (gameCanvas != null) {
-                inputManager.setupKeyHandlers(); // Configurar los manejadores de eventos de teclado
-                System.out.println("Manejadores de teclas configurados");
-            } else {
-                System.err.println("ERROR: No se pueden configurar manejadores de teclas porque el canvas es nulo");
+                inputManager.setupKeyHandlers();
             }
-              // Inicializar gestor de renderizado
+            
             if (gc != null) {
                 renderManager = new RenderManager(gc, GAME_WIDTH, GAME_HEIGHT, FLOOR_Y);
                 renderManager.setImages(
@@ -172,121 +136,62 @@ public class GameController {
                     resourceManager.getHeartImage(),
                     resourceManager.getEmptyHeartImage()
                 );
-                System.out.println("RenderManager inicializado");
-            } else {
-                System.err.println("ERROR: No se puede inicializar RenderManager porque gc es nulo");
             }
             
-            // Inicializar gestor de niveles
             levelManager = new LevelManager();
-            System.out.println("LevelManager inicializado");
             
-            // Pasar la información de fórmulas al RenderManager solo si el renderManager no es nulo
             if (renderManager != null && levelManager != null) {
                 renderManager.setFormulasInfo(
                     levelManager.getFormulasShort(),
                     levelManager.getFormulasDescriptions()
                 );
-                System.out.println("Información de fórmulas configurada en RenderManager");
-            } else {
-                System.err.println("ERROR: No se puede configurar información de fórmulas porque renderManager o levelManager son nulos");
             }
             
-            // Inicializar gestor de puntuación (5 vidas máximo)
             scoreManager = new ScoreManager(5);
-            System.out.println("ScoreManager inicializado");              // Inicializar gestor de manzanas
             appleManager = new AppleManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 1500, 2.0, 5.0);
-            System.out.println("AppleManager inicializado");
-            
-            // Inicializar gestor de pociones (aparecen menos frecuentemente que las manzanas)
             potionManager = new PotionManager(GAME_WIDTH, GAME_HEIGHT, FLOOR_Y, 5000, 1.5, 4.0);
-            System.out.println("PotionManager inicializado");
             
-            // Inicializar gestor de efectos visuales
             if (gameCanvas != null && gameCanvas.getScene() != null) {
                 visualEffectsManager = new VisualEffectsManager(gameCanvas.getScene());
-                System.out.println("VisualEffectsManager inicializado");            } else {
-                System.out.println("VisualEffectsManager se inicializará más tarde cuando la escena esté disponible");
             }
             
-            // Inicializar gestor de ranking
             rankingManager = RankingManager.getInstance();
-            
-            // Inicializar gestor de videos
             videoManager = VideoManager.getInstance();
             
-            // Configurar usuario actual desde LoginController
             String currentUsername = Controlador.LoginController.getCurrentUsername();
             if (currentUsername != null && !currentUsername.isEmpty()) {
-                int userId = Modelo.UsuarioDAO.obtenerIdUsuario(currentUsername);
+                int userId = Modelo.dao.UsuarioDAO.obtenerIdUsuario(currentUsername);
                 rankingManager.setCurrentUser(userId, currentUsername);
-                System.out.println("RankingManager configurado para usuario: " + currentUsername);
-            } else {
-                System.out.println("No hay usuario actual definido para el ranking");
-            }              // Configurar callback para cuando se completan todas las fórmulas
+            }
+            
             if (levelManager != null && renderManager != null) {
                 levelManager.setOnAllFormulasCompleted(() -> {
-                    System.out.println("¡Todas las fórmulas completadas! Iniciando celebración...");
-                    // Activar pausa especial para celebración (sin mostrar interfaz de pausa)
                     isPausedForCelebration = true;
                     renderManager.startCompletionCelebration();
                     
-                    // También guardar inmediatamente en el ranking
                     if (rankingManager != null && scoreManager != null) {
-                        boolean saved = rankingManager.checkAndSaveCompletedGame(
+                        rankingManager.checkAndSaveCompletedGame(
                             levelManager.getUnlockedFormulas(), 
                             scoreManager.getScore()
                         );
-                        if (saved) {
-                            System.out.println("Completación guardada en ranking inmediatamente");
-                        }
                     }
                 });
-                System.out.println("Callback de completación de todas las fórmulas configurado");
             }
-            
-            System.out.println("Todos los componentes inicializados correctamente");
         } catch (Exception e) {
-            System.err.println("Error al inicializar componentes: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso durante inicialización
         }
     }
     
     /**
-     * Configura los callbacks entre los diferentes componentes
+     * Configura los callbacks entre los diferentes componentes.
+     * Establece las comunicaciones entre managers para el funcionamiento correcto del juego.
      */
     private void setupComponentCallbacks() {
         try {
-            // Verificar que todos los componentes estén inicializados
-            if (inputManager == null) {
-                System.err.println("ERROR: InputManager es null en setupComponentCallbacks");
-                return;
+            if (inputManager == null || renderManager == null || scoreManager == null || 
+                levelManager == null || appleManager == null || audioManager == null) {
+                return; // No se pueden configurar callbacks sin todos los componentes
             }
-            
-            if (renderManager == null) {
-                System.err.println("ERROR: RenderManager es null en setupComponentCallbacks");
-                return;
-            }
-            
-            if (scoreManager == null) {
-                System.err.println("ERROR: ScoreManager es null en setupComponentCallbacks");
-                return;
-            }
-            
-            if (levelManager == null) {
-                System.err.println("ERROR: LevelManager es null en setupComponentCallbacks");
-                return;
-            }
-            
-            if (appleManager == null) {
-                System.err.println("ERROR: AppleManager es null en setupComponentCallbacks");
-                return;
-            }
-            
-            if (audioManager == null) {
-                System.err.println("ERROR: AudioManager es null en setupComponentCallbacks");
-                return;
-            }            // Configurar callbacks del InputManager
             inputManager.setCallbacks(
                 this::handleEscapeKey,             // onPauseToggle (ahora maneja ESCAPE inteligentemente)
                 this::returnToMainMenu,            // onReturnToMenu
@@ -311,8 +216,6 @@ public class GameController {
                 audioManager.playUnlockSound(); // onFormulaUnlocked
                 // Actualizar acceso a videos cuando se desbloquee una fórmula
                 videoManager.updateVideoAccess(levelManager.getUnlockedFormulas());
-                System.out.println("Acceso a videos actualizado - Fórmulas desbloqueadas: " + 
-                                 countUnlockedFormulas(levelManager.getUnlockedFormulas()) + "/5");
             });
               // Configurar callbacks del AppleManager
             appleManager.setCallbacks(
@@ -326,10 +229,9 @@ public class GameController {
                 scoreManager::gainLife             // onGainLife (ganar vida)
             );
             
-            System.out.println("Todos los callbacks configurados correctamente");
+            // Callbacks configurados correctamente
         } catch (Exception e) {
-            System.err.println("Error al configurar callbacks: " + e.getMessage());
-            e.printStackTrace();
+            // Error al configurar callbacks - se mantiene silencioso
         }
     }    /**
      * Inicia el bucle principal del juego
@@ -337,33 +239,9 @@ public class GameController {
     private void startGameLoop() {
         try {
             // Verificar componentes críticos antes de iniciar el bucle
-            if (renderManager == null) {
-                System.err.println("ERROR CRÍTICO: RenderManager es null, no se puede iniciar el bucle del juego");
-                return;
-            }
-            
-            if (player == null) {
-                System.err.println("ERROR CRÍTICO: Player es null, no se puede iniciar el bucle del juego");
-                return;
-            }
-              if (appleManager == null) {
-                System.err.println("ERROR CRÍTICO: AppleManager es null, no se puede iniciar el bucle del juego");
-                return;
-            }
-            
-            if (potionManager == null) {
-                System.err.println("ERROR CRÍTICO: PotionManager es null, no se puede iniciar el bucle del juego");
-                return;
-            }
-            
-            if (scoreManager == null) {
-                System.err.println("ERROR CRÍTICO: ScoreManager es null, no se puede iniciar el bucle del juego");
-                return;
-            }
-            
-            if (levelManager == null) {
-                System.err.println("ERROR CRÍTICO: LevelManager es null, no se puede iniciar el bucle del juego");
-                return;
+            if (renderManager == null || player == null || appleManager == null || 
+                potionManager == null || scoreManager == null || levelManager == null) {
+                return; // Error crítico silencioso
             }
             
             gameLoop = new AnimationTimer() {
@@ -378,17 +256,15 @@ public class GameController {
                             update();
                         }
                     } catch (Exception e) {
-                        System.err.println("Error en el bucle del juego: " + e.getMessage());
-                        e.printStackTrace();
+                        // Error silencioso en el bucle del juego
                     }
                 }
             };
             
             gameLoop.start();
-            System.out.println("Bucle del juego iniciado correctamente");
+            // Bucle del juego iniciado
         } catch (Exception e) {
-            System.err.println("Error al iniciar el bucle del juego: " + e.getMessage());
-            e.printStackTrace();
+            // Error al iniciar el bucle del juego - silencioso
         }
     }    /**
      * Actualiza el estado del juego
@@ -396,19 +272,8 @@ public class GameController {
     private void update() {
         try {
             // Verificar componentes críticos
-            if (player == null) {
-                System.err.println("ERROR: Player es null en update(), no se puede actualizar");
-                return;
-            }
-            
-            if (appleManager == null) {
-                System.err.println("ERROR: AppleManager es null en update(), no se puede actualizar");
-                return;
-            }
-            
-            if (levelManager == null) {
-                System.err.println("ERROR: LevelManager es null en update(), no se puede actualizar");
-                return;
+            if (player == null || appleManager == null || levelManager == null) {
+                return; // Error silencioso
             }
             
             // NO actualizar el juego si está pausado por celebración (pausa silenciosa)
@@ -420,7 +285,6 @@ public class GameController {
                     
                     // Si la celebración terminó, reanudar el juego
                     if (wasShowingCelebration && !renderManager.isShowingCompletionCelebration()) {
-                        System.out.println("Celebración terminada, reanudando el juego...");
                         isPausedForCelebration = false;
                     }
                 }
@@ -445,8 +309,7 @@ public class GameController {
             levelManager.updateUnlockEffect();
             
         } catch (Exception e) {
-            System.err.println("Error al actualizar el juego: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al actualizar el juego
         }
     }/**
      * Renderiza el estado actual del juego
@@ -454,28 +317,17 @@ public class GameController {
     private void render() {
         try {
             // Verificar componentes críticos
-            if (renderManager == null) {
-                System.err.println("ERROR: RenderManager es null en render(), no se puede renderizar");
-                return;
-            }
-            
-            if (scoreManager == null) {
-                System.err.println("ERROR: ScoreManager es null en render(), no se puede renderizar");
-                return;
-            }
-            
-            if (levelManager == null) {
-                System.err.println("ERROR: LevelManager es null en render(), no se puede renderizar");
-                return;
+            if (renderManager == null || scoreManager == null || levelManager == null) {
+                return; // Error silencioso
             }
             
             if (player == null) {
-                System.err.println("ERROR: Player es null en render(), no se puede renderizar al jugador");
+                // Error silencioso - continuar para mostrar fondo e interfaz
                 // Continuamos para al menos mostrar el fondo y la interfaz
             }
             
             if (appleManager == null) {
-                System.err.println("ERROR: AppleManager es null en render(), no se pueden renderizar las manzanas");
+                // Error silencioso - continuar sin renderizar manzanas
                 // Continuamos para al menos mostrar el fondo y la interfaz
             }
             
@@ -544,8 +396,7 @@ public class GameController {
             }
             
         } catch (Exception e) {
-            System.err.println("Error al renderizar el juego: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al renderizar el juego
         }
     }
     
@@ -554,7 +405,7 @@ public class GameController {
      */
     private void togglePause() {
         isPaused = !isPaused;
-        System.out.println("Juego " + (isPaused ? "pausado" : "reanudado"));
+        // Juego pausado/reanudado silenciosamente
     }
       /**
      * Alterna entre interfaz minimalista y completa (desactivado)
@@ -562,8 +413,7 @@ public class GameController {
     private void toggleUI() {
         // Siempre mantenemos la interfaz minimalista
         minimalUI = true;
-        // No hacer nada más, ya que solo queremos la interfaz minimalista
-        System.out.println("Interfaz se mantiene en modo minimalista");
+        // Interfaz se mantiene en modo minimalista
     }    /**
      * Marca el juego como terminado y configura el sprite de muerte del jugador
      */
@@ -587,26 +437,25 @@ public class GameController {
             try {
                 int currentUserId = Controlador.utils.SessionManager.getInstance().getCurrentUserId();
                 if (currentUserId != -1) {
-                    boolean progressSaved = Modelo.UsuarioDAO.actualizarProgresoUsuario(
+                    boolean progressSaved = Modelo.dao.UsuarioDAO.actualizarProgresoUsuario(
                         currentUserId, 
                         scoreManager.getScore(), 
                         formulasCount
                     );
                     
                     if (progressSaved) {
-                        System.out.println("Progreso guardado exitosamente: " + scoreManager.getScore() + " puntos, " + formulasCount + " fórmulas");
+                        // Progreso guardado exitosamente
                         
                         // Actualizar VideoManager con el nuevo progreso
                         if (videoManager != null) {
                             videoManager.updateUnlockedVideos(unlockedFormulas);
                         }
                     } else {
-                        System.err.println("Error al guardar el progreso del usuario");
+                        // Error silencioso al guardar progreso
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error al guardar progreso: " + e.getMessage());
-                e.printStackTrace();
+                // Error silencioso al guardar progreso
             }
             
             // Además, verificar si completó todas las fórmulas para el ranking global
@@ -617,12 +466,12 @@ public class GameController {
                 );
                 
                 if (allFormulasCompleted) {
-                    System.out.println("¡Jugador completó todas las fórmulas! También guardado en ranking global.");
+                    // Jugador completó todas las fórmulas
                 }
             }
         }
         
-        System.out.println("Juego terminado");
+        // Juego terminado
     }      /**
      * Maneja la pérdida de una vida
      */
@@ -636,7 +485,7 @@ public class GameController {
     private void handlePotionScore(int points) {
         // Los puntos ya vienen procesados desde PotionManager, no duplicar aquí
         scoreManager.addScore(points);
-        System.out.println("Puntos de poción añadidos: " + points);
+        // Puntos de poción añadidos
     }
       /**
      * Maneja los efectos visuales de las pociones
@@ -644,7 +493,7 @@ public class GameController {
     private void handlePotionEffect(String message) {
         // Los efectos visuales de las pociones se muestran en el HUD
         // a través de los indicadores en renderPotionEffects()
-        System.out.println("Efecto de poción: " + message);
+        // Efecto de poción aplicado
         
         // Opcional: Aquí se podría agregar un efecto visual temporal
         // como un cambio de brillo o color si se desea
@@ -655,25 +504,18 @@ public class GameController {
     private void showFormulaDetails(int formulaIndex) {
         try {
             // Verificar componentes críticos
-            if (levelManager == null) {
-                System.err.println("ERROR: LevelManager es null en showFormulaDetails, no se puede continuar");
-                return;
-            }
-            
-            if (renderManager == null) {
-                System.err.println("ERROR: RenderManager es null en showFormulaDetails, no se puede continuar");
-                return;
+            if (levelManager == null || renderManager == null) {
+                return; // Error silencioso
             }
             
             // Verificar si el índice está fuera de rango
             if (formulaIndex < 0 || formulaIndex >= levelManager.getMaxLevel()) {
-                System.err.println("ERROR: Índice de fórmula fuera de rango: " + formulaIndex);
-                return;
+                return; // Error silencioso
             }
             
             // Verificar si la fórmula está desbloqueada
             if (!levelManager.getUnlockedFormulas()[formulaIndex]) {
-                System.out.println("La fórmula " + (formulaIndex + 1) + " no está desbloqueada todavía");
+                // La fórmula no está desbloqueada
                 return;
             }
               // Si ya se están mostrando los detalles de esta fórmula, ocultarlos y reanudar el juego
@@ -683,7 +525,7 @@ public class GameController {
                 if (isPaused) {
                     isPaused = false;
                 }
-                System.out.println("Ocultando detalles de la fórmula y reanudando el juego");
+                // Ocultando detalles y reanudando
                 return;
             }
             
@@ -699,13 +541,11 @@ public class GameController {
             
             // Verificar que los arreglos no sean nulos y tengan el índice solicitado
             if (formulasShort == null || formulasDescriptions == null) {
-                System.err.println("ERROR: Los arreglos de fórmulas son nulos");
-                return;
+                return; // Error silencioso
             }
             
             if (formulaIndex >= formulasShort.length || formulaIndex >= formulasDescriptions.length) {
-                System.err.println("ERROR: Índice de fórmula fuera de rango para los arreglos de información");
-                return;
+                return; // Error silencioso
             }
             
             // Mostrar los detalles en pantalla mediante el RenderManager
@@ -715,50 +555,41 @@ public class GameController {
                 formulasDescriptions[formulaIndex]
             );
             
-            System.out.println("Mostrando detalles de la fórmula: " + formulasShort[formulaIndex]);
-            System.out.println("Descripción: " + formulasDescriptions[formulaIndex]);
-            System.out.println("Juego pausado mientras se muestran detalles de la fórmula");
+            // Detalles de fórmula mostrados
         } catch (Exception e) {
-            System.err.println("Error al mostrar detalles de la fórmula: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al mostrar detalles
         }
     }    /**
      * Vuelve al menú principal
      */
     public void returnToMainMenu() {
         try {
-            System.out.println("Preparando para volver al menú principal...");
+            // Preparando para volver al menú principal
             
             // Detener el bucle del juego
             if (gameLoop != null) {
                 gameLoop.stop();
-                System.out.println("Bucle del juego detenido");
-            } else {
-                System.err.println("ADVERTENCIA: gameLoop es null al intentar detenerlo");
+                // Bucle del juego detenido
             }
             
             // Detener la música
             if (audioManager != null) {
                 audioManager.stopBackgroundMusic();
-                System.out.println("Música de fondo detenida");
-            } else {
-                System.err.println("ADVERTENCIA: audioManager es null al intentar detener la música");
+                // Música de fondo detenida
             }
             
-            System.out.println("Volviendo al menú principal...");
+            // Volviendo al menú principal
             
             // Usar el NavigationManager para volver al menú principal con el usuario configurado
             Stage stage = (Stage) gameCanvas.getScene().getWindow();
             NavigationManager.navigateToMainWithUser(stage);
             
-            System.out.println("Vuelto al menú principal correctamente");
+            // Vuelto al menú principal correctamente
             
         } catch (IOException e) {
-            System.err.println("Error al cargar el menú principal: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al cargar el menú principal
         } catch (Exception e) {
-            System.err.println("Error inesperado al volver al menú principal: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al volver al menú principal
         }
     }
     
@@ -787,10 +618,9 @@ public class GameController {
                 isPaused = false;
             }
             
-            System.out.println("Configuración cerrada, juego reanudado");
+            // Configuración cerrada, juego reanudado
         } catch (Exception e) {
-            System.err.println("Error al mostrar configuración: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al mostrar configuración
             showingSettings = false;
             if (!gameOver) {
                 isPaused = false;
@@ -835,12 +665,12 @@ public class GameController {
         try {
             // Solo mostrar ranking si el juego está terminado y se han completado todas las fórmulas
             if (!gameOver) {
-                System.out.println("El ranking solo se puede ver cuando el juego ha terminado");
+                // El ranking solo se puede ver cuando el juego ha terminado
                 return;
             }
             
             if (levelManager == null || !levelManager.areAllFormulasUnlocked()) {
-                System.out.println("El ranking solo se puede ver cuando se han completado todas las fórmulas");
+                // El ranking solo se puede ver cuando se han completado todas las fórmulas
                 return;
             }
             
@@ -848,10 +678,9 @@ public class GameController {
             Controlador.dialogs.RankingDialog rankingDialog = new Controlador.dialogs.RankingDialog(gameStage);
             rankingDialog.showAndWait();
             
-            System.out.println("Ranking mostrado exitosamente");
+            // Ranking mostrado exitosamente
         } catch (Exception e) {
-            System.err.println("Error al mostrar ranking: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al mostrar ranking
         }
     }/**
      * Oculta la pantalla de ranking (método deshabilitado - funcionalidad no implementada)
@@ -860,10 +689,9 @@ public class GameController {
         try {
             // La funcionalidad de ranking completo no está implementada en RenderManager
             // El ranking se muestra solo en la celebración de completitud
-            System.out.println("Funcionalidad de ranking no implementada");
+            // Funcionalidad de ranking no implementada
         } catch (Exception e) {
-            System.err.println("Error al ocultar ranking: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al ocultar ranking
         }
     }    /**
      * Maneja la tecla ESCAPE con prioridades: game over > detalles de fórmula > pausa
@@ -879,7 +707,6 @@ public class GameController {
             // Prioridad 2: Si se están mostrando detalles de fórmula, cerrarlos
             if (renderManager != null && renderManager.isShowingFormulaDetails()) {
                 renderManager.hideFormulaDetails();
-                System.out.println("Cerrando detalles de fórmula");
                 return;
             }
             
@@ -899,9 +726,6 @@ public class GameController {
                 // Ocultar la celebración y reanudar el juego
                 renderManager.stopCompletionCelebration();
                 isPausedForCelebration = false; // Reanudar desde pausa de celebración
-                System.out.println("Continuando juego después del mensaje de completación");
-            } else {
-                System.out.println("No hay celebración activa para continuar");
             }
         } catch (Exception e) {
             System.err.println("Error al continuar después de completación: " + e.getMessage());
@@ -921,15 +745,11 @@ public class GameController {
                 if (action != null) {
                     switch (action) {
                         case "back":
-                            System.out.println("Botón 'Volver al menú' clickeado");
                             returnToMainMenu();
                             break;
                         case "settings":
-                            System.out.println("Botón 'Configuración' clickeado");
                             showSettings();
                             break;
-                        default:
-                            System.out.println("Acción desconocida: " + action);
                     }
                 }
             }
@@ -943,12 +763,9 @@ public class GameController {
      */
     private void returnToMap() {
         try {
-            System.out.println("Preparando para volver al mapa...");
-            
             // Detener el bucle del juego
             if (gameLoop != null) {
                 gameLoop.stop();
-                System.out.println("Bucle del juego detenido");
             } else {
                 System.err.println("ADVERTENCIA: gameLoop es null al intentar detenerlo");
             }
@@ -956,18 +773,14 @@ public class GameController {
             // Detener la música
             if (audioManager != null) {
                 audioManager.stopBackgroundMusic();
-                System.out.println("Música de fondo detenida");
             } else {
                 System.err.println("ADVERTENCIA: audioManager es null al intentar detener la música");
             }
-            
-            System.out.println("Volviendo al mapa...");
             
             // Obtener el stage actual y navegar al mapa con actualización del estado
             Stage currentStage = (Stage) gameCanvas.getScene().getWindow();
             NavigationManager.navigateToMapWithRefresh(currentStage);
             
-            System.out.println("Navegación al mapa completada con actualización del estado");
         } catch (Exception e) {
             System.err.println("Error al regresar al mapa: " + e.getMessage());
             e.printStackTrace();
@@ -976,7 +789,6 @@ public class GameController {
             try {
                 Stage currentStage = (Stage) gameCanvas.getScene().getWindow();
                 NavigationManager.navigateToMainWithUser(currentStage);
-                System.out.println("Navegando al menú principal como fallback");
             } catch (Exception fallbackError) {
                 System.err.println("Error en fallback: " + fallbackError.getMessage());
             }
