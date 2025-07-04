@@ -2,10 +2,7 @@ package Modelo;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class ConexionDB {
     
@@ -21,43 +18,10 @@ public class ConexionDB {
         try {
             Class.forName(driver);
             cnx = DriverManager.getConnection(url, user, clave);
-            //System.out.println("Conexión a la base de datos establecida con éxito.");
-        } catch (ClassNotFoundException e) {
-            System.err.println("Error: No se encontró el driver de MySQL. " + e.getMessage());
-            e.printStackTrace();
-        } catch (SQLException e) {
-            System.err.println("Error: No se pudo conectar a la base de datos. " + e.getMessage());
-            e.printStackTrace();
+        } catch (ClassNotFoundException | SQLException e) {
+            // Error silencioso en conexión
         }
-
         return cnx;
-    }
-    
-    // Método para probar la conexión
-    public static boolean testConnection() {
-        Connection conn = null;
-        try {
-            conn = getConnection();
-            if (conn != null) {
-                System.out.println("Conexión exitosa a la base de datos: " + conn.getCatalog());
-                return true;
-            } else {
-                System.err.println("No se pudo establecer la conexión a la base de datos.");
-                return false;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al probar la conexión: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    System.err.println("Error al cerrar la conexión: " + e.getMessage());
-                }
-            }
-        }
     }
     
     /**
@@ -72,7 +36,7 @@ public class ConexionDB {
                 rs.close();
             }
         } catch (SQLException e) {
-            System.err.println("Error al cerrar ResultSet: " + e.getMessage());
+            // Error silencioso al cerrar ResultSet
         }
         
         try {
@@ -80,7 +44,7 @@ public class ConexionDB {
                 stmt.close();
             }
         } catch (SQLException e) {
-            System.err.println("Error al cerrar Statement: " + e.getMessage());
+            // Error silencioso al cerrar Statement
         }
         
         try {
@@ -88,7 +52,7 @@ public class ConexionDB {
                 conn.close();
             }
         } catch (SQLException e) {
-            System.err.println("Error al cerrar Connection: " + e.getMessage());
+            // Error silencioso al cerrar Connection
         }
     }
     
