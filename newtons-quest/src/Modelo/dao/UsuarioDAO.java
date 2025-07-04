@@ -1,5 +1,7 @@
-package Modelo;
+package Modelo.dao;
 
+import Modelo.ConexionDB;
+import Modelo.Player;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,35 +10,45 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 
-public class UsuarioDAO {    // Método para registrar un nuevo usuario
+/**
+ * Data Access Object para la gestión de usuarios en la base de datos.
+ * Proporciona métodos para registrar, validar y obtener información de usuarios.
+ */
+public class UsuarioDAO {
+    
+    /**
+     * Registra un nuevo usuario con username y contraseña únicamente.
+     * @param username Nombre de usuario único
+     * @param password Contraseña del usuario
+     * @return true si el registro fue exitoso, false en caso contrario
+     */
     public static boolean registrarUsuario(String username, String password) {
         return registrarUsuario(username, password, "", "");
     }
     
-    // Método sobrecargado para registrar un nuevo usuario con información completa
+    /**
+     * Registra un nuevo usuario con información completa.
+     * @param username Nombre de usuario único
+     * @param password Contraseña del usuario
+     * @param nombreCompleto Nombre completo del usuario
+     * @param email Correo electrónico del usuario
+     * @return true si el registro fue exitoso, false en caso contrario
+     */
     public static boolean registrarUsuario(String username, String password, String nombreCompleto, String email) {
         Connection conn = null;
         PreparedStatement stmt = null;
 
         try {
-            // Obtener conexión
             conn = ConexionDB.getConnection();
-
-            // Verificar si la conexión se estableció correctamente
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return false;
             }
 
-            // Verificar si el usuario ya existe
             if (existeUsuario(username)) {
                 return false;
             }
 
-            // Hashear la contraseña
             String hashedPassword = hashPassword(password);
-
-            // Preparar la consulta SQL con todas las columnas
             String sql = "INSERT INTO usuarios (username, password, nombre_completo, correo, fecha_registro, activo) VALUES (?, ?, ?, ?, NOW(), 1)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
@@ -44,63 +56,48 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             stmt.setString(3, nombreCompleto != null ? nombreCompleto : "");
             stmt.setString(4, email != null ? email : "");
 
-            // Ejecutar la consulta
             int filasAfectadas = stmt.executeUpdate();
-
             return filasAfectadas > 0;
 
         } catch (SQLException e) {
-            System.err.println("Error al registrar usuario: " + e.getMessage());
-            e.printStackTrace();
             return false;
         } finally {
-            // Cerrar recursos
             try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar recursos
             }
         }
     }
 
-    // Método para verificar si un usuario existe
+    /**
+     * Verifica si un usuario existe en la base de datos.
+     * @param username Nombre de usuario a verificar
+     * @return true si el usuario existe, false en caso contrario
+     */
     public static boolean existeUsuario(String username) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
-            // Obtener conexión
             conn = ConexionDB.getConnection();
-
-            // Verificar si la conexión se estableció correctamente
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return false;
             }
 
-            // Preparar la consulta SQL
             String sql = "SELECT COUNT(*) FROM usuarios WHERE username = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
-
-            // Ejecutar la consulta
             rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
-
             return false;
 
         } catch (SQLException e) {
-            System.err.println("Error al verificar usuario: " + e.getMessage());
-            e.printStackTrace();
             return false;
         } finally {
             // Cerrar recursos
@@ -115,135 +112,105 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
                     conn.close();
                 }
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar recursos
             }
         }
     }
 
-    // Método para validar credenciales
+    /**
+     * Valida las credenciales de un usuario.
+     * @param username Nombre de usuario
+     * @param password Contraseña del usuario
+     * @return true si las credenciales son válidas, false en caso contrario
+     */
     public static boolean validarCredenciales(String username, String password) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
-            // Obtener conexión
             conn = ConexionDB.getConnection();
-
-            // Verificar si la conexión se estableció correctamente
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return false;
             }
 
-            // Preparar la consulta SQL
             String sql = "SELECT password FROM usuarios WHERE username = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
-
-            // Ejecutar la consulta
             rs = stmt.executeQuery();
 
             if (rs.next()) {
                 String hashedPassword = rs.getString("password");
-
-                // Verificar si la contraseña coincide
-                boolean passwordMatch = verificarPassword(password, hashedPassword);
-
-                // Imprimir información de depuración
-                //System.out.println("Verificando contraseña para usuario: " + username);
-                //System.out.println("Contraseña proporcionada hash: " + hashPassword(password));
-                //System.out.println("Contraseña almacenada hash: " + hashedPassword);
-                //System.out.println("¿Coinciden? " + passwordMatch);
-
-                return passwordMatch;
+                return verificarPassword(password, hashedPassword);
             } else {
-                System.out.println("No se encontró el usuario en la base de datos: " + username);
                 return false;
             }
 
         } catch (SQLException e) {
-            System.err.println("Error al validar credenciales: " + e.getMessage());
-            e.printStackTrace();
             return false;
         } finally {
-            // Cerrar recursos
             try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar recursos
             }
         }
     }
 
-    // Método para obtener el ID de un usuario
+    /**
+     * Obtiene el ID de un usuario basado en su nombre de usuario.
+     * @param username Nombre de usuario
+     * @return ID del usuario o -1 si no se encuentra
+     */
     public static int obtenerIdUsuario(String username) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
-            // Obtener conexión
             conn = ConexionDB.getConnection();
-
-            // Verificar si la conexión se estableció correctamente
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
                 return -1;
-            }            // Preparar la consulta SQL
+            }
+            
             String sql = "SELECT id FROM usuarios WHERE username = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
-
-            // Ejecutar la consulta
             rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return rs.getInt("id");
             }
-
-            return -1; // Usuario no encontrado
+            return -1;
 
         } catch (SQLException e) {
-            System.err.println("Error al obtener ID de usuario: " + e.getMessage());
-            e.printStackTrace();
             return -1;
         } finally {
-            // Cerrar recursos
             try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar recursos
             }
         }
     }
 
     /**
-     * Obtiene el nombre completo de un usuario
-     */    public static String obtenerNombreCompleto(int userId) {
+     * Obtiene el nombre completo de un usuario.
+     * @param userId ID del usuario
+     * @return Nombre completo del usuario o username si no está disponible
+     */
+    public static String obtenerNombreCompleto(int userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
         try {
             conn = ConexionDB.getConnection();
-            if (conn == null) return null;
+            if (conn == null) return "Usuario desconocido";
             
             String sql = "SELECT nombre_completo, username FROM usuarios WHERE id = ?";
             stmt = conn.prepareStatement(sql);
@@ -252,22 +219,27 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             
             if (rs.next()) {
                 String nombreCompleto = rs.getString("nombre_completo");
-                // Si no hay nombre completo, devolver el username
                 return (nombreCompleto != null && !nombreCompleto.trim().isEmpty()) ? 
                        nombreCompleto : rs.getString("username");
             }
-              } catch (SQLException e) {
-            System.err.println("Error al obtener nombre completo: " + e.getMessage());
+        } catch (SQLException e) {
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
-        // Si no se pudo obtener de la base de datos, devolver "Usuario desconocido"
         return "Usuario desconocido";
     }
     
     /**
-     * Obtiene el correo electrónico de un usuario
+     * Obtiene el correo electrónico de un usuario.
+     * @param userId ID del usuario
+     * @return Correo electrónico del usuario o cadena vacía si no está disponible
      */
     public static String obtenerCorreo(int userId) {
         Connection conn = null;
@@ -276,35 +248,43 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
         
         try {
             conn = ConexionDB.getConnection();
-            if (conn == null) return null;
+            if (conn == null) return "";
             
             String sql = "SELECT correo FROM usuarios WHERE id = ?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
-              if (rs.next()) {
+            
+            if (rs.next()) {
                 String email = rs.getString("correo");
                 return email != null ? email : "";
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al obtener correo: " + e.getMessage());
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
         return "";
     }
     
     /**
-     * Obtiene la fecha de registro de un usuario
+     * Obtiene la fecha de registro de un usuario.
+     * @param userId ID del usuario
+     * @return Fecha de registro formateada o "Fecha no disponible"
      */
     public static String obtenerFechaRegistro(int userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         
-        try {            conn = ConexionDB.getConnection();
+        try {
+            conn = ConexionDB.getConnection();
             if (conn == null) return "Fecha no disponible";
             
             String sql = "SELECT fecha_registro FROM usuarios WHERE id = ?";
@@ -319,17 +299,26 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
                     return formatter.format(timestamp);
                 }
             }
-              } catch (SQLException e) {
-            System.err.println("Error al obtener fecha de registro: " + e.getMessage());
+        } catch (SQLException e) {
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
         return "Fecha no disponible";
     }
     
     /**
-     * Actualiza el perfil de un usuario (nombre completo y correo)
+     * Actualiza el perfil de un usuario (nombre completo y correo).
+     * @param userId ID del usuario
+     * @param nombreCompleto Nuevo nombre completo
+     * @param correo Nuevo correo electrónico
+     * @return true si la actualización fue exitosa
      */
     public static boolean actualizarPerfilUsuario(int userId, String nombreCompleto, String correo) {
         Connection conn = null;
@@ -349,10 +338,14 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             return filasAfectadas > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al actualizar perfil de usuario: " + e.getMessage());
             return false;
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, null);
+            try {
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
     }
     
@@ -371,17 +364,11 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             conn = ConexionDB.getConnection();
             if (conn == null) return false;
             
-            // Primero verificar el puntaje actual para no sobreescribir con uno menor
             int puntajeActual = obtenerMejorPuntajeUsuario(userId);
             int puntajeFinal = Math.max(puntajeActual, mejorPuntaje);
             
-            // También verificar fórmulas actuales para no retroceder
             int formulasActuales = obtenerFormulasCompletadasUsuario(userId);
             int formulasFinal = Math.max(formulasActuales, formulasCompletadas);
-            
-            System.out.println("=== ACTUALIZANDO PROGRESO USUARIO " + userId + " ===");
-            System.out.println("Puntaje actual: " + puntajeActual + " -> Nuevo puntaje: " + mejorPuntaje + " -> Final: " + puntajeFinal);
-            System.out.println("Fórmulas actuales: " + formulasActuales + " -> Nuevas fórmulas: " + formulasCompletadas + " -> Final: " + formulasFinal);
             
             String sql = "UPDATE usuarios SET mejor_puntaje = ?, formulas_completadas = ?, ultima_partida = NOW() WHERE id = ?";
             stmt = conn.prepareStatement(sql);
@@ -390,24 +377,24 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             stmt.setInt(3, userId);
             
             int filasAfectadas = stmt.executeUpdate();
-            
-            if (filasAfectadas > 0) {
-                System.out.println("Progreso actualizado para usuario " + userId + ": Puntaje=" + puntajeFinal + ", Fórmulas=" + formulasFinal);
-                return true;
-            }
+            return filasAfectadas > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al actualizar progreso del usuario: " + e.getMessage());
             return false;
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, null);
+            try {
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
-        return false;
     }
     
     /**
-     * Obtiene el mejor puntaje de un usuario
+     * Obtiene el mejor puntaje de un usuario.
+     * @param userId ID del usuario
+     * @return Mejor puntaje del usuario
      */
     public static int obtenerMejorPuntajeUsuario(int userId) {
         Connection conn = null;
@@ -426,18 +413,24 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             if (rs.next()) {
                 return rs.getInt("mejor_puntaje");
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al obtener mejor puntaje del usuario: " + e.getMessage());
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
         return 0;
     }
     
     /**
-     * Obtiene el número de fórmulas completadas por un usuario
+     * Obtiene el número de fórmulas completadas por un usuario.
+     * @param userId ID del usuario
+     * @return Número de fórmulas completadas
      */
     public static int obtenerFormulasCompletadasUsuario(int userId) {
         Connection conn = null;
@@ -456,18 +449,24 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             if (rs.next()) {
                 return rs.getInt("formulas_completadas");
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al obtener fórmulas completadas del usuario: " + e.getMessage());
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
         return 0;
     }
     
     /**
-     * Obtiene la fecha de la última partida de un usuario
+     * Obtiene la fecha de la última partida de un usuario.
+     * @param userId ID del usuario
+     * @return Fecha de la última partida formateada o "Nunca"
      */
     public static String obtenerUltimaPartidaUsuario(int userId) {
         Connection conn = null;
@@ -490,17 +489,25 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
                     return formatter.format(timestamp);
                 }
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al obtener última partida del usuario: " + e.getMessage());
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmt, rs);
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
         }
-        
         return "Nunca";
     }
 
-    // Método para hashear contraseñas usando SHA-256
+    /**
+     * Genera un hash SHA-256 de la contraseña proporcionada.
+     * @param password Contraseña a hashear
+     * @return Hash de la contraseña o null si hay error
+     */
     private static String hashPassword(String password) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -508,28 +515,31 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             BigInteger no = new BigInteger(1, messageDigest);
             String hashtext = no.toString(16);
 
-            // Añadir ceros a la izquierda si es necesario
             while (hashtext.length() < 32) {
                 hashtext = "0" + hashtext;
             }
-
             return hashtext;
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Error al hashear contraseña: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
 
-    // Método para verificar si una contraseña coincide con su hash
+    /**
+     * Verifica si una contraseña coincide con su hash.
+     * @param password Contraseña en texto plano
+     * @param hashedPassword Hash almacenado
+     * @return true si coinciden, false en caso contrario
+     */
     private static boolean verificarPassword(String password, String hashedPassword) {
         String hashedInput = hashPassword(password);
         return hashedInput != null && hashedInput.equals(hashedPassword);
     }
     
     /**
-     * Sincroniza los datos del ranking con la tabla de usuarios
-     * Este método corrige las discrepancias entre ambas tablas
+     * Sincroniza los datos del ranking con la tabla de usuarios.
+     * Este método corrige las discrepancias entre ambas tablas.
+     * @param userId ID del usuario a sincronizar
+     * @return true si la sincronización fue exitosa
      */
     public static boolean sincronizarDatosRankingAUsuarios(int userId) {
         Connection conn = null;
@@ -541,7 +551,6 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             conn = ConexionDB.getConnection();
             if (conn == null) return false;
             
-            // Obtener datos del ranking
             String sqlRanking = "SELECT mejor_puntaje FROM ranking WHERE usuario_id = ?";
             stmtRanking = conn.prepareStatement(sqlRanking);
             stmtRanking.setInt(1, userId);
@@ -550,23 +559,16 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             if (rs.next()) {
                 int puntajeRanking = rs.getInt("mejor_puntaje");
                 
-                // Actualizar tabla usuarios con los datos del ranking
-                // Si el usuario está en ranking, significa que completó las 5 fórmulas
                 String sqlUsuarios = "UPDATE usuarios SET mejor_puntaje = ?, formulas_completadas = 5 WHERE id = ?";
                 stmtUsuarios = conn.prepareStatement(sqlUsuarios);
                 stmtUsuarios.setInt(1, puntajeRanking);
                 stmtUsuarios.setInt(2, userId);
                 
                 int filasActualizadas = stmtUsuarios.executeUpdate();
-                
-                if (filasActualizadas > 0) {
-                    System.out.println("Datos sincronizados para usuario " + userId + ": puntaje=" + puntajeRanking + ", fórmulas=5");
-                    return true;
-                }
+                return filasActualizadas > 0;
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al sincronizar datos: " + e.getMessage());
+            // Error silencioso
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -574,16 +576,16 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
                 if (stmtUsuarios != null) stmtUsuarios.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar recursos: " + e.getMessage());
+                // Error silencioso al cerrar recursos
             }
         }
-        
         return false;
     }
     
     /**
-     * Sincroniza todos los datos del ranking con la tabla de usuarios
-     * Útil para corregir discrepancias masivas
+     * Sincroniza todos los datos del ranking con la tabla de usuarios.
+     * Útil para corregir discrepancias masivas.
+     * @return Número de usuarios sincronizados
      */
     public static int sincronizarTodosLosDatosRanking() {
         Connection conn = null;
@@ -596,12 +598,10 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
             conn = ConexionDB.getConnection();
             if (conn == null) return 0;
             
-            // Obtener todos los usuarios del ranking
             String sqlRanking = "SELECT usuario_id, mejor_puntaje FROM ranking";
             stmtRanking = conn.prepareStatement(sqlRanking);
             rs = stmtRanking.executeQuery();
             
-            // Preparar statement para actualizar usuarios
             String sqlUsuarios = "UPDATE usuarios SET mejor_puntaje = ?, formulas_completadas = 5 WHERE id = ? AND (mejor_puntaje < ? OR formulas_completadas < 5)";
             stmtUsuarios = conn.prepareStatement(sqlUsuarios);
             
@@ -616,23 +616,75 @@ public class UsuarioDAO {    // Método para registrar un nuevo usuario
                 int filasActualizadas = stmtUsuarios.executeUpdate();
                 if (filasActualizadas > 0) {
                     usuariosSincronizados++;
-                    System.out.println("Usuario " + userId + " sincronizado: puntaje=" + puntajeRanking + ", fórmulas=5");
                 }
             }
-            
         } catch (SQLException e) {
-            System.err.println("Error al sincronizar todos los datos: " + e.getMessage());
+            // Error silencioso
         } finally {
-            ConexionDB.cerrarRecursos(conn, stmtRanking, rs);
-            if (stmtUsuarios != null) {
-                try {
-                    stmtUsuarios.close();
-                } catch (SQLException e) {
-                    System.err.println("Error al cerrar statement: " + e.getMessage());
-                }
+            try {
+                if (rs != null) rs.close();
+                if (stmtRanking != null) stmtRanking.close();
+                if (stmtUsuarios != null) stmtUsuarios.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
             }
         }
-        
         return usuariosSincronizados;
+    }
+    
+    /**
+     * Obtiene los datos del jugador a partir de su ID.
+     * @param userId ID del usuario
+     * @return Objeto Player con los datos del usuario o null si no existe
+     */
+    public static Player obtenerDatosJugador(int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = ConexionDB.getConnection();
+            if (conn == null) {
+                return null;
+            }
+
+            String sql = "SELECT id, username, nombre_completo, correo FROM usuarios WHERE id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                try {
+                    Player player = new Player();
+                    
+                    int id = rs.getInt("id");
+                    String username = rs.getString("username");
+                    String nombreCompleto = rs.getString("nombre_completo");
+                    String correo = rs.getString("correo");
+                    
+                    player.setId(id);
+                    player.setUsername(username);
+                    player.setFullName(nombreCompleto);
+                    player.setEmail(correo);
+                    
+                    return player;
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+            return null;
+
+        } catch (SQLException e) {
+            return null;
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                // Error silencioso al cerrar recursos
+            }
+        }
     }
 }
