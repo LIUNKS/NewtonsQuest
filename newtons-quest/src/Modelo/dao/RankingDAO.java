@@ -1,7 +1,7 @@
 package Modelo.dao;
 
 import Modelo.ConexionDB;
-import Modelo.RankingEntry;
+import Modelo.dto.RankingEntry;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase DAO para gestionar el ranking de jugadores que han completado los 5 niveles
+ * Data Access Object para la gestión del sistema de ranking.
+ * 
+ * Maneja los puntajes y clasificaciones de jugadores que han completado
+ * los 5 niveles del juego. Incluye operaciones para guardar puntajes,
+ * obtener rankings y gestionar estadísticas de jugadores.
+ * 
+ * @author Johann
+ * @version 1.0
  */
 public class RankingDAO {
     
@@ -44,9 +51,10 @@ public class RankingDAO {
                     return actualizarPuntaje(userId, score);
                 } else {
                     // El puntaje actual es mayor o igual al nuevo
-                    return true; // No es error, simplemente no se actualiza
+                    return true;
                 }
-            } else {                // Insertar nuevo registro
+            } else {                
+                // Insertar nuevo registro
                 String sql = "INSERT INTO ranking (usuario_id, mejor_puntaje, partidas_completadas, fecha_mejor_puntaje) VALUES (?, ?, ?, NOW())";
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, userId);
@@ -62,13 +70,13 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            // Error silencioso al guardar puntaje en ranking
+            // Error al guardar puntaje en ranking
         } finally {
             try {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar conexión
+                // Error al cerrar conexión
             }
         }
         
@@ -96,14 +104,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            // Error silencioso al verificar usuario en ranking
+            // Error al verificar usuario en ranking
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar conexión
+                // Error al cerrar conexión
             }
         }
         
@@ -130,14 +138,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            // Error silencioso al obtener mejor puntaje
+            // Error al obtener mejor puntaje
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar conexión
+                // Error al cerrar conexión
             }
         }
         
@@ -167,13 +175,13 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al actualizar puntaje: " + e.getMessage());
+            // Error silencioso
         } finally {
             try {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -182,7 +190,7 @@ public class RankingDAO {
     
     /**
      * Obtiene el ranking de los mejores jugadores que completaron las 5 fórmulas
-     * @param limite Número máximo de resultados (ej: top 10)
+     * @param limite Número máximo de resultados (top 10)
      * @return Lista de objetos RankingEntry
      */
     public static List<RankingEntry> obtenerTopRanking(int limite) {
@@ -194,7 +202,7 @@ public class RankingDAO {
         try {
             conn = ConexionDB.getConnection();
             if (conn == null) {
-                System.err.println("Error: No se pudo establecer la conexión a la base de datos.");
+                // No se pudo establecer conexión
                 return ranking;
             }
               String sql = "SELECT r.usuario_id, u.username, r.mejor_puntaje, r.fecha_mejor_puntaje " +
@@ -219,18 +227,15 @@ public class RankingDAO {
                 ranking.add(entry);
             }
             
-            // Ranking obtenido silenciosamente
-            
         } catch (SQLException e) {
-            System.err.println("Error al obtener ranking: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -280,14 +285,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener posición del usuario: " + e.getMessage());
+            // Error silencioso
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -315,14 +320,14 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener total de jugadores: " + e.getMessage());
+            // Error silencioso
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                System.err.println("Error al cerrar conexión: " + e.getMessage());
+                // Error silencioso al cerrar conexión
             }
         }
         
@@ -350,7 +355,7 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener mejor puntaje: " + e.getMessage());
+            // Error silencioso
         } finally {
             ConexionDB.cerrarRecursos(conn, stmt, rs);
         }
@@ -379,7 +384,7 @@ public class RankingDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener fecha de completación: " + e.getMessage());
+            // Error silencioso
         } finally {
             ConexionDB.cerrarRecursos(conn, stmt, rs);
         }
