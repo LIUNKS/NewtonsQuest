@@ -26,6 +26,24 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.stage.Stage;
 
+/**
+ * Controlador para la pantalla del mapa en Newton's Apple Quest.
+ * 
+ * Esta clase gestiona la navegación y funcionalidades disponibles en la pantalla del mapa,
+ * incluyendo el acceso al juego, videos educativos y quiz.
+ * 
+ * Funcionalidades principales:
+ * - Navegación al juego principal
+ * - Acceso a videos educativos sobre física
+ * - Acceso al quiz (requiere desbloqueo previo de todas las fórmulas)
+ * - Gestión del progreso del usuario y desbloqueo de contenido
+ * - Retroalimentación visual sobre el progreso del usuario
+ * 
+ * Flujo de navegación:
+ * - Desde el mapa, el usuario puede acceder al juego, videos o quiz (si está desbloqueado)
+ * - El acceso al quiz está condicionado al desbloqueo de todas las fórmulas físicas
+ * - El usuario puede regresar al menú principal desde esta pantalla
+ */
 public class MapController {
     
     @FXML private Button btnJugar;
@@ -37,10 +55,13 @@ public class MapController {
     private VideoManager videoManager;
     private RankingManager rankingManager;
     
+    /**
+     * Inicializa el controlador del mapa.
+     * Configura los componentes visuales, carga la imagen de fondo,
+     * actualiza el estado del botón del quiz y configura los eventos de teclado.
+     */
     public void initialize() {
         try {
-            // MapController inicializado
-            
             // Inicializar managers
             videoManager = VideoManager.getInstance();
             rankingManager = RankingManager.getInstance();
@@ -50,9 +71,6 @@ public class MapController {
             
             // Configurar el estado inicial del botón del quiz
             updateQuizButtonState();
-            
-            // Configurar datos del usuario actual (debug deshabilitado)
-            // debugUserData();
             
             // Configurar eventos de teclado para la escena
             btnJugar.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -66,13 +84,14 @@ public class MapController {
             });
             
         } catch (Exception e) {
-            System.err.println("Error al inicializar MapController: " + e.getMessage());
+            System.err.println("Error durante la inicialización del mapa: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
     /**
-     * Actualiza el estado visual del botón del quiz según el progreso del usuario
+     * Actualiza el estado visual del botón del quiz según el progreso del usuario.
+     * Habilita o deshabilita visualmente el botón según la cantidad de fórmulas desbloqueadas.
      */
     private void updateQuizButtonState() {
         try {
@@ -84,13 +103,11 @@ public class MapController {
                 btnQuiz.setDisable(false);
                 btnQuiz.setText("Quiz");
                 btnQuiz.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-                // Botón del quiz habilitado - Todas las fórmulas desbloqueadas
             } else {
                 // No todas las fórmulas desbloqueadas - botón deshabilitado visualmente
                 btnQuiz.setDisable(false); // Mantenemos habilitado para mostrar el mensaje
                 btnQuiz.setText("Quiz (" + unlockedCount + "/5)");
                 btnQuiz.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: #2c3e50; -fx-font-weight: bold;");
-                // Botón del quiz marcado como bloqueado
             }
             
         } catch (Exception e) {
@@ -100,25 +117,15 @@ public class MapController {
     }
     
     /**
-     * Carga la imagen de fondo directamente desde código
+     * Carga la imagen de fondo del mapa
      */
     private void loadBackgroundImage() {
         try {
             // Ruta de la imagen
             String imagePath = "src/recursos/imagenes/map_background.jpg";
-            File imageFile = new File(imagePath);
             
-            Image backgroundImage;
-            
-            if (imageFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                backgroundImage = new Image(new FileInputStream(imageFile));
-                // Imagen de fondo del mapa cargada
-            } else {
-                // Estamos en producción, usar getResource
-                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/map_background.jpg"));
-                // Imagen de fondo del mapa cargada desde recursos
-            }
+            // Cargar imagen directamente desde archivo (modo desarrollo)
+            Image backgroundImage = new Image(new FileInputStream(new File(imagePath)));
             
             // Crear el objeto BackgroundImage
             BackgroundImage bgImage = new BackgroundImage(
@@ -131,36 +138,23 @@ public class MapController {
             
             // Establecer el fondo
             mapBackground.setBackground(new Background(bgImage));
-              } catch (Exception e) {
+        } catch (Exception e) {
             System.err.println("Error al cargar la imagen de fondo del mapa: " + e.getMessage());
             e.printStackTrace();
             ErrorHandler.logWarning("No se pudo cargar la imagen de fondo del mapa: " + e.getMessage());
-            // También podemos usar handleResourceError que es específico para errores de recursos
             ErrorHandler.handleResourceError("imagen de fondo del mapa", e);
         }
     }
       @FXML
     private void onJugarButtonClick(ActionEvent event) {
         try {
-            // Iniciando juego desde el mapa
-              // Cargar la pantalla del juego
+            // Iniciar el juego desde el mapa
             String gameFxmlPath = "src/Vista/Game.fxml";
             String gameCssPath = "src/Vista/resources/game.css";
             
-            // Verificar si estamos en desarrollo o en producción
-            File gameFxmlFile = new File(gameFxmlPath);
-            File gameCssFile = new File(gameCssPath);
-            
-            FXMLLoader loader;
-            String cssPath;
-            
-            if (gameFxmlFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
-                loader = new FXMLLoader(gameFxmlFile.toURI().toURL());
-                cssPath = gameCssFile.toURI().toURL().toExternalForm();            } else {                // Estamos en producción, usar getResource
-                loader = new FXMLLoader(getClass().getResource("/Vista/Game.fxml"));
-                cssPath = getClass().getResource("/Vista/resources/game.css").toExternalForm();
-            }
+            // Cargar en modo desarrollo
+            FXMLLoader loader = new FXMLLoader(new File(gameFxmlPath).toURI().toURL());
+            String cssPath = new File(gameCssPath).toURI().toURL().toExternalForm();
             
             // Cargar la pantalla del juego
             Parent root = loader.load();
@@ -178,8 +172,6 @@ public class MapController {
             stage.setScene(scene);
             stage.setTitle("Newton's Apple Quest - Juego");
             
-            // Juego iniciado correctamente
-            
         } catch (IOException e) {
             System.err.println("Error al cargar la pantalla del juego: " + e.getMessage());
             e.printStackTrace();
@@ -189,11 +181,15 @@ public class MapController {
         }
     }
     
+    /**
+     * Manejador del evento de clic en el botón de Video.
+     * Muestra el diálogo de selección de videos educativos.
+     * 
+     * @param event El evento de acción generado por el clic
+     */
     @FXML
     private void onVideoButtonClick(ActionEvent event) {
         try {
-            // Mostrando diálogo de selección de videos
-            
             // Obtener las fórmulas desbloqueadas del usuario actual
             boolean[] unlockedFormulas = getUserUnlockedFormulas();
             
@@ -208,11 +204,16 @@ public class MapController {
             ErrorHandler.handleResourceError("sistema de videos", e);
         }
     }    
+    /**
+     * Manejador del evento de clic en el botón de Quiz.
+     * Verifica si el usuario ha desbloqueado todas las fórmulas antes de permitir
+     * el acceso al quiz. Si no están todas desbloqueadas, muestra un mensaje informativo.
+     * 
+     * @param event El evento de acción generado por el clic
+     */
     @FXML
     private void onQuizButtonClick(ActionEvent event) {
         try {
-            // Verificando acceso al quiz
-            
             // Verificar si el usuario ha desbloqueado todas las fórmulas
             if (!areAllFormulasUnlocked()) {
                 // Acceso al quiz denegado
@@ -242,12 +243,8 @@ public class MapController {
             }
             
             // Acceso al quiz permitido - Todas las fórmulas desbloqueadas
-            // Iniciando quiz desde el mapa
-            
             Stage stage = (Stage) btnQuiz.getScene().getWindow();
             NavigationManager.navigateToQuiz(stage);
-            
-            // Quiz iniciado correctamente
             
         } catch (IOException e) {
             System.err.println("Error al cargar la pantalla del quiz: " + e.getMessage());
@@ -258,20 +255,24 @@ public class MapController {
         }
     }
     
+    /**
+     * Manejador del evento de clic en el botón de volver al menú principal.
+     * 
+     * @param event El evento de acción generado por el clic
+     */
     @FXML
     private void onBackToMainMenuClick(ActionEvent event) {
         returnToMainMenu();
     }
     
-    // Método para volver al menú principal
+    /**
+     * Navega de regreso al menú principal.
+     * Utiliza el NavigationManager para gestionar la transición entre pantallas.
+     */
     private void returnToMainMenu() {
         try {
-            // Volviendo al menú principal desde el mapa
-            
             Stage stage = (Stage) btnJugar.getScene().getWindow();
             NavigationManager.navigateToMainWithUser(stage);
-            
-            // Vuelto al menú principal correctamente
             
         } catch (IOException e) {
             System.err.println("Error al cargar el menú principal: " + e.getMessage());
@@ -350,8 +351,10 @@ public class MapController {
     }
     
     /**
-     * Obtiene las fórmulas desbloqueadas del usuario actual
-     * Se basa en el mejor puntaje del usuario para determinar qué fórmulas tiene disponibles
+     * Obtiene las fórmulas desbloqueadas del usuario actual.
+     * Se basa en el progreso guardado en la base de datos para determinar
+     * qué fórmulas tiene disponibles.
+     * 
      * @return Array de booleanos indicando qué fórmulas están desbloqueadas
      */
     private boolean[] getUserUnlockedFormulas() {
@@ -371,10 +374,7 @@ public class MapController {
                 for (int i = 0; i < 5; i++) {
                     unlockedFormulas[i] = (i < formulasCompletadas);
                 }
-                
-                // Fórmulas completadas cargadas del usuario
             } else {
-                // No hay usuario en sesión, todas las fórmulas bloqueadas
                 // Si no hay usuario en sesión, todas las fórmulas están bloqueadas
                 for (int i = 0; i < 5; i++) {
                     unlockedFormulas[i] = false;
@@ -383,6 +383,7 @@ public class MapController {
             
         } catch (Exception e) {
             System.err.println("Error al obtener fórmulas desbloqueadas: " + e.getMessage());
+            e.printStackTrace();
             // En caso de error, asumir que no hay fórmulas desbloqueadas
             for (int i = 0; i < 5; i++) {
                 unlockedFormulas[i] = false;
@@ -406,18 +407,10 @@ public class MapController {
     }
     
     /**
-     * Método público para actualizar el estado del mapa cuando el usuario regrese del juego
-     * Esto permite que el botón del quiz se actualice si se desbloquearon más fórmulas
+     * Método público para actualizar el estado del mapa cuando el usuario regrese del juego.
+     * Actualiza el botón del quiz si se desbloquearon más fórmulas.
      */
     public void refreshMapState() {
         updateQuizButtonState();
-        // Estado del mapa actualizado
-    }
-    
-    /**
-     * Método temporal de debug para verificar los datos del usuario (deshabilitado)
-     */
-    private void debugUserData() {
-        // Método de debug deshabilitado para mantener la consola limpia
     }
 }
