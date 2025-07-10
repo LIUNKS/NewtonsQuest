@@ -1,8 +1,8 @@
 package Controlador.componentes;
 
-import Modelo.Apple;
-import Modelo.Potion;
-import Modelo.Player;
+import Modelo.dto.Apple;
+import Modelo.dto.Potion;
+import Modelo.dto.Player;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -10,37 +10,96 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 /**
- * Clase encargada de todas las operaciones de renderizado del juego.
- * Se separa la lógica de visualización de la lógica de juego.
+ * Gestor de renderizado y gráficos del juego.
+ * 
+ * Esta clase centraliza todas las operaciones de dibujado y visualización:
+ * 
+ *   - Renderizado de elementos del juego (jugador, manzanas, pociones)
+ *   - Dibujado de interfaz de usuario (puntuación, vidas, nivel)
+ *   - Efectos visuales especiales (desbloqueos, celebraciones)
+ *   - Gestión de fondos y elementos decorativos
+ *   - Paneles informativos y detalles de fórmulas
+ * 
+ * Separa completamente la lógica de visualización de la lógica de juego,
+ * proporcionando una interfaz limpia para el renderizado de todos los
+ * componentes visuales del Newton's Quest.
  */
 public class RenderManager {
     
+    // ================================================================================================
+    // CONFIGURACIÓN DEL CANVAS Y DIMENSIONES
+    // ================================================================================================
+    
+    /** Contexto gráfico donde se realiza todo el renderizado */
     private final GraphicsContext gc;
+    
+    /** Ancho del área de juego */
     private final int GAME_WIDTH;
+    
+    /** Alto del área de juego */
     private final int GAME_HEIGHT;
+    
+    /** Posición Y del suelo del juego */
     private final int FLOOR_Y;
     
-    // Referencias a imágenes
+    // ================================================================================================
+    // RECURSOS GRÁFICOS
+    // ================================================================================================
+    
+    /** Imagen de fondo del juego */
     private Image backgroundImage;
+    
+    /** Imagen de corazón lleno para las vidas */
     private Image heartImage;
+    
+    /** Imagen de corazón vacío para las vidas perdidas */
     private Image emptyHeartImage;
-      // Estado para mostrar detalles de fórmula
+    
+    // ================================================================================================
+    // ESTADO DE INTERFAZ ESPECIAL
+    // ================================================================================================
+    
+    /** Indica si se están mostrando detalles de una fórmula */
     private boolean showingFormulaDetails = false;
+    
+    /** Índice de la fórmula cuyos detalles se están mostrando */
     private int currentFormulaIndex = -1;
+    
+    /** Texto de detalles de la fórmula actual */
     private String currentFormulaDetails = "";
+    
+    /** Nombre de la fórmula actual */
     private String currentFormulaName = "";
     
-    // Estado para mostrar celebración de completación
-    private boolean showingCompletionCelebration = false;
-    private long completionCelebrationStartTime = 0;
-    private static final long COMPLETION_CELEBRATION_DURATION = 5000; // 5 segundos
+    // ================================================================================================
+    // SISTEMA DE CELEBRACIÓN
+    // ================================================================================================
     
-    // Información de fórmulas para el desbloqueo
+    /** Indica si se está mostrando la celebración de completación */
+    private boolean showingCompletionCelebration = false;
+    
+    /** Momento en que inició la celebración de completación */
+    private long completionCelebrationStartTime = 0;
+    
+    /** Duración de la celebración en milisegundos */
+    private static final long COMPLETION_CELEBRATION_DURATION = 5000;
+    
+    // ================================================================================================
+    // INFORMACIÓN DE FÓRMULAS
+    // ================================================================================================
+    
+    /** Versiones cortas de las fórmulas para mostrar */
     private String[] FORMULAS_SHORT;
+    
+    /** Descripciones detalladas de las fórmulas */
     private String[] FORMULAS_DESCRIPTIONS;
     
+    // ================================================================================================
+    // CONSTRUCTORES
+    // ================================================================================================
+    
     /**
-     * Constructor del RenderManager
+     * Constructor principal del gestor de renderizado.
      * @param gc Contexto gráfico donde se dibujará
      * @param gameWidth Ancho del área de juego
      * @param gameHeight Alto del área de juego
@@ -51,12 +110,15 @@ public class RenderManager {
         this.GAME_WIDTH = gameWidth;
         this.GAME_HEIGHT = gameHeight;
         this.FLOOR_Y = floorY;
-        
-        System.out.println("RenderManager inicializado");
     }
-      /**
-     * Establece las imágenes utilizadas para el renderizado
-     * @param backgroundImage Imagen de fondo
+    
+    // ================================================================================================
+    // CONFIGURACIÓN DE RECURSOS
+    // ================================================================================================
+    
+    /**
+     * Establece las imágenes utilizadas para el renderizado.
+     * @param backgroundImage Imagen de fondo del juego
      * @param heartImage Imagen de corazón lleno
      * @param emptyHeartImage Imagen de corazón vacío
      */
@@ -67,7 +129,7 @@ public class RenderManager {
     }
     
     /**
-     * Establece la información de las fórmulas para mostrar en desbloqueos y detalles
+     * Establece la información de las fórmulas para mostrar en desbloqueos y detalles.
      * @param formulasShort Versiones cortas de las fórmulas
      * @param formulasDescriptions Descripciones detalladas de las fórmulas
      */
@@ -76,18 +138,19 @@ public class RenderManager {
         this.FORMULAS_DESCRIPTIONS = formulasDescriptions;
     }
     
+    // ================================================================================================
+    // RENDERIZADO BÁSICO DE ELEMENTOS
+    // ================================================================================================
+    
     /**
-     * Renderiza el fondo del juego
+     * Renderiza el fondo del juego.
      */
     public void renderBackground() {
-        // Limpiar el canvas
         gc.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         
-        // Dibujar la imagen de fondo
         if (backgroundImage != null) {
             gc.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
         } else {
-            // Dibujar el fondo (cielo) como respaldo si la imagen no se cargó
             gc.setFill(Color.SKYBLUE);
             gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         }
@@ -96,8 +159,9 @@ public class RenderManager {
         gc.setFill(Color.SADDLEBROWN);
         gc.fillRect(0, FLOOR_Y, GAME_WIDTH, GAME_HEIGHT - FLOOR_Y);
     }
-      /**
-     * Renderiza todas las manzanas activas
+    
+    /**
+     * Renderiza todas las manzanas activas.
      * @param apples Lista de manzanas a renderizar
      */
     public void renderApples(java.util.List<Apple> apples) {
@@ -109,7 +173,7 @@ public class RenderManager {
     }
     
     /**
-     * Renderiza todas las pociones activas
+     * Renderiza todas las pociones activas.
      * @param potions Lista de pociones a renderizar
      */
     public void renderPotions(java.util.List<Potion> potions) {
@@ -121,18 +185,21 @@ public class RenderManager {
     }
     
     /**
-     * Renderiza al jugador
+     * Renderiza al jugador.
      * @param player Objeto jugador a renderizar
      */
     public void renderPlayer(Player player) {
         if (player != null) {
             player.render(gc);
-        } else {
-            System.err.println("ERROR: Player es null en RenderManager.renderPlayer()");
         }
     }
-      /**
-     * Dibuja solo los elementos esenciales de la interfaz (modo minimalista)
+    
+    // ================================================================================================
+    // INTERFAZ DE USUARIO MINIMALISTA
+    // ================================================================================================
+    
+    /**
+     * Dibuja los elementos esenciales de la interfaz en modo minimalista.
      * @param score Puntuación actual
      * @param lives Vidas actuales
      * @param maxLives Máximo de vidas
@@ -144,7 +211,8 @@ public class RenderManager {
      */
     public void renderMinimalUI(int score, int lives, int maxLives, int level, boolean showingUnlockEffect,
                                boolean hasSlownessEffect, boolean hasPointsEffect, boolean hasHealthEffect) {
-        try {            // Crear un fondo semi-transparente para el puntaje
+        try {
+            // Crear un fondo semi-transparente para el puntaje
             gc.setFill(new Color(0, 0, 0, 0.5));
             gc.fillRoundRect(GAME_WIDTH - 135, 15, 120, 45, 10, 10);
             
@@ -167,7 +235,8 @@ public class RenderManager {
             if (heartImage != null && emptyHeartImage != null) {
                 int heartSize = 24; // Tamaño aumentado
                 int heartSpacing = 4; // Espacio ajustado
-                  // Calcular el ancho total que ocuparían todos los corazones
+                
+                // Calcular el ancho total que ocuparían todos los corazones
                 int totalWidth = (maxLives * (heartSize + heartSpacing));
                 
                 // Si el ancho es mayor que un tercio de la pantalla, redimensionar
@@ -192,7 +261,8 @@ public class RenderManager {
                 
                 // Asegurarse de que los corazones no se salgan de la pantalla
                 int startX = 25;
-                  for (int i = 0; i < maxLives; i++) {
+                
+                for (int i = 0; i < maxLives; i++) {
                     int x = startX + (i * (heartSize + heartSpacing));
                     
                     if (i < lives) {
@@ -204,10 +274,13 @@ public class RenderManager {
                     }
                 }
             }
-              // Si se acaba de desbloquear una fórmula, mostrar el efecto
+            
+            // Si se acaba de desbloquear una fórmula, mostrar el efecto
             if (showingUnlockEffect) {
                 renderUnlockPopup();
-            }            // Indicador de nivel mejorado en la esquina inferior izquierda
+            }
+            
+            // Indicador de nivel mejorado en la esquina inferior izquierda
             gc.setFill(new Color(0, 0, 0, 0.6));
             gc.fillRoundRect(15, GAME_HEIGHT - 45, 110, 30, 8, 8);
             
@@ -218,7 +291,8 @@ public class RenderManager {
             gc.setFill(new Color(0.4, 0.8, 1, 1)); // Azul claro
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
             gc.fillText("Nivel " + (level + 1), 35, GAME_HEIGHT - 25);
-              // Indicador de tecla de configuración en la esquina inferior derecha
+            
+            // Indicador de tecla de configuración en la esquina inferior derecha
             renderSettingsIndicator();
             
             // Indicadores de efectos de pociones activos
@@ -227,8 +301,7 @@ public class RenderManager {
             // Ya no mostramos el indicador de modo minimalista
             
         } catch (Exception e) {
-            System.err.println("Error al dibujar UI minimalista: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al dibujar UI minimalista
         }
     }
     
@@ -277,8 +350,7 @@ public class RenderManager {
                 renderFormulasPanel(unlockedFormulas, formulasShort, level);
             }
         } catch (Exception e) {
-            System.err.println("Error al dibujar UI completa: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al dibujar UI completa
         }
     }
     
@@ -315,7 +387,8 @@ public class RenderManager {
     
     /**
      * Dibuja la pantalla de pausa
-     */    public void renderPauseScreen() {
+     */
+    public void renderPauseScreen() {
         // Fondo oscuro más opaco para ocultar completamente elementos de la interfaz
         gc.setFill(new Color(0, 0, 0, 0.85));
         gc.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -333,7 +406,9 @@ public class RenderManager {
         // Borde del panel
         gc.setStroke(new Color(0.7, 0.7, 0.7, 0.6));
         gc.setLineWidth(2);
-        gc.strokeRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);          // Título
+        gc.strokeRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);
+        
+        // Título
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 48));
         gc.fillText("PAUSA", GAME_WIDTH / 2 - 80, GAME_HEIGHT / 2 - 20);
@@ -341,10 +416,13 @@ public class RenderManager {
         // Instrucción para ESC (mantener como texto ya que ESC es estándar)
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 20));
         gc.fillText("Presiona ESC para continuar", GAME_WIDTH / 2 - 130, GAME_HEIGHT / 2 + 30);
-          // Botones clickeables modernos - solo íconos
+        
+        // Botones clickeables modernos - solo íconos
         renderClickableButton("🔙", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 65, 80, 40);
         renderClickableButton("⚙️", GAME_WIDTH / 2 + 40, GAME_HEIGHT / 2 + 65, 80, 40);
-    }    /**
+    }
+    
+    /**
      * Renderiza la pantalla de Game Over con el resumen del juego
      * @param score Puntuación final
      * @param unlockedFormulas Array de fórmulas desbloqueadas
@@ -363,7 +441,9 @@ public class RenderManager {
      */
     public void renderGameOverScreen(int score, int currentLevel, boolean[] unlockedFormulas, int maxLevel) {
         renderGameOverScreen(score, currentLevel, maxLevel, unlockedFormulas, FORMULAS_SHORT, FORMULAS_DESCRIPTIONS);
-    }    /**
+    }
+    
+    /**
      * Dibuja la pantalla de fin de juego
      */
     private void renderGameOverScreen(int score, int level, int maxLevel, boolean[] unlockedFormulas,
@@ -378,7 +458,8 @@ public class RenderManager {
         }
         
         boolean allFormulasCompleted = (formulasUnlocked == maxLevel);
-          if (allFormulasCompleted) {
+        
+        if (allFormulasCompleted) {
             // BANNER DE COMPLETACIÓN MEJORADO
             renderCompletionBanner(score, level, maxLevel);
             // Fórmulas empiezan más arriba: y=300 en lugar de y=380
@@ -391,7 +472,8 @@ public class RenderManager {
             renderGameOverInstructions(formulasUnlocked, maxLevel);
         }
     }
-      /**
+    
+    /**
      * Renderiza el banner mejorado de completación del juego
      */
     private void renderCompletionBanner(int score, int level, int maxLevel) {
@@ -463,12 +545,13 @@ public class RenderManager {
         gc.setFill(Color.YELLOW);
         gc.fillText("Nivel alcanzado: " + level + " de " + maxLevel, GAME_WIDTH / 2 - 150, 220);
     }
-      /**
+    
+    /**
      * Renderiza la felicitación personalizada basada en el ranking
      */
     private void renderPersonalizedCongratulation(int score, int yPosition) {
         try {
-            Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
+            RankingManager rankingManager = RankingManager.getInstance();
             
             int position = rankingManager.getCurrentUserPosition();
             int totalPlayers = rankingManager.getTotalCompletedPlayers();
@@ -515,7 +598,8 @@ public class RenderManager {
             gc.fillText("🎉 ¡Todas las fórmulas desbloqueadas!", GAME_WIDTH / 2 - 140, yPosition + 30);
         }
     }
-      /**
+    
+    /**
      * Renderiza el resumen de fórmulas de manera organizada
      */
     private void renderFormulasSummary(boolean[] unlockedFormulas, String[] formulasShort, 
@@ -576,7 +660,9 @@ public class RenderManager {
             gc.fillText("Ninguna fórmula desbloqueada", GAME_WIDTH / 2 - 120, startY + 50);
             gc.fillText("¡Intenta conseguir al menos 100 puntos!", GAME_WIDTH / 2 - 140, startY + 70);
         }
-    }    /**
+    }
+    
+    /**
      * Renderiza las instrucciones para cuando se completa el juego
      */
     private void renderCompletionInstructions() {
@@ -585,7 +671,8 @@ public class RenderManager {
         gc.fillText("Presiona 'R' para ver el ranking | ESC para volver al mapa", 
                    GAME_WIDTH / 2 - 240, GAME_HEIGHT - 25);
     }
-      /**
+    
+    /**
      * Renderiza las instrucciones para Game Over normal
      */
     private void renderGameOverInstructions(int formulasUnlocked, int maxLevel) {
@@ -601,7 +688,8 @@ public class RenderManager {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         gc.fillText("Presiona ESC para volver al mapa", GAME_WIDTH / 2 - 140, GAME_HEIGHT - 30);
     }
-      /**
+    
+    /**
      * Dibuja las instrucciones del juego
      */
     private void renderInstructions() {
@@ -997,7 +1085,6 @@ public class RenderManager {
     public void startCompletionCelebration() {
         showingCompletionCelebration = true;
         completionCelebrationStartTime = System.currentTimeMillis();
-        System.out.println("Iniciando celebración de completación de todas las fórmulas");
     }
     
     /**
@@ -1005,7 +1092,6 @@ public class RenderManager {
      */
     public void stopCompletionCelebration() {
         showingCompletionCelebration = false;
-        System.out.println("Celebración de completación detenida manualmente");
     }
     
     /**
@@ -1023,7 +1109,6 @@ public class RenderManager {
             long currentTime = System.currentTimeMillis();
             if (currentTime - completionCelebrationStartTime > COMPLETION_CELEBRATION_DURATION) {
                 showingCompletionCelebration = false;
-                System.out.println("Celebración de completación terminada");
             }
         }
     }
@@ -1043,7 +1128,7 @@ public class RenderManager {
     private void renderCompletionCelebration(int score, int yPosition) {
         try {
             // Importar RankingManager
-            Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
+            RankingManager rankingManager = RankingManager.getInstance();
             
             // Obtener mensaje de felicitación personalizado
             String celebrationMessage = rankingManager.generateCongratulationMessage(score, true);
@@ -1276,6 +1361,4 @@ public class RenderManager {
     public int getCurrentFormulaIndex() {
         return showingFormulaDetails ? currentFormulaIndex : -1;
     }
-
-    // ...existing code...
 }
