@@ -3,8 +3,8 @@ package Controlador;
 import Controlador.navigation.NavigationManager;
 import Controlador.utils.SessionManager;
 import Modelo.dao.QuizDAO;
-import Modelo.QuizQuestion;
-import Modelo.QuizResult;
+import Modelo.dto.QuizQuestion;
+import Modelo.dto.QuizResult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,8 +33,18 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * Controlador para la funcionalidad del Quiz de Física.
- * Maneja la lógica del quiz, incluyendo preguntas, respuestas y progreso.
+ * Controlador para la funcionalidad del Quiz.
+ * 
+ * Esta clase gestiona toda la lógica del sistema de quiz, incluyendo:
+ * - Carga y presentación de preguntas de física
+ * - Manejo de respuestas del usuario y validación
+ * - Sistema de puntuación y progreso
+ * - Timer de tiempo límite por pregunta
+ * - Navegación entre preguntas y resultados
+ * - Interfaz gráfica dinámica con efectos visuales
+ * 
+ * El quiz presenta preguntas de opción múltiple sobre conceptos de física
+ * relacionados con las fórmulas desbloqueadas en el juego principal.
  */
 public class QuizController {
     
@@ -73,24 +83,23 @@ public class QuizController {
     private boolean preguntaRespondida = false;
     
     /**
-     * Inicializa el controlador del quiz
+     * Para el entorno de runtime, este método es llamado después de que todos los elementos @FXML
+     * han sido inyectados, pero antes de que la vista sea mostrada.
+     * Este enfoque es utilizado por JavaFX para la inicialización controlada.
      */
     public void initialize() {
         try {
             // Inicializando QuizController
+            System.out.println("Inicializando QuizController...");
             
             // Verificar que los botones estén correctamente inicializados
-            if (btnPista == null) {
-                System.err.println("ERROR: btnPista es null");
+            if (btnPista == null || btnResponder == null || btnVolver == null) {
+                System.err.println("Error: Componentes FXML no inicializados correctamente");
+                return;
             }
             
-            if (btnResponder == null) {
-                System.err.println("ERROR: btnResponder es null");
-            }
-            
-            if (btnVolver == null) {
-                System.err.println("ERROR: btnVolver es null");
-            }
+            // Asegurar que el botón de volver siempre esté por encima del ScrollPane
+            asegurarVisibilidadBotonVolver();
             
             // Cargar fondo
             loadBackgroundImage();
@@ -107,41 +116,88 @@ public class QuizController {
             // Configurar eventos
             configurarEventos();
             
+            // Configuración post-inicialización
+            Platform.runLater(() -> {
+                // Esto se ejecutará después de que la escena sea completamente creada
+                // Asegurar que el botón está por encima y es visible
+                if (btnVolver != null) {
+                    btnVolver.toFront();
+                    System.out.println("Botón volver llevado al frente en post-inicialización");
+                    
+                    // Añadir un efecto de hover para mejor retroalimentación visual
+                    btnVolver.setOnMouseEntered(e -> {
+                        btnVolver.setStyle(btnVolver.getStyle().replace("-fx-background-color: #e74c3c", 
+                                                                       "-fx-background-color: #c0392b"));
+                    });
+                    
+                    btnVolver.setOnMouseExited(e -> {
+                        btnVolver.setStyle(btnVolver.getStyle().replace("-fx-background-color: #c0392b", 
+                                                                       "-fx-background-color: #e74c3c"));
+                    });
+                }
+                
+                // Asegurar que el ScrollPane no tape el botón
+                if (quizScrollPane != null) {
+                    quizScrollPane.toBack();
+                }
+            });
+            
         } catch (Exception e) {
-            System.err.println("Error al inicializar QuizController: " + e.getMessage());
+            System.err.println("Error durante inicialización: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
     /**
-     * Carga la imagen de fondo del quiz
+     * Asegura que el botón de volver siempre esté visible y por encima del ScrollPane
+     */
+    private void asegurarVisibilidadBotonVolver() {
+        if (btnVolver != null && quizScrollPane != null) {
+            // Asegurar que el botón esté en el frente (mayor z-index)
+            btnVolver.toFront();
+            
+            // Hacer el ScrollPane transparente para que se vea el fondo detrás
+            quizScrollPane.setStyle("-fx-background-color: transparent;");
+            
+            // Mejorar la apariencia del botón y añadir cursor de mano
+            String estiloActual = btnVolver.getStyle();
+            if (!estiloActual.contains("-fx-cursor: hand")) {
+                btnVolver.setStyle(estiloActual + "; -fx-cursor: hand;");
+            }
+            
+            // Configurar múltiples eventos para mejorar la respuesta
+            
+            // Evento principal de acción
+            btnVolver.setOnAction(event -> {
+                System.out.println("Botón Volver presionado - Regresando al mapa...");
+                onVolverButtonClick(event);
+            });
+            
+            // Evento adicional de clic para mayor respuesta
+            btnVolver.setOnMouseClicked(event -> {
+                System.out.println("Clic detectado en botón volver");
+                onVolverButtonClick(new ActionEvent(btnVolver, null));
+                event.consume();
+            });
+        }
+    }
+    
+    /**
+     * Configura el fondo degradado del quiz
      */
     private void loadBackgroundImage() {
         try {
-            String imagePath = "src/recursos/imagenes/quiz_background.jpg";
-            File imageFile = new File(imagePath);
+            System.out.println("Configurando fondo degradado para el quiz...");
             
-            Image backgroundImage;
+            // Aplicar gradiente de color según la paleta oficial del proyecto
+            // De azul oscuro a azul medio a morado, siguiendo los colores del CSS
+            quizBackground.setStyle("-fx-background-color: linear-gradient(to bottom, #0f0c29, #24243e, #302b63);");
             
-            if (imageFile.exists()) {
-                backgroundImage = new Image(new FileInputStream(imageFile));
-            } else {
-                // Usar imagen por defecto del juego
-                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/game_background.jpg"));
-            }
-            
-            BackgroundImage bgImage = new BackgroundImage(
-                backgroundImage,
-                BackgroundRepeat.NO_REPEAT,
-                BackgroundRepeat.NO_REPEAT,
-                BackgroundPosition.CENTER,
-                new BackgroundSize(100, 100, true, true, false, true)
-            );
-            
-            quizBackground.setBackground(new Background(bgImage));
+            System.out.println("Fondo degradado aplicado correctamente");
             
         } catch (Exception e) {
-            System.err.println("Error al cargar imagen de fondo del quiz: " + e.getMessage());
+            System.err.println("Error al configurar el fondo degradado: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -185,6 +241,35 @@ public class QuizController {
                 btnResponder.setDisable(false);
             }
         });
+        
+        // Asegurar que el botón de volver tenga su evento configurado correctamente
+        if (btnVolver != null) {
+            // Aplicar un evento independiente que no se vea afectado por el scroll
+            btnVolver.setOnMouseClicked(event -> {
+                System.out.println("Evento de mouse click en botón volver detectado");
+                onVolverButtonClick(new ActionEvent(btnVolver, null));
+                event.consume(); // Importante para evitar propagación
+            });
+            
+            // Agregar también el evento estándar como respaldo
+            btnVolver.setOnAction(event -> {
+                System.out.println("Evento de botón volver detectado");
+                onVolverButtonClick(event);
+            });
+            
+            // Mejorar el estilo visual para indicar interactividad
+            btnVolver.setStyle(btnVolver.getStyle() + "; -fx-cursor: hand;");
+            
+            // Asegurar que esté siempre visible y en primer plano
+            Platform.runLater(() -> {
+                btnVolver.toFront();
+                if (quizScrollPane != null) {
+                    quizScrollPane.toBack();
+                }
+            });
+        } else {
+            System.err.println("Error: btnVolver no inicializado correctamente");
+        }
     }
     
     /**
@@ -383,7 +468,7 @@ public class QuizController {
         if (userId != -1) {
             boolean guardado = QuizDAO.guardarResultadoQuiz(resultado);
             if (!guardado) {
-                System.err.println("Error al guardar resultado del quiz");
+                // Error silencioso al guardar resultado del quiz
             }
         }
         
@@ -423,7 +508,7 @@ public class QuizController {
                     scene.getStylesheets().add(cssFile.toURI().toURL().toExternalForm());
                 }
             } catch (Exception e) {
-                System.err.println("Error al cargar CSS: " + e.getMessage());
+                // Error silencioso al cargar CSS
             }
             
             Stage stage = (Stage) btnVolver.getScene().getWindow();
@@ -431,8 +516,7 @@ public class QuizController {
             stage.setTitle("Newton's Apple Quest - Resultados del Quiz");
             
         } catch (Exception e) {
-            System.err.println("Error al mostrar resultados: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al mostrar resultados
             
             // Fallback: volver al mapa
             onVolverButtonClick(null);
@@ -445,17 +529,55 @@ public class QuizController {
     @FXML
     public void onVolverButtonClick(ActionEvent event) {
         try {
+            System.out.println("Botón Volver presionado - Regresando al mapa...");
+            
             // Detener el timer si está corriendo
             if (timer != null) {
                 timer.cancel();
+                timer = null;
             }
             
-            Stage stage = (Stage) btnVolver.getScene().getWindow();
-            NavigationManager.navigateToMap(stage);
+            // Limpiar recursos antes de navegar
+            cleanup();
             
-        } catch (IOException e) {
+            // Intentar navegar utilizando diferentes estrategias
+            Stage stage = null;
+            
+            // Estrategia 1: Utilizar el botón de volver
+            if (btnVolver != null && btnVolver.getScene() != null && btnVolver.getScene().getWindow() instanceof Stage) {
+                stage = (Stage) btnVolver.getScene().getWindow();
+            } 
+            // Estrategia 2: Utilizar el título
+            else if (lblTitulo != null && lblTitulo.getScene() != null && lblTitulo.getScene().getWindow() instanceof Stage) {
+                stage = (Stage) lblTitulo.getScene().getWindow();
+            }
+            // Estrategia 3: Utilizar el evento si está disponible
+            else if (event != null && event.getSource() instanceof javafx.scene.Node) {
+                javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+                stage = (Stage) source.getScene().getWindow();
+            }
+            
+            // Si se encontró un stage, intentar navegar
+            if (stage != null) {
+                NavigationManager.navigateToMap(stage);
+                return; // Salir después de navegar exitosamente
+            }
+            
+            // Si todas las estrategias fallan, intentar un método alternativo
+            System.err.println("No se pudo determinar el Stage para la navegación. Intentando método alternativo.");
+            NavigationManager.navigateToMapAlternative();
+            
+        } catch (Exception e) {
             System.err.println("Error al volver al mapa: " + e.getMessage());
             e.printStackTrace();
+            
+            // Último intento de navegación de emergencia
+            try {
+                NavigationManager.navigateToMapEmergency();
+            } catch (Exception ex) {
+                System.err.println("Error crítico al intentar volver al mapa: " + ex.getMessage());
+                System.err.println("La aplicación puede estar en un estado inconsistente.");
+            }
         }
     }
     
