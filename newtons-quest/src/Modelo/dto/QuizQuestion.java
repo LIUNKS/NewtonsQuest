@@ -1,4 +1,4 @@
-package Modelo;
+package Modelo.dto;
 
 /**
  * Clase que representa una pregunta del quiz.
