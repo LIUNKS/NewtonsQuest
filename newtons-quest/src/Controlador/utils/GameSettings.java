@@ -4,8 +4,24 @@ import java.io.*;
 import java.util.Properties;
 
 /**
- * Clase para manejar las configuraciones del juego.
- * Guarda y carga configuraciones como volumen, brillo, etc.
+ * Gestor de configuraciones del juego Newton's Apple Quest.
+ * 
+ * Esta clase singleton se encarga de gestionar todas las configuraciones
+ * del juego, incluyendo persistencia de datos en archivo de propiedades.
+ * 
+ * Configuraciones gestionadas:
+ * - Volumen de música de fondo (0.0 - 1.0)
+ * - Volumen de efectos de sonido (0.0 - 1.0)  
+ * - Brillo de pantalla (0.0 - 2.0)
+ * - Modo pantalla completa (habilitado/deshabilitado)
+ * 
+ * Las configuraciones se guardan automáticamente en un archivo de propiedades
+ * llamado "newtons_quest_settings.properties" en el directorio del juego.
+ * Al iniciar la aplicación, las configuraciones se cargan desde el archivo,
+ * o se utilizan valores por defecto si el archivo no existe.
+ * 
+ * Implementa el patrón Singleton para garantizar configuraciones únicas
+ * y consistentes en toda la aplicación.
  */
 public class GameSettings {
     
@@ -61,8 +77,7 @@ public class GameSettings {
                 saveSettings(); // Crear archivo con valores por defecto
             }
         } catch (Exception e) {
-            System.err.println("Error al cargar configuraciones: " + e.getMessage());
-            // Usar valores por defecto en caso de error
+            // Error silencioso al cargar configuraciones - usar valores por defecto
         }
     }
     
@@ -81,7 +96,7 @@ public class GameSettings {
                 // Configuraciones guardadas exitosamente
             }
         } catch (Exception e) {
-            System.err.println("Error al guardar configuraciones: " + e.getMessage());
+            // Error silencioso al guardar configuraciones
         }
     }
     
