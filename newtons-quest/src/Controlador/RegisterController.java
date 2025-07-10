@@ -13,17 +13,50 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+/**
+ * Controlador para la pantalla de registro de nuevos usuarios.
+ * 
+ * Esta clase gestiona toda la lógica de registro de usuarios incluyendo:
+ * - Validación de datos de entrada (nombre, usuario, email, contraseña)
+ * - Verificación de disponibilidad de nombre de usuario
+ * - Confirmación de contraseña
+ * - Registro en la base de datos
+ * - Manejo de errores y feedback al usuario
+ * - Navegación de regreso al login
+ */
 public class RegisterController {
 
+    // ===================================
+    // COMPONENTES FXML
+    // ===================================
+    
+    /** Campo de texto para el nombre completo */
     @FXML private TextField fullNameField;
+    
+    /** Campo de texto para el nombre de usuario */
     @FXML private TextField usernameField;
+    
+    /** Campo de texto para el email */
     @FXML private TextField emailField;
+    
+    /** Campo de contraseña */
     @FXML private PasswordField passwordField;
+    
+    /** Campo de confirmación de contraseña */
     @FXML private PasswordField confirmPasswordField;
+    
+    /** Botón de registro */
     @FXML private Button registerButton;
+    
+    /** Botón de regreso */
     @FXML private Button backButton;
+    
+    /** Etiqueta para mostrar errores */
     @FXML private Label errorLabel;
 
+    /**
+     * Inicializa el controlador y configura los eventos.
+     */
     public void initialize() {
         // Configurar el botón de registro
         registerButton.setOnAction(event -> handleRegister());
@@ -33,8 +66,7 @@ public class RegisterController {
             try {
                 goBackToLogin();
             } catch (IOException e) {
-                System.err.println("Error al volver a la pantalla de login: " + e.getMessage());
-                e.printStackTrace();
+                // Error silencioso al volver a la pantalla de login
             }
         });
 
@@ -93,8 +125,7 @@ public class RegisterController {
             try {
                 goBackToLogin();
             } catch (IOException e) {
-                System.err.println("Error al volver a la pantalla de login: " + e.getMessage());
-                e.printStackTrace();
+                // Error silencioso al volver a la pantalla de login
             }
         } else {
             showError("Error al registrar el usuario. Inténtalo de nuevo.");
@@ -156,8 +187,7 @@ public class RegisterController {
             stage.setTitle("Newton's Apple Quest - Inicio de Sesión");
 
         } catch (IOException e) {
-            System.err.println("Error al cargar la pantalla de login: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al cargar la pantalla de login
             throw e;
         }
     }
