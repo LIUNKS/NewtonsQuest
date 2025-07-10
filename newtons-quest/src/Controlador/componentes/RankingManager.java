@@ -1,31 +1,58 @@
 package Controlador.componentes;
 
 import Modelo.dao.RankingDAO;
-import Modelo.RankingEntry;
-import java.util.ArrayList;
+import Modelo.dto.RankingEntry;
 import java.util.List;
 
 /**
- * Clase encargada de gestionar el sistema de ranking de jugadores
- * que han completado las 5 fórmulas del juego.
+ * Gestor del sistema de rankings y logros.
+ * 
+ * Esta clase controla el sistema de rankings para jugadores que han
+ * completado todas las fórmulas de Newton:
+ * 
+ *   - Verificación de completación de las 5 fórmulas
+ *   - Guardado de puntajes en el ranking global
+ *   - Generación de mensajes de felicitación personalizados
+ *   - Cálculo de posiciones y logros especiales
+ *   - Gestión de récords y hitos significativos
+ * 
+ * Implementa el patrón Singleton para mantener la consistencia
+ * del usuario actual y los datos del ranking durante la sesión.
  */
+
 public class RankingManager {
     
+    // ================================================================================================
+    // INSTANCIA SINGLETON Y DATOS DEL USUARIO
+    // ================================================================================================
+    
+    /** Instancia única del gestor de ranking */
     private static RankingManager instance;
+    
+    /** ID del usuario actual */
     private int currentUserId = -1;
+    
+    /** Nombre de usuario actual */
     private String currentUsername = "";
     
-    // Callbacks
+    // ================================================================================================
+    // CALLBACKS Y EVENTOS
+    // ================================================================================================
+    
+    /** Callback ejecutado cuando se actualiza el ranking */
     private Runnable onRankingUpdated;
     
-    /**
-     * Constructor privado para patrón Singleton
-     */
+    // ================================================================================================
+    // CONSTRUCTORES Y PATRÓN SINGLETON
+    // ================================================================================================
+    
+    /** Constructor privado para implementar patrón Singleton */
     private RankingManager() {
     }
     
     /**
-     * Obtiene la instancia única del RankingManager
+     * Obtiene la instancia única del gestor de ranking.
+     * @return Instancia única del RankingManager
      */
     public static RankingManager getInstance() {
         if (instance == null) {
@@ -34,31 +61,40 @@ public class RankingManager {
         return instance;
     }
     
+    // ================================================================================================
+    // CONFIGURACIÓN DEL USUARIO ACTUAL
+    // ================================================================================================
+    
     /**
-     * Establece el usuario actual
+     * Establece el usuario actual para las operaciones de ranking.
+     * @param userId ID único del usuario
+     * @param username Nombre de usuario
      */
     public void setCurrentUser(int userId, String username) {
         this.currentUserId = userId;
         this.currentUsername = username;
-        // Usuario configurado silenciosamente
     }
     
     /**
-     * Establece el callback para cuando se actualiza el ranking
+     * Establece el callback para cuando se actualiza el ranking.
+     * @param callback Acción a ejecutar cuando se actualiza el ranking
      */
     public void setOnRankingUpdated(Runnable callback) {
         this.onRankingUpdated = callback;
     }
     
+    // ================================================================================================
+    // VERIFICACIÓN Y GUARDADO DE PROGRESO
+    // ================================================================================================
+    
     /**
-     * Verifica si el usuario completó las 5 fórmulas y guarda su puntaje
+     * Verifica si el usuario completó las 5 fórmulas y guarda su puntaje.
      * @param formulasUnlocked Array de fórmulas desbloqueadas
-     * @param score Puntaje final
+     * @param score Puntaje final obtenido
      * @return true si se completaron todas las fórmulas
      */
     public boolean checkAndSaveCompletedGame(boolean[] formulasUnlocked, int score) {
         if (currentUserId == -1) {
-            // No hay usuario actual establecido
             return false;
         }
         
@@ -69,8 +105,6 @@ public class RankingManager {
                 formulasCompletadas++;
             }
         }
-        
-        // Usuario completó las fórmulas
         
         // Verificar si completó todas las fórmulas
         if (formulasCompletadas >= 5) {
@@ -86,28 +120,31 @@ public class RankingManager {
         return false;
     }
     
+    // ================================================================================================
+    // CONSULTAS DE RANKING
+    // ================================================================================================
+    
     /**
-     * Obtiene el top N del ranking
+     * Obtiene el top N del ranking de jugadores completos.
+     * @param limite Número máximo de jugadores a retornar
+     * @return Lista de entradas del ranking ordenadas por puntaje
      */
     public List<RankingEntry> getTopRanking(int limite) {
         return RankingDAO.obtenerTopRanking(limite);
     }
     
     /**
-     * Obtiene los mejores jugadores del ranking
+     * Obtiene los mejores jugadores del ranking.
      * @param limit Número máximo de jugadores a retornar
-     * @return Lista de entradas del ranking ordenadas por puntaje
-     */    public List<RankingEntry> getTopPlayers(int limit) {
-        try {
-            return RankingDAO.obtenerTopRanking(limit);
-        } catch (Exception e) {
-            System.err.println("Error al obtener top players: " + e.getMessage());
-            return new ArrayList<>();
-        }
+     * @return Lista de entradas del ranking o lista vacía si hay error
+     */
+    public List<RankingEntry> getTopPlayers(int limit) {
+        return RankingDAO.obtenerTopRanking(limit);
     }
     
     /**
-     * Obtiene la posición del usuario actual en el ranking
+     * Obtiene la posición del usuario actual en el ranking.
+     * @return Posición en el ranking o -1 si no hay usuario actual
      */
     public int getCurrentUserPosition() {
         if (currentUserId == -1) {
@@ -117,15 +154,24 @@ public class RankingManager {
     }
     
     /**
-     * Obtiene el total de jugadores que han completado el juego
+     * Obtiene el total de jugadores que han completado el juego.
+     * @return Número total de jugadores que completaron todas las fórmulas
      */
     public int getTotalCompletedPlayers() {
         return RankingDAO.obtenerTotalJugadoresCompletos();
     }
     
+    // ================================================================================================
+    // GENERACIÓN DE MENSAJES Y LOGROS
+    // ================================================================================================
+    
     /**
-     * Genera un mensaje de felicitación personalizado según el ranking
-     */    public String generateCongratulationMessage(int score, boolean allFormulasCompleted) {
+     * Genera un mensaje de felicitación personalizado según el ranking.
+     * @param score Puntaje obtenido por el jugador
+     * @param allFormulasCompleted Si completó todas las fórmulas
+     * @return Mensaje de felicitación personalizado
+     */
+    public String generateCongratulationMessage(int score, boolean allFormulasCompleted) {
         if (!allFormulasCompleted) {
             return "¡Buen trabajo! Sigue jugando para desbloquear todas las fórmulas y entrar al ranking de maestros de la física.";
         }
@@ -161,7 +207,10 @@ public class RankingManager {
     }
     
     /**
-     * Verifica si hay nuevos récords o mejoras significativas
+     * Verifica si hay nuevos récords o mejoras significativas.
+     * @param newScore Nuevo puntaje obtenido
+     * @param allFormulasCompleted Si completó todas las fórmulas
+     * @return Mensaje de logro especial o null si no hay logros
      */
     public String checkForAchievements(int newScore, boolean allFormulasCompleted) {
         if (!allFormulasCompleted) {
@@ -199,13 +248,22 @@ public class RankingManager {
         return null;
     }
     
+    // ================================================================================================
+    // MÉTODOS DE ACCESO - GETTERS
+    // ================================================================================================
+    
     /**
-     * Obtiene información del usuario actual
+     * Obtiene el nombre del usuario actual.
+     * @return Nombre de usuario actual
      */
     public String getCurrentUsername() {
         return currentUsername;
     }
     
+    /**
+     * Obtiene el ID del usuario actual.
+     * @return ID del usuario actual
+     */
     public int getCurrentUserId() {
         return currentUserId;
     }
