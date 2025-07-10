@@ -1,32 +1,65 @@
 package Controlador.componentes;
 
 /**
- * Clase encargada de gestionar el sistema de puntuación y vidas.
- * Separa la lógica de puntuación del controlador principal.
+ * Gestor de puntuación y sistema de vidas.
+ * 
+ * Esta clase controla el sistema de puntuación y vidas del juego:
+ * 
+ *   - Gestión de puntuación actual del jugador
+ *   - Sistema de vidas y game over
+ *   - Efectos temporales (puntos dobles, etc.)
+ *   - Callbacks para eventos de puntuación
+ *   - Validación de límites y restricciones
+ * 
+ * Centraliza toda la lógica relacionada con el puntaje y la supervivencia
+ * del jugador, proporcionando una interfaz limpia para el control de
+ * estos aspectos fundamentales del juego.
  */
 public class ScoreManager {
     
+    // ================================================================================================
+    // ESTADO DEL JUGADOR
+    // ================================================================================================
+    
+    /** Puntuación actual del jugador */
     private int score = 0;
+    
+    /** Vidas actuales del jugador */
     private int lives;
+    
+    /** Número máximo de vidas permitidas */
     private final int MAX_LIVES;
     
-    // Callbacks
+    // ================================================================================================
+    // CALLBACKS Y EVENTOS
+    // ================================================================================================
+    
+    /** Callback ejecutado cuando el juego termina */
     private Runnable onGameOver;
+    
+    /** Callback ejecutado cuando cambia la puntuación */
     private java.util.function.Consumer<Integer> onScoreChange;
     
+    // ================================================================================================
+    // CONSTRUCTORES
+    // ================================================================================================
+    
     /**
-     * Constructor del ScoreManager
-     * @param maxLives Número máximo de vidas
+     * Constructor principal del gestor de puntuación.
+     * @param maxLives Número máximo de vidas permitidas
      */
     public ScoreManager(int maxLives) {
         this.MAX_LIVES = maxLives;
         this.lives = maxLives;
-        // ScoreManager inicializado
     }
     
+    // ================================================================================================
+    // CONFIGURACIÓN DE CALLBACKS
+    // ================================================================================================
+    
     /**
-     * Establece los callbacks para eventos relacionados con la puntuación
-     * @param onGameOver Acción cuando el juego termina
+     * Establece los callbacks para eventos relacionados con la puntuación.
+     * @param onGameOver Acción cuando el juego termina (vidas = 0)
      * @param onScoreChange Acción cuando cambia la puntuación
      */
     public void setCallbacks(Runnable onGameOver, java.util.function.Consumer<Integer> onScoreChange) {
@@ -34,88 +67,93 @@ public class ScoreManager {
         this.onScoreChange = onScoreChange;
     }
     
+    // ================================================================================================
+    // GESTIÓN DE PUNTUACIÓN
+    // ================================================================================================
+    
     /**
-     * Añade puntos a la puntuación actual
-     * @param points Puntos a añadir (puede ser negativo)
+     * Añade puntos a la puntuación actual.
+     * @param points Puntos a añadir (puede ser negativo para penalizaciones)
      */
     public void addScore(int points) {
         score += points;
         
-        // Asegurar que la puntuación no sea negativa
         if (score < 0) {
             score = 0;
         }
         
-        // Puntuación actualizada
-        
-        // Notificar el cambio de puntuación
         if (onScoreChange != null) {
             onScoreChange.accept(score);
         }
     }
     
+    // ================================================================================================
+    // GESTIÓN DE VIDAS
+    // ================================================================================================
+    
     /**
-     * Reduce una vida del jugador y verifica si el juego ha terminado
+     * Reduce una vida del jugador y verifica si el juego ha terminado.
      * @param reason Motivo por el que perdió la vida
      * @return true si quedan vidas, false si el juego ha terminado
      */
     public boolean loseLife(String reason) {
         if (lives > 0) {
             lives--;
-            // Vida perdida
             
-            // Si no quedan vidas, fin del juego
             if (lives <= 0) {
-                // GAME OVER - no quedan vidas
-                
-                // Notificar fin del juego
                 if (onGameOver != null) {
                     onGameOver.run();
                 }
-                
                 return false;
             }
             
             return true;
         }
-          return false;
+        
+        return false;
     }
     
     /**
-     * Añade una vida extra al jugador (si no ha alcanzado el máximo)
+     * Añade una vida extra al jugador si no ha alcanzado el máximo.
      * @param reason Motivo por el que ganó la vida
      * @return true si se pudo añadir la vida, false si ya tenía el máximo
      */
     public boolean gainLife(String reason) {
         if (lives < MAX_LIVES) {
             lives++;
-            // Vida ganada
             return true;
         } else {
-            // No se puede ganar vida - ya tiene el máximo
             return false;
         }
     }
     
+    // ================================================================================================
+    // REINICIO Y ESTADO
+    // ================================================================================================
+    
     /**
-     * Restablece la puntuación y las vidas a sus valores iniciales
+     * Restablece la puntuación y las vidas a sus valores iniciales.
      */
     public void reset() {
         score = 0;
         lives = MAX_LIVES;
-        // Puntuación y vidas restablecidas
     }
     
-    // Getters
+    // ================================================================================================
+    // MÉTODOS DE ACCESO - GETTERS
+    // ================================================================================================
     
+    /** @return Puntuación actual del jugador */
     public int getScore() {
         return score;
     }
     
+    /** @return Vidas actuales del jugador */
     public int getLives() {
         return lives;
     }
     
+    /** @return Número máximo de vidas permitidas */
     public int getMaxLives() {
         return MAX_LIVES;
     }
