@@ -1,17 +1,38 @@
-package Modelo;
+package Modelo.dto;
 
 import java.sql.Timestamp;
 
 /**
- * Clase que representa una entrada en el ranking de jugadores
+ * Representa una entrada en el ranking de jugadores.
+ * 
+ * Contiene información de posición, usuario, puntaje y fecha de un récord
+ * para mostrar en las tablas de clasificación del juego.
+ * 
+ * @author Johann
+ * @version 1.0
  */
 public class RankingEntry {
+    
+    /** Posición en el ranking (1, 2, 3, etc.) */
     private int posicion;
+    /** ID único del usuario en la base de datos */
     private int userId;
+    /** Nombre de usuario para mostrar */
     private String username;
+    /** Puntaje obtenido por el jugador */
     private int puntaje;
+    /** Fecha y hora cuando se completó el juego */
     private Timestamp fechaCompletado;
     
+    /**
+     * Constructor para crear una entrada de ranking.
+     * 
+     * @param posicion Posición en el ranking
+     * @param userId ID del usuario
+     * @param username Nombre de usuario
+     * @param puntaje Puntaje obtenido
+     * @param fechaCompletado Fecha de finalización
+     */
     public RankingEntry(int posicion, int userId, String username, int puntaje, Timestamp fechaCompletado) {
         this.posicion = posicion;
         this.userId = userId;
@@ -38,7 +59,7 @@ public class RankingEntry {
     }
     
     /**
-     * Obtiene el puntaje (alias para getPuntaje)
+     * Obtiene el puntaje
      */
     public int getScore() {
         return puntaje;
