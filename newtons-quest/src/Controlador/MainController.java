@@ -12,8 +12,8 @@ import Controlador.utils.CertificateGenerator;
 import Controlador.utils.ErrorHandler;
 import Controlador.utils.SessionManager;
 import Modelo.dao.UsuarioDAO;
-import Modelo.QuizResult;
-import Modelo.Player;
+import Modelo.dto.QuizResult;
+import Modelo.dto.Player;
 import Modelo.dao.QuizDAO;
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -58,10 +58,7 @@ public class MainController {
         if (sessionManager.isLoggedIn()) {
             setUsername(sessionManager.getCurrentUsername());
         }
-        
-        // Inicializar directorios para certificados
-        CertificateGenerator.initCertificateDirectories();
-        
+       
         // MainController inicializado
     }
       // Método para establecer el nombre de usuario
@@ -129,7 +126,8 @@ public class MainController {
             ErrorHandler.handleNavigationError("pantalla de login", e, (Stage) logoutButton.getScene().getWindow());
         }
     }
-      /**
+      
+    /**
      * Muestra el diálogo de perfil de usuario desde el menú principal
      */
     @FXML
@@ -193,8 +191,7 @@ public class MainController {
             
         } catch (Exception e) {
             ErrorHandler.handleResourceError("video de biografía", e);
-            System.err.println("Error al reproducir video de biografía: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso al reproducir video de biografía
         }
     }
     
@@ -285,7 +282,7 @@ public class MainController {
             String certificatePath = CertificateGenerator.generateCertificate(player, latestResult, stage);
             
             if (certificatePath != null) {
-                showCertificateAlert(true, "¡Certificado generado con éxito!\nGuardado en: " + certificatePath);
+                showCertificateAlert(true, "¡Certificado generado con éxito!");
                 // Certificado generado correctamente
             } else {
                 showCertificateAlert(false, "Hubo un problema al generar el certificado. Inténtalo de nuevo.");
