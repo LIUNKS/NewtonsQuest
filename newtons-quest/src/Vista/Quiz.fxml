@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    Quiz.fxml - Interfaz del sistema de quiz
+    
+    Esta vista presenta preguntas de opción múltiple sobre conceptos de física.
+    Incluye navegación entre preguntas, temporizador, barra de progreso, sistema
+    de pistas y validación de respuestas. Diseño responsivo con scroll.
+
+    Controlador: Controlador.QuizController
+    Autor: Johann
+-->
+
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -14,10 +25,15 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.geometry.Insets?>
 
+<?import java.net.URL?>
+
 <AnchorPane fx:id="quizBackground" prefHeight="700.0" prefWidth="900.0" styleClass="quiz-background" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controlador.QuizController">
+    <stylesheets>
+        <URL value="@resources/quiz.css" />
+    </stylesheets>
    <children>
       <!-- Botón para volver al mapa - Posición fija -->
-      <Button fx:id="btnVolver" layoutX="20.0" layoutY="20.0" mnemonicParsing="false" onAction="#onVolverButtonClick" prefHeight="50.0" prefWidth="50.0" style="-fx-background-color: #e74c3c; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #c0392b; -fx-border-width: 2;" text="←" textFill="WHITE">
+      <Button fx:id="btnVolver" layoutX="20.0" layoutY="20.0" mnemonicParsing="false" onAction="#onVolverButtonClick" prefHeight="50.0" prefWidth="50.0" style="-fx-background-color: #e74c3c; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #c0392b; -fx-border-width: 2; -fx-cursor: hand;" text="←" textFill="WHITE" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
@@ -27,7 +43,7 @@
       <ScrollPane fx:id="quizScrollPane" fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" 
                   AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" 
                   AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                  styleClass="quiz-scroll">
+                  styleClass="quiz-scroll" style="-fx-background-color: transparent;">
          <content>
             <VBox spacing="15.0" style="-fx-background-color: transparent;" prefHeight="650.0">
                <padding>
@@ -46,7 +62,7 @@
                </HBox>
                
                <!-- Información del progreso y puntuación -->
-               <HBox spacing="15.0" style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 10; -fx-padding: 10;">
+               <HBox spacing="15.0" style="-fx-background-color: rgba(255, 255, 255, 0.1); -fx-background-radius: 10; -fx-padding: 10;">
                   <children>
                      <!-- Progreso izquierda -->
                      <VBox spacing="5.0" HBox.hgrow="ALWAYS">
@@ -56,7 +72,7 @@
                                  <Font name="System Bold" size="16.0" />
                               </font>
                            </Label>
-                           <ProgressBar fx:id="progressBar" prefWidth="200.0" maxWidth="Infinity" progress="0.0" styleClass="quiz-progress" />
+                           <ProgressBar fx:id="progressBar" prefWidth="200.0" maxWidth="Infinity" progress="0.0" styleClass="quiz-progress" style="-fx-accent: #4CAF50;" />
                            <Label fx:id="lblTiempo" text="Tiempo: 00:00" textFill="#ffffff">
                               <font>
                                  <Font size="14.0" />
@@ -87,7 +103,7 @@
                </HBox>
                
                <!-- Área de la pregunta y opciones -->
-               <VBox spacing="10.0" style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-padding: 15;">
+               <VBox spacing="10.0" style="-fx-background-color: rgba(255, 255, 255, 0.1); -fx-background-radius: 15; -fx-padding: 15;">
                   <children>
                      <!-- Pregunta -->
                      <Label fx:id="lblPregunta" text="¿Cuál es la respuesta correcta?" textFill="#ffffff" wrapText="true" maxWidth="Infinity">
@@ -160,14 +176,14 @@
                </VBox>
                
                <!-- Botones de acción -->
-               <HBox alignment="CENTER" spacing="20.0" style="-fx-padding: 20 0 30 0; -fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 15;">
+               <HBox alignment="CENTER" spacing="20.0" style="-fx-padding: 20 0 30 0; -fx-background-color: rgba(255, 255, 255, 0.1); -fx-background-radius: 15;">
                   <children>
-                     <Button fx:id="btnPista" mnemonicParsing="false" onAction="#onPistaButtonClick" prefHeight="50.0" prefWidth="180.0" text="💡 Ver Pista" style="-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2);">
+                     <Button fx:id="btnPista" mnemonicParsing="false" onAction="#onPistaButtonClick" prefHeight="50.0" prefWidth="180.0" text="💡 Ver Pista" style="-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2); -fx-cursor: hand;">
                         <font>
                            <Font name="System Bold" size="14.0" />
                         </font>
                      </Button>
-                     <Button fx:id="btnResponder" mnemonicParsing="false" onAction="#onResponderButtonClick" prefHeight="50.0" prefWidth="180.0" text="Responder" style="-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2);">
+                     <Button fx:id="btnResponder" mnemonicParsing="false" onAction="#onResponderButtonClick" prefHeight="50.0" prefWidth="180.0" text="Responder" style="-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-border-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2); -fx-cursor: hand;">
                         <font>
                            <Font name="System Bold" size="14.0" />
                         </font>
