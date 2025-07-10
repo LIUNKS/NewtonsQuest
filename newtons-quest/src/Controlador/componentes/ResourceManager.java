@@ -5,30 +5,64 @@ import java.io.FileInputStream;
 import javafx.scene.image.Image;
 
 /**
- * Clase encargada de gestionar la carga de recursos del juego.
- * Separa la lógica de carga de recursos del controlador principal.
+ * Gestor de carga de recursos gráficos.
+ * 
+ * Esta clase centraliza la carga de todos los recursos gráficos del juego:
+ * 
+ *   - Imágenes de fondo y escenarios
+ *   - Sprites de interfaz de usuario (corazones, iconos)
+ *   - Gestión de rutas de desarrollo vs. producción
+ *   - Carga de recursos desde archivos locales
+ *   - Fallbacks para recursos no encontrados
+ * 
+ * Separa completamente la lógica de carga de recursos del resto
+ * del juego, proporcionando una interfaz limpia para acceder
+ * a todos los recursos gráficos necesarios.
  */
 public class ResourceManager {
     
-    // Rutas de los recursos
+    // ================================================================================================
+    // RUTAS DE RECURSOS (ENTORNO DE DESARROLLO)
+    // ================================================================================================
+    
+    /** Ruta de la imagen de fondo del juego */
     private final String BACKGROUND_IMAGE_PATH = "src/recursos/imagenes/fondo_juego.jpg";
+    
+    /** Ruta de la imagen de corazón lleno */
     private final String HEART_IMAGE_PATH = "src/recursos/sprites/corazon/corazon_lleno.png";
+    
+    /** Ruta de la imagen de corazón vacío */
     private final String EMPTY_HEART_IMAGE_PATH = "src/recursos/sprites/corazon/corazon_vacio.png";
     
-    // Recursos cargados
+    // ================================================================================================
+    // RECURSOS CARGADOS
+    // ================================================================================================
+    
+    /** Imagen de fondo cargada */
     private Image backgroundImage;
+    
+    /** Imagen de corazón lleno cargada */
     private Image heartImage;
+    
+    /** Imagen de corazón vacío cargada */
     private Image emptyHeartImage;
     
-    /**
-     * Constructor del ResourceManager
-     */
-    public ResourceManager() {
-        // ResourceManager inicializado
-    }
+    // ================================================================================================
+    // CONSTRUCTORES
+    // ================================================================================================
     
     /**
-     * Carga todos los recursos necesarios para el juego
+     * Constructor principal del gestor de recursos.
+     */
+    public ResourceManager() {
+    }
+    
+    // ================================================================================================
+    // CARGA DE RECURSOS
+    // ================================================================================================
+    
+    /**
+     * Carga todos los recursos necesarios para el juego.
      */
     public void loadAllResources() {
         loadBackgroundImage();
@@ -36,25 +70,23 @@ public class ResourceManager {
     }
     
     /**
-     * Carga la imagen de fondo del juego
+     * Carga la imagen de fondo del juego.
      */
     private void loadBackgroundImage() {
-        try {
-            File backgroundFile = new File(BACKGROUND_IMAGE_PATH);
-            
-            if (backgroundFile.exists()) {
-                // Estamos en desarrollo, usar ruta de archivo
+        File backgroundFile = new File(BACKGROUND_IMAGE_PATH);
+        
+        if (backgroundFile.exists()) {
+            try {
                 backgroundImage = new Image(new FileInputStream(backgroundFile));
-                // Imagen de fondo cargada correctamente
-            } else {
-                // Estamos en producción, usar getResource
-                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/fondo_juego.jpg"));
-                // Imagen de fondo cargada desde recursos
+            } catch (Exception e) {
+                backgroundImage = null;
             }
-        } catch (Exception e) {
-            System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
-            e.printStackTrace();
-            backgroundImage = null;
+        } else {
+            try {
+                backgroundImage = new Image(getClass().getResourceAsStream("/recursos/imagenes/fondo_juego.jpg"));
+            } catch (Exception e) {
+                backgroundImage = null;
+            }
         }
     }
     
@@ -88,16 +120,30 @@ public class ResourceManager {
         }
     }
     
-    // Getters para los recursos cargados
+    // ================================================================================================
+    // MÉTODOS DE ACCESO - GETTERS
+    // ================================================================================================
     
+    /**
+     * Obtiene la imagen de fondo cargada.
+     * @return Imagen de fondo o null si no se pudo cargar
+     */
     public Image getBackgroundImage() {
         return backgroundImage;
     }
     
+    /**
+     * Obtiene la imagen de corazón lleno.
+     * @return Imagen de corazón lleno o imagen por defecto
+     */
     public Image getHeartImage() {
         return heartImage;
     }
     
+    /**
+     * Obtiene la imagen de corazón vacío.
+     * @return Imagen de corazón vacío o imagen por defecto
+     */
     public Image getEmptyHeartImage() {
         return emptyHeartImage;
     }
