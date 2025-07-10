@@ -15,30 +15,68 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * Diálogo de configuración del juego con controles de volumen y brillo
+ * Diálogo de configuración del juego Newton's Apple Quest.
+ * 
+ * Esta clase proporciona una interfaz para que los usuarios ajusten
+ * las configuraciones del juego, incluyendo volumen de música y brillo
+ * de la pantalla. Los cambios pueden aplicarse en tiempo real o cancelarse.
+ * 
+ * Características:
+ * - Control deslizante para volumen de música
+ * - Control deslizante para brillo de pantalla
+ * - Botones para aplicar, cancelar o restaurar valores por defecto
+ * - Callbacks para aplicar cambios en tiempo real
+ * - Interfaz visual consistente con el tema del juego
  */
 public class SettingsDialog {
     
+    /** Escenario del diálogo de configuración */
     private Stage settingsStage;
+    
+    /** Escenario padre para centrar el diálogo */
     private Stage parentStage;
-    private GameSettings gameSettings;    // Controles de configuración
+    
+    /** Gestor de configuraciones del juego */
+    private GameSettings gameSettings;
+    
+    // === Controles de configuración ===
+    /** Control deslizante para el volumen de música */
     private Slider musicVolumeSlider;
+    
+    /** Control deslizante para el brillo de pantalla */
     private Slider brightnessSlider;
     
-    // Variables para guardar valores originales
+    // === Valores originales para cancelar cambios ===
+    /** Volumen original de música para restaurar si se cancela */
     private double originalMusicVolume;
+    
+    /** Brillo original de pantalla para restaurar si se cancela */
     private double originalBrightness;
     
-    // Callback para aplicar cambios de brillo
+    // === Callbacks para aplicar cambios en tiempo real ===
+    /** Callback ejecutado cuando cambia el brillo */
     private Runnable onBrightnessChanged;
+    
+    /** Callback ejecutado cuando cambia el volumen */
     private Runnable onVolumeChanged;
-      public SettingsDialog(Stage parentStage) {
+    
+    /**
+     * Constructor básico del diálogo de configuración.
+     * 
+     * @param parentStage Escenario padre para centrar el diálogo
+     */
+    public SettingsDialog(Stage parentStage) {
         this.parentStage = parentStage;
         this.gameSettings = GameSettings.getInstance();
         initializeDialog();
     }
-      /**
-     * Constructor con callbacks para aplicar cambios
+    
+    /**
+     * Constructor con callbacks para aplicar cambios en tiempo real.
+     * 
+     * @param parentStage Escenario padre para centrar el diálogo
+     * @param onBrightnessChanged Callback ejecutado cuando cambia el brillo
+     * @param onVolumeChanged Callback ejecutado cuando cambia el volumen
      */
     public SettingsDialog(Stage parentStage, Runnable onBrightnessChanged, Runnable onVolumeChanged) {
         this.parentStage = parentStage;
@@ -265,17 +303,16 @@ public class SettingsDialog {
         return buttonContainer;
     }
     
+    /**
+     * Aplica los estilos CSS del juego a la escena del diálogo.
+     * 
+     * @param scene Escena donde aplicar los estilos CSS
+     */
     private void applyCSSStyles(Scene scene) {
-        try {
-            File mainCssFile = new File("src/Vista/resources/main.css");
-            if (mainCssFile.exists()) {
-                scene.getStylesheets().add(mainCssFile.toURI().toURL().toExternalForm());            } else {
-                // Fallback para producción
-                String cssPath = getClass().getResource("/Vista/resources/main.css").toExternalForm();
-                scene.getStylesheets().add(cssPath);
-            }
-        } catch (Exception cssEx) {
-            System.err.println("No se pudo cargar CSS para el diálogo de configuración: " + cssEx.getMessage());
+        // === Aplicación de estilos CSS desde directorio de desarrollo ===
+        File mainCssFile = new File("src/Vista/resources/main.css");
+        if (mainCssFile.exists()) {
+            scene.getStylesheets().add(mainCssFile.toURI().toString());
         }
     }    private void centerWindow() {
         if (parentStage != null) {
