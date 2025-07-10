@@ -1,7 +1,7 @@
 package Controlador;
 
 import Controlador.navigation.NavigationManager;
-import Modelo.QuizResult;
+import Modelo.dto.QuizResult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,8 +23,23 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * Controlador para mostrar los resultados del quiz.
- * Presenta los resultados obtenidos por el usuario al completar el quiz.
+ * Controlador para la pantalla de resultados del quiz.
+ * 
+ * Esta clase gestiona la presentación de los resultados obtenidos por el usuario
+ * al completar un quiz. Se encarga de:
+ * - Mostrar estadísticas detalladas del rendimiento (porcentaje, calificación, tiempo)
+ * - Determinar si el usuario aprobó o reprobó el quiz
+ * - Generar certificados de aprobación cuando corresponde
+ * - Proporcionar mensajes motivacionales personalizados
+ * - Navegar de vuelta al mapa principal
+ * 
+ * La interfaz muestra información como:
+ * - Estado de aprobación/reprobación
+ * - Porcentaje de aciertos
+ * - Calificación numérica
+ * - Número de respuestas correctas/incorrectas
+ * - Tiempo empleado en el quiz
+ * - Opciones para generar certificado (si aplica)
  */
 public class QuizResultController {
     
@@ -53,8 +68,7 @@ public class QuizResultController {
             loadBackgroundImage();
             configurarEfectosBotones();
         } catch (Exception e) {
-            System.err.println("Error al inicializar QuizResultController: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso en inicialización
         }
     }
     
@@ -86,7 +100,7 @@ public class QuizResultController {
             resultBackground.setBackground(new Background(bgImage));
             
         } catch (Exception e) {
-            System.err.println("Error al cargar imagen de fondo de resultados: " + e.getMessage());
+            // Error silencioso al cargar imagen de fondo
         }
     }
     
@@ -218,10 +232,9 @@ public class QuizResultController {
                 }
             }
         } catch (IndexOutOfBoundsException e) {
-            System.err.println("Error al personalizar mensajes: " + e.getMessage());
-            // Usar mensajes por defecto si hay problemas
+            // Error silencioso al personalizar mensajes
         } catch (ClassCastException e) {
-            System.err.println("Error de tipo al personalizar mensajes: " + e.getMessage());
+            // Error silencioso de tipo al personalizar mensajes
         }
     }
     
@@ -255,7 +268,7 @@ public class QuizResultController {
                     scene.getStylesheets().add(cssFile.toURI().toURL().toExternalForm());
                 }
             } catch (Exception e) {
-                System.err.println("Error al cargar CSS: " + e.getMessage());
+                // Error silencioso al cargar CSS
             }
             
             Stage stage = (Stage) btnRepetir.getScene().getWindow();
