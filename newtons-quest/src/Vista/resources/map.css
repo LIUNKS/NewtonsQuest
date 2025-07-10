@@ -1,14 +1,13 @@
 /* Estilos para la pantalla del mapa */
 .map-background {
     -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);
-    background-color: #1e3c72; /* Propiedad estándar para compatibilidad */
-    /* Intentamos varias rutas posibles para la imagen de fondo */
+    background-color: #1e3c72;
     -fx-background-image: url("/recursos/imagenes/map_background.jpg");
-    background-image: url("/recursos/imagenes/map_background.jpg"); /* Propiedad estándar para compatibilidad */
+    background-image: url("/recursos/imagenes/map_background.jpg");
     -fx-background-size: cover;
-    background-size: cover; /* Propiedad estándar para compatibilidad */
+    background-size: cover;
     -fx-background-position: center center;
-    background-position: center center; /* Propiedad estándar para compatibilidad */
+    background-position: center center;
 }
 
 .map-button {
