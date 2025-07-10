@@ -1,5 +1,6 @@
 package Controlador.dialogs;
 
+import Controlador.componentes.RankingManager;
 import Modelo.dao.UsuarioDAO;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,21 +15,44 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * Diálogo para mostrar y editar el perfil del usuario.
- * Permite al usuario ver y modificar su información personal,
- * así como visualizar sus estadísticas de juego.
+ * Diálogo de perfil de usuario en Newton's Quest.
+ * 
+ * Esta clase proporciona una interfaz completa para que los usuarios
+ * visualicen su información personal y estadísticas de juego.
+ * 
+ * Características:
+ * - Visualización de información personal del usuario
+ * - Estadísticas de juego (puntaje, ranking, fórmulas completadas)
+ * - Fecha de última partida y fecha de registro
+ * - Interfaz visual atractiva con gradientes y efectos
+ * - Sincronización automática de datos de ranking
  */
 public class UserProfileDialog {
     
+    // ===================================
+    // ATRIBUTOS PRIVADOS
+    // ===================================
+    
+    /** Escenario del diálogo de perfil */
     private Stage dialogStage;
+    
+    /** Nombre de usuario actual */
     private String currentUsername;
+    
+    /** ID del usuario actual */
     private int currentUserId;
+    
+    
+    // ===================================
+    // CONSTRUCTOR
+    // ===================================
     
     /**
      * Constructor del diálogo de perfil de usuario.
+     * 
      * @param parentStage Ventana padre del diálogo
-     * @param username Nombre de usuario
-     * @param userId ID del usuario
+     * @param username Nombre de usuario actual
+     * @param userId ID del usuario en la base de datos
      */
     public UserProfileDialog(Stage parentStage, String username, int userId) {
         this.currentUsername = username;
@@ -36,22 +60,29 @@ public class UserProfileDialog {
         createDialog(parentStage);
     }
     
+    // ===================================
+    // MÉTODOS DE CONFIGURACIÓN
+    // ===================================
+    
     /**
      * Crea y configura el diálogo de perfil de usuario.
-     * @param parentStage Ventana padre
+     * 
+     * @param parentStage Ventana padre para centrar el diálogo
      */
     private void createDialog(Stage parentStage) {
         dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(parentStage);
-        dialogStage.initStyle(StageStyle.DECORATED);        dialogStage.setTitle("Perfil de Usuario - " + currentUsername);
+        dialogStage.initStyle(StageStyle.DECORATED);
+        dialogStage.setTitle("Perfil de Usuario - " + currentUsername);
         dialogStage.setResizable(true);
         dialogStage.setMinWidth(520);
         dialogStage.setMinHeight(650);
         
         // Crear el contenido del diálogo
         VBox mainContent = createMainContent();
-          // Crear la escena con dimensiones más grandes
+        
+        // Crear la escena con dimensiones más grandes
         Scene scene = new Scene(mainContent, 520, 700);
         scene.getStylesheets().add(getClass().getResource("/Vista/resources/main.css").toExternalForm());
         
@@ -63,16 +94,24 @@ public class UserProfileDialog {
             dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - dialogStage.getHeight()) / 2);
         });
     }
-      private VBox createMainContent() {
+    
+    /**
+     * Crea el contenido principal del diálogo.
+     * 
+     * @return VBox con el contenido completo del diálogo
+     */
+    private VBox createMainContent() {
         VBox mainContent = new VBox(15);
         mainContent.setPadding(new Insets(20));
         mainContent.setStyle("-fx-background-color: linear-gradient(to bottom, #1a1a2e, #16213e);");
-          // Título
+        
+        // Título
         Label titleLabel = new Label("👤 PERFIL DE USUARIO");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         titleLabel.setTextFill(Color.GOLD);
         titleLabel.setAlignment(Pos.CENTER);
-          // Contenedor para la información del usuario
+        
+        // Contenedor para la información del usuario
         VBox userInfoContainer = createUserInfoSection();
         
         // Contenedor para estadísticas del juego
@@ -85,7 +124,17 @@ public class UserProfileDialog {
         
         return mainContent;
     }
-      private VBox createUserInfoSection() {
+    
+    // ===================================
+    // MÉTODOS DE CREACIÓN DE SECCIONES
+    // ===================================
+    
+    /**
+     * Crea la sección de información personal del usuario.
+     * 
+     * @return VBox con la información personal del usuario
+     */
+    private VBox createUserInfoSection() {
         VBox container = new VBox(12);
         container.setStyle(
             "-fx-background-color: rgba(255,255,255,0.1); " +
@@ -103,7 +152,8 @@ public class UserProfileDialog {
         
         // Obtener datos del usuario desde la base de datos
         String[] userData = getUserData();
-          // Campo de nombre de usuario (no editable)
+        
+        // Campo de nombre de usuario (no editable)
         VBox usernameBox = createReadOnlyField("Nombre de Usuario:", currentUsername, "👤");
         
         // Campo de nombre completo (no editable)
@@ -119,7 +169,13 @@ public class UserProfileDialog {
         
         return container;
     }
-      private VBox createStatsSection() {
+    
+    /**
+     * Crea la sección de estadísticas del juego.
+     * 
+     * @return VBox con las estadísticas del usuario
+     */
+    private VBox createStatsSection() {
         VBox container = new VBox(12);
         container.setStyle(
             "-fx-background-color: rgba(255,255,255,0.1); " +
@@ -154,7 +210,16 @@ public class UserProfileDialog {
         
         return container;
     }
-      private VBox createReadOnlyField(String labelText, String value, String icon) {
+    
+    /**
+     * Crea un campo de solo lectura con icono.
+     * 
+     * @param labelText Texto de la etiqueta
+     * @param value Valor a mostrar
+     * @param icon Icono para el campo
+     * @return VBox con el campo formateado
+     */
+    private VBox createReadOnlyField(String labelText, String value, String icon) {
         VBox fieldBox = new VBox(3);
         
         Label label = new Label(labelText);
@@ -179,6 +244,11 @@ public class UserProfileDialog {
         return fieldBox;
     }
     
+    /**
+     * Crea la sección de botones del diálogo.
+     * 
+     * @return HBox con los botones del diálogo
+     */
     private HBox createCloseButtonSection() {
         HBox buttonsBox = new HBox();
         buttonsBox.setAlignment(Pos.CENTER);
@@ -199,7 +269,18 @@ public class UserProfileDialog {
         buttonsBox.getChildren().add(closeButton);
         
         return buttonsBox;
-    }private String[] getUserData() {
+    }
+    
+    // ===================================
+    // MÉTODOS DE DATOS
+    // ===================================
+    
+    /**
+     * Obtiene los datos personales del usuario desde la base de datos.
+     * 
+     * @return Array con los datos del usuario [nombre, correo, fecha]
+     */
+    private String[] getUserData() {
         try {
             // Obtener datos del usuario desde la base de datos
             String nombreCompleto = UsuarioDAO.obtenerNombreCompleto(currentUserId);
@@ -212,16 +293,20 @@ public class UserProfileDialog {
                 fechaRegistro != null ? fechaRegistro : "No disponible"
             };
         } catch (Exception e) {
-            System.err.println("Error al obtener datos del usuario: " + e.getMessage());
-            e.printStackTrace();
+            // Retornar valores por defecto en caso de error
             return new String[]{"", "", "No disponible"};
         }
     }
     
+    /**
+     * Obtiene las estadísticas del usuario desde la base de datos.
+     * 
+     * @return Array con las estadísticas [puntaje, posición, fórmulas, última partida]
+     */
     private String[] getUserStats() {
         try {
             // Obtener estadísticas del usuario desde la tabla usuarios
-            Controlador.componentes.RankingManager rankingManager = Controlador.componentes.RankingManager.getInstance();
+            RankingManager rankingManager = RankingManager.getInstance();
             
             String mejorPuntaje = "0";
             String posicionRanking = "No clasificado";
@@ -231,21 +316,21 @@ public class UserProfileDialog {
             // Obtener estadísticas básicas desde la tabla usuarios
             try {
                 // Primero intentar sincronizar datos del ranking si existen
-                Modelo.dao.UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
+                UsuarioDAO.sincronizarDatosRankingAUsuarios(currentUserId);
                 
-                int puntaje = Modelo.dao.UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
+                int puntaje = UsuarioDAO.obtenerMejorPuntajeUsuario(currentUserId);
                 mejorPuntaje = String.valueOf(puntaje);
                 
-                int formulas = Modelo.dao.UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
+                int formulas = UsuarioDAO.obtenerFormulasCompletadasUsuario(currentUserId);
                 formulasCompletadas = formulas + "/5";
                 if (formulas >= 5) {
                     formulasCompletadas += " ✅";
                 }
                 
-                ultimaPartida = Modelo.dao.UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
+                ultimaPartida = UsuarioDAO.obtenerUltimaPartidaUsuario(currentUserId);
                 
             } catch (Exception e) {
-                System.err.println("Error al obtener estadísticas básicas del usuario: " + e.getMessage());
+                // Continuar con valores por defecto en caso de error
             }
             
             // Verificar posición en el ranking global (solo si completó las 5 fórmulas)
@@ -258,15 +343,25 @@ public class UserProfileDialog {
             
             return new String[]{mejorPuntaje, posicionRanking, formulasCompletadas, ultimaPartida};
         } catch (Exception e) {
-            System.err.println("Error al obtener estadísticas del usuario: " + e.getMessage());
+            // Retornar valores por defecto en caso de error
             return new String[]{"0", "No clasificado", "0/5", "Nunca"};
         }
     }
     
+    // ===================================
+    // MÉTODOS PÚBLICOS
+    // ===================================
+    
+    /**
+     * Muestra el diálogo de forma modal y espera a que se cierre.
+     */
     public void showAndWait() {
         dialogStage.showAndWait();
     }
     
+    /**
+     * Muestra el diálogo de forma no modal.
+     */
     public void show() {
         dialogStage.show();
     }
