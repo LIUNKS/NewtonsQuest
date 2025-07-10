@@ -1,4 +1,4 @@
-/* Estilos para la pantalla de login */
+/* === FONDO PRINCIPAL === */
 .main-background {
     -fx-background-color: linear-gradient(to bottom, #0f0c29, #1a1a2e, #24243e);
 }
