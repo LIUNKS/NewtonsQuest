@@ -1,7 +1,7 @@
 package Controlador.dialogs;
 
 import Controlador.componentes.RankingManager;
-import Modelo.RankingEntry;
+import Modelo.dto.RankingEntry;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -17,18 +17,42 @@ import javafx.stage.StageStyle;
 import java.util.List;
 
 /**
- * Diálogo para mostrar el ranking de jugadores que han completado las 5 fórmulas
+ * Diálogo de ranking de jugadores.
+ * 
+ * Esta clase proporciona una interfaz visual para mostrar el ranking de los
+ * mejores jugadores que han completado las 5 fórmulas de Newton. Presenta
+ * una tabla clasificatoria con información detallada de cada jugador.
+ * 
+ * Características:
+ * - Top 20 mejores jugadores
+ * - Medallas especiales para los primeros 3 puestos
+ * - Destacado especial para el usuario actual
+ * - Información de puntaje y fecha de logro
+ * - Interfaz visual atractiva con gradientes y efectos
  */
 public class RankingDialog {
     
+    /** Escenario del diálogo modal */
     private Stage dialogStage;
+    
+    /** Gestor de ranking para obtener datos de jugadores */
     private RankingManager rankingManager;
     
+    /**
+     * Constructor del diálogo de ranking.
+     * 
+     * @param parentStage Escenario padre que servirá como propietario del diálogo
+     */
     public RankingDialog(Stage parentStage) {
         this.rankingManager = RankingManager.getInstance();
         createDialog(parentStage);
     }
     
+    /**
+     * Crea y configura el diálogo modal de ranking.
+     * 
+     * @param parentStage Escenario padre para centrar el diálogo
+     */
     private void createDialog(Stage parentStage) {
         dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -37,43 +61,48 @@ public class RankingDialog {
         dialogStage.setTitle("Ranking de Maestros de la Física");
         dialogStage.setResizable(false);
         
-        // Crear el contenido del diálogo
+        // === Contenido principal del diálogo ===
         VBox mainContent = createMainContent();
         
-        // Crear la escena
+        // === Configuración de la escena ===
         Scene scene = new Scene(mainContent, 650, 500);
-        scene.getStylesheets().add(getClass().getResource("/Vista/resources/main.css").toExternalForm());
+        scene.getStylesheets().add("file:src/Vista/resources/main.css");
         
         dialogStage.setScene(scene);
         
-        // Centrar el diálogo en la ventana padre
+        // === Centrado automático en la ventana padre ===
         dialogStage.setOnShown(e -> {
             dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - dialogStage.getWidth()) / 2);
             dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - dialogStage.getHeight()) / 2);
         });
     }
     
+    /**
+     * Crea el contenido principal del diálogo con título, tabla y botón de cierre.
+     * 
+     * @return VBox con el contenido completo del diálogo
+     */
     private VBox createMainContent() {
         VBox mainContent = new VBox(20);
         mainContent.setPadding(new Insets(20));
         mainContent.setStyle("-fx-background-color: linear-gradient(to bottom, #1a1a2e, #16213e);");
         
-        // Título
+        // === Título principal ===
         Label titleLabel = new Label("🏆 RANKING DE MAESTROS DE LA FÍSICA 🏆");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         titleLabel.setTextFill(Color.GOLD);
         titleLabel.setAlignment(Pos.CENTER);
         
-        // Subtítulo
+        // === Subtítulo descriptivo ===
         Label subtitleLabel = new Label("Jugadores que han desbloqueado las 5 fórmulas de Newton");
         subtitleLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
         subtitleLabel.setTextFill(Color.LIGHTGRAY);
         subtitleLabel.setAlignment(Pos.CENTER);
         
-        // Crear la tabla de ranking
+        // === Tabla de ranking con scroll ===
         ScrollPane rankingScrollPane = createRankingTable();
         
-        // Botón de cerrar
+        // === Botón de cierre ===
         Button closeButton = new Button("Cerrar");
         closeButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         closeButton.setPrefWidth(120);
@@ -86,7 +115,7 @@ public class RankingDialog {
         );
         closeButton.setOnAction(e -> dialogStage.close());
         
-        // Layout del botón
+        // === Layout del botón centrado ===
         HBox buttonBox = new HBox();
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.getChildren().add(closeButton);
@@ -96,30 +125,36 @@ public class RankingDialog {
         return mainContent;
     }
     
+    /**
+     * Crea la tabla de ranking con scroll y datos de los mejores jugadores.
+     * 
+     * @return ScrollPane conteniendo la tabla de ranking
+     */
     private ScrollPane createRankingTable() {
         VBox rankingContent = new VBox(5);
         rankingContent.setPadding(new Insets(10));
         
-        // Obtener los datos del ranking
+        // === Obtención de datos del ranking ===
         List<RankingEntry> rankingEntries = rankingManager.getTopPlayers(20); // Top 20
         
         if (rankingEntries.isEmpty()) {
+            // === Mensaje cuando no hay datos ===
             Label noDataLabel = new Label("😔 Aún no hay maestros en el ranking");
             noDataLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
             noDataLabel.setTextFill(Color.LIGHTGRAY);
             noDataLabel.setAlignment(Pos.CENTER);
             rankingContent.getChildren().add(noDataLabel);
         } else {
-            // Crear encabezado
+            // === Construcción de la tabla ===
             HBox header = createRankingHeader();
             rankingContent.getChildren().add(header);
             
-            // Agregar separador
+            // Separador visual
             Separator separator = new Separator();
             separator.setStyle("-fx-background-color: #34495e;");
             rankingContent.getChildren().add(separator);
             
-            // Agregar cada entrada del ranking
+            // Filas de datos del ranking
             for (int i = 0; i < rankingEntries.size(); i++) {
                 RankingEntry entry = rankingEntries.get(i);
                 HBox rankingRow = createRankingRow(i + 1, entry);
@@ -127,7 +162,7 @@ public class RankingDialog {
             }
         }
         
-        // Crear el ScrollPane
+        // === Configuración del ScrollPane ===
         ScrollPane scrollPane = new ScrollPane(rankingContent);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
@@ -234,10 +269,16 @@ public class RankingDialog {
         return row;
     }
     
+    /**
+     * Muestra el diálogo de forma modal y espera hasta que sea cerrado.
+     */
     public void showAndWait() {
         dialogStage.showAndWait();
     }
     
+    /**
+     * Muestra el diálogo de forma no modal.
+     */
     public void show() {
         dialogStage.show();
     }
