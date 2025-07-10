@@ -1,4 +1,4 @@
-package Modelo;
+package Modelo.dto;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -7,47 +7,58 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 /**
- * Clase que representa una manzana en el juego
+ * Representación de las manzanas en el juego.
+ * 
+ * Las manzanas rojas otorgan puntos positivos al jugador, mientras que las verdes
+ * otorgan puntos negativos. Incluye lógica de movimiento, renderizado y colisiones.
+ * 
+ * @author Johann
+ * @version 1.0
  */
 public class Apple {
-    // Posición de la manzana
-    private double x;
-    private double y;
     
-    // Velocidad de caída
+    // === POSICIÓN Y MOVIMIENTO ===
+    /** Posición X de la manzana en el canvas */
+    private double x;
+    /** Posición Y de la manzana en el canvas */
+    private double y;
+    /** Velocidad de caída vertical */
     private double velocityY;
     
-    // Tipo de manzana (roja o verde)
+    // === PROPIEDADES ===
+    /** true para manzana roja (puntos positivos), false para verde (negativos) */
     private boolean isRed;
-    
-    // Dimensiones de la manzana
-    private final int WIDTH = 32;
-    private final int HEIGHT = 32;
-    
-    // Imagen de la manzana
-    private Image sprite;
-    
-    // Estado de la manzana
+    /** Estado activo de la manzana (false cuando es recolectada) */
     private boolean active = true;
     
+    // === DIMENSIONES ===
+    /** Ancho del sprite de la manzana */
+    private final int WIDTH = 32;
+    /** Alto del sprite de la manzana */
+    private final int HEIGHT = 32;
+    
+    // === GRÁFICOS ===
+    /** Sprite de la manzana (roja o verde) */
+    private Image sprite;
+    
     /**
-     * Constructor de la manzana
+     * Constructor para crear una manzana con propiedades específicas.
+     * 
      * @param x Posición X inicial
      * @param y Posición Y inicial
-     * @param isRed Si es true, es una manzana roja (puntos positivos), si es false, es verde (puntos negativos)
-     * @param velocity Velocidad de caída
+     * @param isRed true para manzana roja (puntos +), false para verde (puntos -)
+     * @param velocity Velocidad de caída en píxeles por frame
      */
     public Apple(double x, double y, boolean isRed, double velocity) {
         this.x = x;
         this.y = y;
         this.isRed = isRed;
         this.velocityY = velocity;
-        
         loadSprite();
     }
     
     /**
-     * Carga la imagen de la manzana según su tipo
+     * Carga el sprite apropiado según el tipo de manzana.
      */
     private void loadSprite() {
         try {
@@ -56,23 +67,11 @@ public class Apple {
                 "src/recursos/sprites/manzanas/Apple_Green.png";
             
             File file = new File(path);
-            if (file.exists()) {
-                sprite = new Image(new FileInputStream(file));
-            } else {
-                createFallbackSprite();
-            }
+            sprite = new Image(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            createFallbackSprite();
+            throw new RuntimeException("Error: No se pudo cargar el sprite de manzana: " + 
+                (isRed ? "Apple_Red.png" : "Apple_Green.png"), e);
         }
-    }
-    
-    /**
-     * Crea un sprite de respaldo en caso de error
-     */
-    private void createFallbackSprite() {
-        // Crear una imagen de respaldo (rojo o verde según tipo)
-        String color = isRed ? "FF0000" : "00FF00";
-        sprite = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIElEQVR42u3OMQEAAAgDILV/" + color + "nBzwvJJWtgkRAQIECLwXeADnSQFrMO9mowAAAABJRU5ErkJggg==");
     }
     
     /**
