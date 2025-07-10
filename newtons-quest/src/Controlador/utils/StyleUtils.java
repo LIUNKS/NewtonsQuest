@@ -9,8 +9,31 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 /**
- * Utilidades para aplicar estilos consistentes en toda la aplicación.
- * Centraliza los estilos y temas del juego.
+ * Utilidades de estilo y temas para Newton's Apple Quest.
+ * 
+ * Esta clase proporciona métodos estáticos para aplicar estilos
+ * consistentes en toda la interfaz gráfica del juego.
+ * 
+ * Funcionalidades principales:
+ * - Estilos predefinidos para botones (primario, secundario, peligro)
+ * - Configuración de fuentes y tipografías del juego
+ * - Aplicación de temas de color consistentes
+ * - Estilos para etiquetas y textos
+ * - Efectos de hover y animaciones de interfaz
+ * 
+ * Estilos de botones disponibles:
+ * - Botón primario: Para acciones principales (azul)
+ * - Botón secundario: Para acciones secundarias (gris)
+ * - Botón de peligro: Para acciones destructivas (rojo)
+ * - Botón de éxito: Para confirmaciones (verde)
+ * 
+ * Temas de color:
+ * - Colores primarios del juego (azul, dorado)
+ * - Paleta de colores complementarios
+ * - Esquemas de contraste apropiados para accesibilidad
+ * 
+ * Todos los estilos siguen las convenciones de diseño del juego
+ * y mantienen consistencia visual en toda la aplicación.
  */
 public class StyleUtils {
     
