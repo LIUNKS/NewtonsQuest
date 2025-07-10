@@ -3,8 +3,22 @@ package Controlador.utils;
 import Modelo.dao.UsuarioDAO;
 
 /**
- * Clase para manejar la sesión del usuario actual en la aplicación.
- * Mantiene la información del usuario logueado durante toda la sesión.
+ * Gestor de sesión de usuario en Newton's Apple Quest.
+ * 
+ * Esta clase singleton se encarga de mantener la información
+ * del usuario actualmente logueado durante toda la sesión de juego.
+ * 
+ * Funcionalidades principales:
+ * - Almacenar datos del usuario autenticado (ID y nombre de usuario)
+ * - Proporcionar acceso global a la información de sesión
+ * - Gestionar inicio y cierre de sesión
+ * - Validar estado de autenticación del usuario
+ * 
+ * La clase mantiene sincronización con la base de datos para
+ * obtener información actualizada del usuario cuando es necesario.
+ * 
+ * Implementa el patrón Singleton para garantizar una única
+ * instancia de sesión en toda la aplicación.
  */
 public class SessionManager {
     
