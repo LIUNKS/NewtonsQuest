@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    Game.fxml - Pantalla principal del juego
+    
+    Esta vista contiene el canvas donde se renderiza todo el gameplay principal.
+    Se dibuja en el canvas usando JavaFX GraphicsContext.
+    Incluye los 5 niveles de física con mecánicas de manzanas, pociones y formulas.
+    
+    Controlador: Controlador.GameController
+    Autor: Johann
+-->
+
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.canvas.Canvas?>
 
