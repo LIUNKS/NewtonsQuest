@@ -7,8 +7,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase encargada de gestionar los videos del juego.
- * Controla qué videos están disponibles basándose en las fórmulas desbloqueadas.
+ * Gestor de videos educativos en Newton's Apple Quest.
+ * 
+ * Esta clase maneja la disponibilidad y acceso a los videos educativos del juego,
+ * controlando qué contenido está disponible según el progreso del usuario.
+ * 
+ * Funcionalidades principales:
+ * - Gestión de acceso a videos basado en fórmulas desbloqueadas
+ * - Sincronización con el progreso del usuario en la base de datos
+ * - Control de disponibilidad de contenido educativo
+ * - Listado de videos accesibles según nivel alcanzado
+ * 
+ * Implementa el patrón Singleton para garantizar una única instancia
+ * de gestión de videos en toda la aplicación.
+ * 
+ * Los videos están organizados según las fórmulas de física disponibles:
+ * - Video 0: Física básica y fundamentos
+ * - Video 1-4: Fórmulas específicas correspondientes a cada nivel
  */
 public class VideoManager {
     
@@ -77,7 +92,7 @@ public class VideoManager {
                 // No hay usuario logueado para cargar progreso
             }
         } catch (Exception e) {
-            System.err.println("Error al cargar progreso del usuario: " + e.getMessage());
+            // Error silencioso al cargar progreso del usuario
             // En caso de error, mantener todos los videos bloqueados
             for (int i = 0; i < MAX_VIDEOS; i++) {
                 unlockedVideos[i] = false;
