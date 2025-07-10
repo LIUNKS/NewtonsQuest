@@ -4,8 +4,29 @@ import Controlador.constants.GameConstants;
 import java.util.regex.Pattern;
 
 /**
- * Utilidades para validación de datos de entrada del usuario.
- * Centraliza todas las reglas de validación del juego.
+ * Utilidades de validación de datos para Newton's Apple Quest.
+ * 
+ * Esta clase proporciona métodos estáticos para validar todos los tipos
+ * de datos de entrada del usuario en el juego, asegurando integridad
+ * y consistencia de la información.
+ * 
+ * Validaciones implementadas:
+ * - Nombres de usuario (3-20 caracteres, alfanuméricos y underscore)
+ * - Direcciones de correo electrónico (formato RFC estándar)
+ * - Contraseñas (longitud mínima y complejidad)
+ * - Nombres completos (caracteres válidos y longitud)
+ * - Datos de entrada del juego (puntuaciones, niveles)
+ * 
+ * Criterios de validación:
+ * - Username: 3-20 caracteres, solo letras, números y underscore
+ * - Email: Formato estándar de correo electrónico
+ * - Password: Mínimo 6 caracteres con requisitos de seguridad
+ * - Nombres: Solo letras y espacios, longitud apropiada
+ * 
+ * Todos los métodos retornan objetos ValidationResult que incluyen:
+ * - Estado de validación (válido/inválido)
+ * - Mensaje descriptivo del error (si aplica)
+ * - Código de error para manejo programático
  */
 public class ValidationUtils {
     
