@@ -1,7 +1,7 @@
 package Modelo.dao;
 
 import Modelo.ConexionDB;
-import Modelo.Player;
+import Modelo.dto.Player;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,13 +11,19 @@ import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 
 /**
- * Data Access Object para la gestión de usuarios en la base de datos.
- * Proporciona métodos para registrar, validar y obtener información de usuarios.
+ * Data Access Object para la gestión de usuarios.
+ * 
+ * Proporciona operaciones CRUD completas para usuarios incluyendo registro,
+ * autenticación, gestión de perfiles y sincronización con datos de ranking.
+ * Todos los métodos son estáticos y manejan sus propias conexiones a BD.
+ * 
+ * @author Johann
+ * @version 1.0
  */
 public class UsuarioDAO {
     
     /**
-     * Registra un nuevo usuario con username y contraseña únicamente.
+     * Registra un nuevo usuario con username y contraseña.
      * @param username Nombre de usuario único
      * @param password Contraseña del usuario
      * @return true si el registro fue exitoso, false en caso contrario
@@ -66,7 +72,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -112,7 +118,7 @@ public class UsuarioDAO {
                     conn.close();
                 }
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -154,7 +160,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -193,7 +199,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -223,14 +229,14 @@ public class UsuarioDAO {
                        nombreCompleto : rs.getString("username");
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener nombre completo
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return "Usuario desconocido";
@@ -260,14 +266,14 @@ public class UsuarioDAO {
                 return email != null ? email : "";
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener correo
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return "";
@@ -300,14 +306,14 @@ public class UsuarioDAO {
                 }
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener fecha de registro
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return "Fecha no disponible";
@@ -344,7 +350,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -386,7 +392,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
@@ -414,14 +420,14 @@ public class UsuarioDAO {
                 return rs.getInt("mejor_puntaje");
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener mejor puntaje
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return 0;
@@ -450,14 +456,14 @@ public class UsuarioDAO {
                 return rs.getInt("formulas_completadas");
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener fórmulas completadas
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return 0;
@@ -490,14 +496,14 @@ public class UsuarioDAO {
                 }
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al obtener última partida
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return "Nunca";
@@ -568,7 +574,7 @@ public class UsuarioDAO {
                 return filasActualizadas > 0;
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al sincronizar datos de ranking a usuarios
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -576,7 +582,7 @@ public class UsuarioDAO {
                 if (stmtUsuarios != null) stmtUsuarios.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return false;
@@ -619,7 +625,7 @@ public class UsuarioDAO {
                 }
             }
         } catch (SQLException e) {
-            // Error silencioso
+            // Error al sincronizar datos de ranking a usuarios
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -627,7 +633,7 @@ public class UsuarioDAO {
                 if (stmtUsuarios != null) stmtUsuarios.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
         return usuariosSincronizados;
@@ -683,7 +689,7 @@ public class UsuarioDAO {
                 if (stmt != null) stmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
-                // Error silencioso al cerrar recursos
+                // Error al cerrar recursos
             }
         }
     }
