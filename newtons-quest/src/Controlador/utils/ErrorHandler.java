@@ -10,11 +10,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.SimpleFormatter;
-import java.nio.charset.StandardCharsets;
 
 /**
- * Utilidades para manejo de errores y diálogos del sistema.
- * Centraliza la gestión de excepciones y mensajes al usuario.
+ * Gestor centralizado de errores y diálogos en Newton's Apple Quest.
+ * 
+ * Esta clase proporciona utilidades para el manejo consistente de errores
+ * y la presentación de mensajes al usuario en toda la aplicación.
+ * 
+ * Funcionalidades principales:
+ * - Gestión centralizada de excepciones y errores
+ * - Diálogos de error personalizados y user-friendly
+ * - Sistema de logging configurado para desarrollo y producción
+ * - Mensajes de confirmación y alertas al usuario
+ * - Manejo de diferentes tipos de alertas (error, advertencia, información)
+ * 
+ * Tipos de diálogos soportados:
+ * - Alertas de error con detalles técnicos
+ * - Diálogos de confirmación (Sí/No)
+ * - Mensajes informativos
+ * - Advertencias al usuario
+ * 
+ * El sistema de logging está configurado para:
+ * - Registro de errores en consola durante desarrollo
+ * - Formato consistente de mensajes de error
+ * - Niveles apropiados de logging según criticidad
  */
 public class ErrorHandler {
     
@@ -33,23 +52,40 @@ public class ErrorHandler {
      */
     private static void setupLogger() {
         try {
-            // Configurar encoding UTF-8 para la consola
+            // Forzar el uso de UTF-8 para todos los procesos de Java
             System.setProperty("file.encoding", "UTF-8");
-            System.setProperty("console.encoding", "UTF-8");
+            // Establecer encoding específico para la consola
+            System.setProperty("sun.stdout.encoding", "UTF-8");
+            System.setProperty("sun.stderr.encoding", "UTF-8");
             
-            // Crear un handler personalizado para la consola
+            // Crear un handler personalizado para la consola con formato UTF-8
             ConsoleHandler consoleHandler = new ConsoleHandler();
             consoleHandler.setLevel(Level.ALL);
-            consoleHandler.setFormatter(new SimpleFormatter());
+            
+            // Crear un formateador personalizado para mejor legibilidad
+            SimpleFormatter formatter = new SimpleFormatter() {
+                @Override
+                public String format(java.util.logging.LogRecord record) {
+                    return String.format("[%1$tF %1$tT] %2$s: %3$s%n",
+                            new java.util.Date(record.getMillis()),
+                            record.getLevel().getName(),
+                            record.getMessage());
+                }
+            };
+            
+            consoleHandler.setFormatter(formatter);
             
             // Configurar el logger
             LOGGER.setUseParentHandlers(false);
             LOGGER.addHandler(consoleHandler);
             LOGGER.setLevel(Level.ALL);
             
+            // Registrar la configuración exitosa
+            LOGGER.info("Logger configurado correctamente con soporte UTF-8");
+            
         } catch (Exception e) {
             // Si falla la configuración, usar el logger por defecto
-            System.err.println("Warning: No se pudo configurar el logger correctamente");
+            System.err.println("Warning: No se pudo configurar el logger correctamente: " + e.getMessage());
         }
     }
     
@@ -172,35 +208,61 @@ public class ErrorHandler {
         
         return alert;
     }
-      /**
+    
+    /**
      * Registra información de debug
+     * 
+     * @param message Mensaje de depuración para registrar
      */
     public static void logDebug(String message) {
-        String formattedMessage = String.format("[DEBUG] %s", message);
-        LOGGER.log(Level.INFO, formattedMessage);
+        LOGGER.log(Level.INFO, "[DEBUG] " + message);
     }
     
     /**
      * Registra información general
+     * 
+     * @param message Mensaje informativo para registrar
      */
     public static void logInfo(String message) {
-        String formattedMessage = String.format("[INFO] %s", message);
-        LOGGER.log(Level.INFO, formattedMessage);
+        try {
+            // Asegurarnos de que el mensaje se registre como UTF-8
+            String normalizedMessage = new String(message.getBytes("UTF-8"), "UTF-8");
+            LOGGER.log(Level.INFO, "[INFO] " + normalizedMessage);
+        } catch (Exception e) {
+            // Si hay error de codificación, usar el mensaje original
+            LOGGER.log(Level.INFO, "[INFO] " + message);
+        }
     }
     
     /**
      * Registra advertencias
+     * 
+     * @param message Mensaje de advertencia para registrar
      */
     public static void logWarning(String message) {
-        String formattedMessage = String.format("[WARNING] %s", message);
-        LOGGER.log(Level.WARNING, formattedMessage);
+        try {
+            // Asegurarnos de que el mensaje se registre como UTF-8
+            String normalizedMessage = new String(message.getBytes("UTF-8"), "UTF-8");
+            LOGGER.log(Level.WARNING, "[WARNING] " + normalizedMessage);
+        } catch (Exception e) {
+            // Si hay error de codificación, usar el mensaje original
+            LOGGER.log(Level.WARNING, "[WARNING] " + message);
+        }
     }
     
     /**
      * Registra errores
+     * 
+     * @param message Mensaje de error para registrar
      */
     public static void logError(String message) {
-        String formattedMessage = String.format("[ERROR] %s", message);
-        LOGGER.log(Level.SEVERE, formattedMessage);
+        try {
+            // Asegurarnos de que el mensaje se registre como UTF-8
+            String normalizedMessage = new String(message.getBytes("UTF-8"), "UTF-8");
+            LOGGER.log(Level.SEVERE, "[ERROR] " + normalizedMessage);
+        } catch (Exception e) {
+            // Si hay error de codificación, usar el mensaje original
+            LOGGER.log(Level.SEVERE, "[ERROR] " + message);
+        }
     }
 }
