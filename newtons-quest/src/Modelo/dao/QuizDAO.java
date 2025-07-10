@@ -1,15 +1,21 @@
 package Modelo.dao;
 
 import Modelo.ConexionDB;
-import Modelo.QuizQuestion;
-import Modelo.QuizResult;
+import Modelo.dto.QuizQuestion;
+import Modelo.dto.QuizResult;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase DAO para manejar operaciones relacionadas con el quiz.
- * Maneja las preguntas del quiz y los resultados de los usuarios.
+ * Data Access Object para la gestión del sistema de quiz.
+ * 
+ * Maneja las preguntas del quiz sobre física (energía cinética, potencial, etc.)
+ * y gestiona los resultados de los usuarios. Actualmente las preguntas están
+ * hardcodeadas pero puede expandirse para usar base de datos.
+ * 
+ * @author Johann
+ * @version 1.0
  */
 public class QuizDAO {
     
@@ -20,8 +26,7 @@ public class QuizDAO {
     public static List<QuizQuestion> obtenerTodasLasPreguntas() {
         List<QuizQuestion> preguntas = new ArrayList<>();
         
-        // Por ahora, las preguntas están hardcodeadas
-        // En el futuro se podrían almacenar en la base de datos
+        // Preguntas hardcodeadas
         preguntas.add(new QuizQuestion(1, 
             "¿Qué es la energía cinética?",
             new String[]{
@@ -245,8 +250,7 @@ public class QuizDAO {
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al guardar resultado del quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
             return false;
         }
     }
@@ -275,8 +279,7 @@ public class QuizDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener mejor resultado del quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
         
         return null;
@@ -308,8 +311,7 @@ public class QuizDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener resultados del quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
         
         return resultados;
@@ -334,8 +336,7 @@ public class QuizDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al verificar aprobación del quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
         
         return false;
@@ -365,8 +366,7 @@ public class QuizDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al obtener último resultado del quiz: " + e.getMessage());
-            e.printStackTrace();
+            // Error silencioso
         }
         
         return null;
