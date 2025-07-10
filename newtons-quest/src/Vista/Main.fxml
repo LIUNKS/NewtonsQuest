@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    Main.fxml - Menú principal
+    
+    Esta vista es el hub central del juego después del login exitoso. Proporciona
+    acceso a todas las funcionalidades principales: jugar, quiz, ranking, perfil,
+    configuraciones y reglas. Incluye información del usuario logueado y elementos
+    decorativos temáticos que reflejan el estilo del juego.
+    
+    Controlador: Controlador.MainController
+    Autor: Johann
+-->
+
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tooltip?>
@@ -22,7 +34,7 @@
     <Circle radius="15" fill="#ff6b6b" opacity="0.1" translateX="-220" translateY="220" />
     <Circle radius="18" fill="#ff6b6b" opacity="0.2" translateX="280" translateY="250" />
     
-    <!-- Líneas decorativas que representan trayectorias -->
+    <!-- Líneas decorativas -->
     <Line startX="-350" startY="-250" endX="-200" endY="-100" strokeWidth="1.5" stroke="#ff6b6b" opacity="0.2" />
     <Line startX="200" startY="-200" endX="350" endY="-50" strokeWidth="1.5" stroke="#ff6b6b" opacity="0.2" />
     <Line startX="-300" startY="100" endX="-150" endY="250" strokeWidth="1.5" stroke="#ff6b6b" opacity="0.2" />
@@ -94,7 +106,7 @@
         </Label>
     </VBox>
     
-    <!-- Panel de botones de interfaz superior (debe ir al final para estar encima) -->
+    <!-- Panel de botones de interfaz superior -->
     <VBox alignment="TOP_RIGHT" spacing="8" StackPane.alignment="TOP_RIGHT" pickOnBounds="false">
         <padding>
             <Insets top="15" right="15" />
@@ -138,7 +150,7 @@
                 </tooltip>
             </Button>
             
-            <!-- Botón para descargar certificado (siempre visible) -->
+            <!-- Botón para descargar certificado -->
             <Button fx:id="certificateButton" 
                     text="🎓" 
                     styleClass="interface-button-compact"
