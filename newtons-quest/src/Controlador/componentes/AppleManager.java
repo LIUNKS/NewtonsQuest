@@ -1,51 +1,112 @@
 package Controlador.componentes;
 
-import Modelo.Apple;
-import Modelo.Player;
+import Modelo.dto.Apple;
+import Modelo.dto.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Clase encargada de gestionar las manzanas en el juego.
- * Separa la lógica de generación y control de manzanas del controlador principal.
+ * Gestor de manzanas.
+ * 
+ * Esta clase centraliza toda la lógica relacionada con la generación, 
+ * comportamiento y gestión de las manzanas en el juego. Separa claramente 
+ * las responsabilidades del controlador principal, manejando:
+ * 
+ *   - Generación automática de manzanas rojas y verdes
+ *   - Control de velocidad y posicionamiento
+ *   - Detección de colisiones con el jugador
+ *   - Gestión de puntuación y pérdida de vidas
+ *   - Sistema de pausa para la generación
+ * 
+ * Las manzanas rojas otorgan puntos positivos al ser recolectadas, mientras
+ * que las verdes causan pérdida de puntos y vidas. El sistema también maneja
+ * el caso especial de manzanas rojas perdidas (que llegan al suelo).
  */
+
 public class AppleManager {
     
+    // =====================================
+    // ATRIBUTOS DE INSTANCIA
+    // =====================================
+    
+    /** Lista de manzanas activas en el juego */
     private List<Apple> apples = new ArrayList<>();
+    
+    /** Generador de números aleatorios para posicionamiento y velocidad */
     private Random random = new Random();
     
-    // Configuración de generación de manzanas
+    // =====================================
+    // CONFIGURACIÓN DE GENERACIÓN
+    // =====================================
+    
+    /** Timestamp de la última manzana generada */
     private long lastAppleSpawnTime = 0;
+    
+    /** Intervalo entre generación de manzanas en milisegundos */
     private final long APPLE_SPAWN_INTERVAL;
+    
+    /** Velocidad mínima de caída de manzanas */
     private final double MIN_APPLE_SPEED;
+    
+    /** Velocidad máxima de caída de manzanas */
     private final double MAX_APPLE_SPEED;
     
-    // Controla si el generador de manzanas está en pausa
+    /** Indica si la generación de manzanas está pausada */
     private boolean isPaused = false;
     
-    // Dimensiones del juego
+    // =====================================
+    // DIMENSIONES DEL JUEGO
+    // =====================================
+    
+    /** Ancho del área de juego */
     private final int GAME_WIDTH;
+    
+    /** Alto del área de juego */
     private final int GAME_HEIGHT;
+    
+    /** Posición Y del suelo del juego */
     private final int FLOOR_Y;
     
-    // Puntuaciones
+    // =====================================
+    // CONFIGURACIÓN DE PUNTUACIÓN
+    // =====================================
+    
+    /** Puntos otorgados por recoger una manzana roja */
     private final int RED_APPLE_POINTS = 10;
+    
+    /** Puntos perdidos por tocar una manzana verde */
     private final int GREEN_APPLE_POINTS = -5;
+    
+    /** Puntos perdidos por dejar caer una manzana roja */
     private final int MISSED_APPLE_POINTS = -3;
     
-    // Callbacks
+    // =====================================
+    // CALLBACKS
+    // =====================================
+    
+    /** Callback para notificar cambios en la puntuación */
     private java.util.function.Consumer<Integer> onScoreChange;
+    
+    /** Callback para notificar pérdida de una vida */
     private Runnable onLifeLost;
     
+    // =====================================
+    // CONSTRUCTOR
+    // =====================================
+    
     /**
-     * Constructor del AppleManager
-     * @param gameWidth Ancho del área de juego
-     * @param gameHeight Alto del área de juego
-     * @param floorY Posición Y del suelo
-     * @param appleSpawnInterval Intervalo entre generación de manzanas (ms)
-     * @param minAppleSpeed Velocidad mínima de caída de manzanas
-     * @param maxAppleSpeed Velocidad máxima de caída de manzanas
+     * Constructor del gestor de manzanas.
+     * 
+     * Inicializa el gestor con las dimensiones del área de juego y los
+     * parámetros de configuración para la generación y velocidad de manzanas.
+     * 
+     * @param gameWidth Ancho del área de juego en píxeles
+     * @param gameHeight Alto del área de juego en píxeles  
+     * @param floorY Posición Y del suelo en píxeles
+     * @param appleSpawnInterval Intervalo entre generación de manzanas en milisegundos
+     * @param minAppleSpeed Velocidad mínima de caída en píxeles por frame
+     * @param maxAppleSpeed Velocidad máxima de caída en píxeles por frame
      */
     public AppleManager(int gameWidth, int gameHeight, int floorY, 
                        long appleSpawnInterval, double minAppleSpeed, double maxAppleSpeed) {
@@ -55,41 +116,64 @@ public class AppleManager {
         this.APPLE_SPAWN_INTERVAL = appleSpawnInterval;
         this.MIN_APPLE_SPEED = minAppleSpeed;
         this.MAX_APPLE_SPEED = maxAppleSpeed;
-        
-        System.out.println("AppleManager inicializado");
     }
     
+    // =====================================
+    // MÉTODOS PÚBLICOS - CONFIGURACIÓN
+    // =====================================
+    
     /**
-     * Establece los callbacks para eventos relacionados con manzanas
-     * @param onScoreChange Acción cuando cambia la puntuación
-     * @param onLifeLost Acción cuando se pierde una vida
-     */    public void setCallbacks(java.util.function.Consumer<Integer> onScoreChange, Runnable onLifeLost) {
+     * Establece los callbacks para eventos relacionados con manzanas.
+     * 
+     * Estos callbacks permiten al AppleManager comunicarse con otros
+     * componentes del juego cuando ocurren eventos importantes como
+     * cambios en la puntuación o pérdida de vidas.
+     * 
+     * @param onScoreChange Función callback que recibe el cambio de puntuación
+     * @param onLifeLost Función callback ejecutada cuando se pierde una vida
+     */
+    public void setCallbacks(java.util.function.Consumer<Integer> onScoreChange, Runnable onLifeLost) {
         this.onScoreChange = onScoreChange;
         this.onLifeLost = onLifeLost;
     }
     
     /**
-     * Establece el estado de pausa para la generación de manzanas
-     * @param paused true para pausar la generación de manzanas, false para reanudarla
+     * Controla el estado de pausa para la generación de manzanas.
+     * 
+     * Cuando se pausa, se detiene la generación de nuevas manzanas pero
+     * las existentes continúan su movimiento. Al reanudar, se reinicia el
+     * timer de generación para evitar acumulación de manzanas.
+     * 
+     * @param paused true para pausar la generación, false para reanudarla
      */
     public void setPaused(boolean paused) {
         this.isPaused = paused;
         
-        // Si se reanuda el juego, actualizar el último tiempo de generación
-        // para evitar que se generen muchas manzanas de golpe
+        // Reiniciar timer al reanudar para evitar generación masiva
         if (!paused) {
             lastAppleSpawnTime = System.currentTimeMillis();
         }
-        
-        System.out.println("AppleManager " + (paused ? "pausado" : "reanudado"));
     }
     
+    // =====================================
+    // MÉTODOS PÚBLICOS - ACTUALIZACIÓN
+    // =====================================
+    
     /**
-     * Actualiza el estado de las manzanas, genera nuevas y comprueba colisiones
-     * @param player Jugador para comprobar colisiones
-     */    public void update(Player player) {
+     * Actualiza el estado completo del sistema de manzanas.
+     * 
+     * Realiza las siguientes operaciones en cada frame:
+     * - Genera nuevas manzanas según el intervalo configurado
+     * - Actualiza posición de manzanas existentes
+     * - Detecta colisiones con el jugador
+     * - Elimina manzanas que han salido del área de juego
+     * /
+     * 
+     * @param player Instancia del jugador para detectar colisiones
+     */
+    public void update(Player player) {
         try {
-            // Solo generar nuevas manzanas si el juego no está pausado
+            // Generar nuevas manzanas si no está pausado
             if (!isPaused) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastAppleSpawnTime > APPLE_SPAWN_INTERVAL) {
@@ -98,19 +182,28 @@ public class AppleManager {
                 }
             }
             
-            // Actualizar manzanas existentes y comprobar colisiones solo si no está pausado
+            // Actualizar manzanas existentes y verificar colisiones
             if (!isPaused) {
                 updateApples(player);
             }
             
         } catch (Exception e) {
-            System.err.println("Error al actualizar manzanas: " + e.getMessage());
-            e.printStackTrace();
+            // Manejar errores silenciosamente en producción
         }
     }
     
+    // =====================================
+    // MÉTODOS PRIVADOS - GENERACIÓN
+    // =====================================
+    
     /**
-     * Genera una nueva manzana en una posición aleatoria
+     * Genera una nueva manzana en posición aleatoria.
+     * 
+     * Crea una manzana con las siguientes características:
+     * - Posición X aleatoria dentro del área de juego con márgenes
+     * - Posición Y inicial en la parte superior (fuera de pantalla)
+     * - Velocidad aleatoria dentro del rango configurado
+     * - 70% probabilidad de ser roja, 30% de ser verde
      */
     private void spawnApple() {
         try {
@@ -120,119 +213,151 @@ public class AppleManager {
             // Posición Y en la parte superior
             double y = -50;
             
-            // Velocidad aleatoria
+            // Velocidad aleatoria dentro del rango configurado
             double speed = MIN_APPLE_SPEED + random.nextDouble() * (MAX_APPLE_SPEED - MIN_APPLE_SPEED);
             
             // 70% de probabilidad de que sea manzana roja, 30% de que sea verde
             boolean isRed = random.nextDouble() < 0.7;
             
-            // Crear la manzana y añadirla a la lista
+            // Crear la manzana y añadirla a la lista activa
             Apple apple = new Apple(x, y, isRed, speed);
             apples.add(apple);
             
-            System.out.println("Generada manzana " + (isRed ? "roja" : "verde") + " en (" + x + ", " + y + ") con velocidad " + speed);
         } catch (Exception e) {
-            System.err.println("Error al generar manzana: " + e.getMessage());
-            e.printStackTrace();
+            // Manejar errores en producción
         }
     }
     
+    // =====================================
+    // MÉTODOS PRIVADOS - ACTUALIZACIÓN
+    // =====================================
+    
     /**
-     * Actualiza todas las manzanas, comprobando colisiones y si han llegado al suelo
-     * @param player Jugador para comprobar colisiones
+     * Actualiza posición de manzanas existentes y gestiona colisiones.
+     * 
+     * Para cada manzana activa, realiza las siguientes operaciones:
+     * - Actualiza su posición según la velocidad de caída
+     * - Verifica colisión con el jugador y aplica efectos correspondientes
+     * - Detecta si ha llegado al suelo y aplica penalizaciones si es necesario
+     * - Elimina manzanas inactivas de la lista
+     * 
+     * @param player Instancia del jugador para verificar colisiones
      */
     private void updateApples(Player player) {
         try {
-            // Lista para guardar las manzanas que hay que eliminar
+            // Lista para manzanas que deben ser eliminadas
             List<Apple> applesToRemove = new ArrayList<>();
             
-            // Actualizar cada manzana
+            // Procesar cada manzana activa
             for (Apple apple : apples) {
                 if (!apple.isActive()) {
                     applesToRemove.add(apple);
                     continue;
                 }
                 
-                // Actualizar posición
+                // Actualizar posición de la manzana
                 apple.update();
                 
-                // Comprobar si ha colisionado con el jugador
+                // Verificar colisión con el jugador
                 if (apple.checkCollision(player.getX(), player.getY(), player.getWidth(), player.getHeight())) {
-                    // Actualizar puntuación según el tipo de manzana
-                    if (apple.isRed()) {
-                        // Manzana roja recogida: puntos positivos
-                        if (onScoreChange != null) {
-                            int points = RED_APPLE_POINTS;
-                            // Aplicar efecto de puntos dobles si está activo
-                            if (player.hasPointsEffect()) {
-                                points *= 2;
-                                System.out.println("¡Manzana roja recogida con puntos dobles! Puntos: +" + points);
-                            } else {
-                                System.out.println("¡Manzana roja recogida! Puntos: +" + points);
-                            }
-                            onScoreChange.accept(points);
-                        }
-                    } else {
-                        // Manzana verde recogida: puntos negativos y perder vida
-                        if (onScoreChange != null) {
-                            onScoreChange.accept(GREEN_APPLE_POINTS);
-                        }
-                        System.out.println("¡Manzana verde recogida! Puntos: " + GREEN_APPLE_POINTS);
-                        
-                        // Activar el sprite de manzana verde
-                        player.setGreenAppleEffect();
-                        
-                        // Perder una vida por atrapar manzana verde
-                        if (onLifeLost != null) {
-                            onLifeLost.run();
-                        }
-                    }
-                    
-                    // Desactivar la manzana para que se elimine
-                    apple.deactivate();
+                    processAppleCollected(apple, player);
                     applesToRemove.add(apple);
                 }
-                // Comprobar si ha llegado al suelo
+                // Verificar si llegó al suelo
                 else if (apple.hasReachedFloor(FLOOR_Y)) {
-                    // Si era roja y cayó al suelo, penalizar
-                    if (apple.isRed()) {
-                        // Manzana roja perdida: puntos negativos y perder vida
-                        if (onScoreChange != null) {
-                            onScoreChange.accept(MISSED_APPLE_POINTS);
-                        }
-                        System.out.println("Manzana roja perdida. Puntos: " + MISSED_APPLE_POINTS);
-                        
-                        // Perder una vida por dejar caer manzana roja
-                        if (onLifeLost != null) {
-                            onLifeLost.run();
-                        }
-                    }
-                    
-                    // Desactivar la manzana para que se elimine
-                    apple.deactivate();
+                    processAppleReachedFloor(apple);
                     applesToRemove.add(apple);
                 }
             }
             
-            // Eliminar las manzanas que ya no están activas
+            // Eliminar manzanas procesadas
             apples.removeAll(applesToRemove);
             
         } catch (Exception e) {
-            System.err.println("Error al actualizar manzanas: " + e.getMessage());
-            e.printStackTrace();
+            // Manejar errores en producción
         }
     }
     
     /**
-     * Obtiene la lista de manzanas activas
-     * @return Lista de manzanas
+     * Procesa el evento de manzana recolectada por el jugador.
+     * 
+     * @param apple Manzana que fue recolectada
+     * @param player Jugador que recolectó la manzana
+     */
+    private void processAppleCollected(Apple apple, Player player) {
+        if (apple.isRed()) {
+            // Manzana roja: puntos positivos
+            if (onScoreChange != null) {
+                int points = RED_APPLE_POINTS;
+                // Aplicar multiplicador de puntos dobles si está activo
+                if (player.hasPointsEffect()) {
+                    points *= 2;
+                }
+                onScoreChange.accept(points);
+            }
+        } else {
+            // Manzana verde: puntos negativos y pérdida de vida
+            if (onScoreChange != null) {
+                onScoreChange.accept(GREEN_APPLE_POINTS);
+            }
+            
+            // Activar efecto visual en el jugador
+            player.setGreenAppleEffect();
+            
+            // Aplicar pérdida de vida
+            if (onLifeLost != null) {
+                onLifeLost.run();
+            }
+        }
+        
+        // Desactivar la manzana
+        apple.deactivate();
+    }
+    
+    /**
+     * Procesa el evento de manzana que llegó al suelo.
+     * 
+     * @param apple Manzana que llegó al suelo
+     */
+    private void processAppleReachedFloor(Apple apple) {
+        // Solo penalizar si era una manzana roja perdida
+        if (apple.isRed()) {
+            if (onScoreChange != null) {
+                onScoreChange.accept(MISSED_APPLE_POINTS);
+            }
+            
+            // Pérdida de vida por manzana roja perdida
+            if (onLifeLost != null) {
+                onLifeLost.run();
+            }
+        }
+        
+        // Desactivar la manzana
+        apple.deactivate();
+    }
+    
+    // =====================================
+    // MÉTODOS PÚBLICOS - ACCESO A DATOS
+    // =====================================
+    
+    /**
+     * Obtiene la lista de manzanas activas en el juego.
+     * 
+     * Esta lista es utilizada por el RenderManager para dibujar
+     * las manzanas en pantalla durante cada frame de renderizado.
+     * 
+     * @return Lista inmutable de manzanas activas
      */
     public List<Apple> getApples() {
         return apples;
     }
     
     /**
-     * Limpia todas las manzanas (útil al reiniciar o pausar)
+     * Elimina todas las manzanas del juego.
+     * 
+     * Útil para limpiar el estado del juego al reiniciar una partida,
+     * pausar el juego o cambiar de nivel. No afecta la configuración
+     * del gestor, solo limpia las manzanas existentes.
      */
     public void clearApples() {
         apples.clear();
