@@ -1,4 +1,4 @@
-package Modelo;
+package Modelo.dto;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -7,13 +7,28 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 /**
- * Clase que representa una poción en el juego
+ * Representación de las pociones en el juego.
+ * 
+ * Las pociones tienen diferentes efectos sobre el jugador: lentitud (reduce velocidad),
+ * puntos (otorga puntos extra) y salud (restaura vida). Incluye lógica de movimiento,
+ * renderizado y gestión de efectos.
+ * 
+ * @author Johann
+ * @version 1.0
  */
+ 
 public class Potion {
-    // Tipos de poción
+    
+    /**
+     * Tipos de pociones disponibles en el juego.
+     * Cada tipo tiene asociado un archivo de imagen específico.
+     */
     public enum PotionType {
+        /** Poción que reduce la velocidad del jugador temporalmente */
         LENTITUD("pocion_lentitud.png"),
+        /** Poción que otorga puntos extra al jugador */
         PUNTOS("pocion_puntos.png"),
+        /** Poción que restaura la salud del jugador */
         SALUD("pocion_salud.png");
         
         private final String filename;
@@ -22,30 +37,35 @@ public class Potion {
             this.filename = filename;
         }
         
+        /** @return Nombre del archivo de imagen para este tipo de poción */
         public String getFilename() {
             return filename;
         }
     }
     
-    // Posición de la poción
+    // === POSICIÓN Y MOVIMIENTO ===
+    /** Posición X de la poción en el canvas */
     private double x;
+    /** Posición Y de la poción en el canvas */
     private double y;
-    
-    // Velocidad de caída
+    /** Velocidad de caída vertical */
     private double velocityY;
     
-    // Tipo de poción
+    // === PROPIEDADES ===
+    /** Tipo de poción y su efecto */
     private PotionType type;
+    /** Estado activo de la poción (false cuando es recolectada) */
+    private boolean active = true;
     
-    // Dimensiones de la poción
+    // === DIMENSIONES ===
+    /** Ancho del sprite de la poción */
     private final int WIDTH = 32;
+    /** Alto del sprite de la poción */
     private final int HEIGHT = 32;
     
-    // Imagen de la poción
+    // === GRÁFICOS ===
+    /** Sprite de la poción */
     private Image sprite;
-    
-    // Estado de la poción
-    private boolean active = true;
     
     /**
      * Constructor de la poción
@@ -69,29 +89,11 @@ public class Potion {
     private void loadSprite() {
         try {
             String path = "src/recursos/sprites/pociones/" + type.getFilename();
-            
             File file = new File(path);
-            if (file.exists()) {
-                sprite = new Image(new FileInputStream(file));
-            } else {
-                createFallbackSprite();
-            }
+            sprite = new Image(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            createFallbackSprite();
+            throw new RuntimeException("Error: No se pudo cargar el sprite de poción: " + type.getFilename(), e);
         }
-    }
-    
-    /**
-     * Crea un sprite de respaldo en caso de error
-     */
-    private void createFallbackSprite() {
-        // Crear una imagen de respaldo según el tipo de poción
-        String color = switch (type) {
-            case LENTITUD -> "0000FF"; // Azul
-            case PUNTOS -> "FFD700";   // Dorado
-            case SALUD -> "FF69B4";    // Rosa
-        };
-        sprite = new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIElEQVR42u3OMQEAAAgDILV/" + color + "nBzwvJJWtgkRAQIECLwXeADnSQFrMO9mowAAAABJRU5ErkJggg==");
     }
     
     /**
